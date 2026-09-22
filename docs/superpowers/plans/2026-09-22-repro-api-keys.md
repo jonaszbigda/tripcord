@@ -1551,7 +1551,7 @@ git commit -m "feat(server): add repro-admin CLI for projects and API keys"
 **Interfaces:**
 - Consumes: everything from Tasks 1–4.
 
-- [ ] **Step 1: Update the ingest spec's cross-references**
+- [x] **Step 1: Update the ingest spec's cross-references**
 
 In `docs/superpowers/specs/2026-09-22-repro-ingest-api-design.md`:
 
@@ -1570,12 +1570,12 @@ In `## Explicitly out of scope (future sub-projects)`, replace the two bullets b
   (operator CLI; dashboard self-serve is part of the dashboard sub-project).
 ```
 
-- [ ] **Step 2: Full workspace verification**
+- [x] **Step 2: Full workspace verification**
 
 Run (from repo root): `npm run build && npm test && npm run lint && npm run typecheck`
 Expected: all four succeed across both `packages/js` and `server`.
 
-- [ ] **Step 3: docker-compose smoke test**
+- [x] **Step 3: docker-compose smoke test**
 
 Run: `docker compose up -d --build`
 Wait until `docker compose ps` shows both containers running and `curl -s http://localhost:3000/health` returns `{"status":"ok"}`.
@@ -1627,7 +1627,7 @@ Expected: `Revoked key rpk_... (<uuid>)`, then `{"error":"Invalid API key"}` and
 Run: `docker compose down -v`
 Expected: clean teardown.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add docs/superpowers/specs/2026-09-22-repro-ingest-api-design.md
