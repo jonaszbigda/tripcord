@@ -1635,3 +1635,182 @@ git commit -m "docs: point ingest spec's key-issuance entries at the API keys sp
 ```
 
 If Step 2 or Step 3 required code fixes, commit those separately with a `fix(server): ...` message and describe them in the task report.
+
+---
+
+### Task 6: Final-review fixes
+
+Added after the final whole-branch review of Tasks 1–5 (verdict: ready to merge **with fixes**: 0 Critical, 1 Important, 6 Minor). Items 1–5 below were proposed and still need the user's go-ahead before they're implemented. The Important item (Step 1) is the only must-fix before merge.
+
+**Files:**
+- Modify: `server/README.md` (upgrade note)
+- Modify: `server/src/db/migrate.ts` (advisory lock)
+- Modify: `server/test/db.ts` (memoized test DB)
+- Modify: `server/src/db/projects.test.ts` (zero-key `listProjects` test)
+- Modify: `server/src/admin.ts`, `server/src/admin.test.ts` (`--help`, `--` hint)
+
+**Interfaces:**
+- Consumes: everything from Tasks 1–5. Public signatures do not change: `runMigrations(databaseUrl)`, `getTestDb()` and `runCli(argv, db, out)` keep their current types.
+
+- [ ] **Step 1 (Important): README upgrade note**
+
+The clean-break migration drops `projects.api_key`. After upgrading, every existing key returns 401, and because `@repro/js` fire-and-forget delivery never reads the response, instrumented apps silently drop events. Projects created before the upgrade survive the migration with zero keys.
+
+In `server/README.md`, add this at the end of the `## Creating projects and API keys` section (just before `## Environment variables`):
+
+```markdown
+### Upgrading from a version before API key hashing
+
+Older versions stored one plaintext key per project in `projects.api_key`. The
+migration that introduces hashed keys **drops that column without carrying keys
+over**, so after upgrading every existing key is rejected with `401`. The browser
+client doesn't surface failed sends, so this is silent on the app side.
+
+After upgrading, for each existing project:
+
+1. `project list` to find it. Projects from before the upgrade show `0` active keys.
+2. `key create <projectId>` to mint a new key.
+3. Deploy the new key to the app's `init({ apiKey })` config.
+```
+
+- [ ] **Step 2: Serialize concurrent migrations with an advisory lock**
+
+Drizzle's migrator takes no lock. If the server and the CLI both migrate a fresh database at the same moment, one of them fails. When the server loses, it calls `process.exit(1)`, and compose has no `restart:` policy, so it stays down.
+
+Write a test in `server/src/db/migrate.test.ts` that runs two migrations concurrently against the already-migrated test DB and expects both to resolve:
+
+```ts
+it("allows concurrent runs (serialized by an advisory lock)", async () => {
+  const url = inject("databaseUrl");
+  await expect(Promise.all([runMigrations(url), runMigrations(url)])).resolves.toEqual([undefined, undefined]);
+});
+```
+
+This passes even without the lock, because the database is already migrated. It's a regression guard for the lock plumbing, not a reproduction of the race. The real race only happens on a fresh database, which the shared test container never is.
+
+Replace the body of `runMigrations` in `server/src/db/migrate.ts` with this, keeping the existing imports and comment:
+
+```ts
+// Arbitrary app-wide constant; any process migrating this database takes the same lock.
+const MIGRATION_LOCK_ID = 727_401;
+
+export async function runMigrations(databaseUrl: string): Promise<void> {
+  const pool = new Pool({ connectionString: databaseUrl });
+  const client = await pool.connect();
+  try {
+    // Session-level lock on the same connection that runs the migrations, so a
+    // concurrent server boot and CLI run can't both apply the same migration.
+    await client.query("SELECT pg_advisory_lock($1)", [MIGRATION_LOCK_ID]);
+    await migrate(drizzle(client), {
+      // src/db/migrate.ts and dist/db/migrate.js both sit two levels below server/.
+      migrationsFolder: path.join(__dirname, "..", "..", "drizzle"),
+    });
+  } finally {
+    // Releasing the connection back to a pool that's about to end closes the
+    // session, which drops the lock even if unlock fails.
+    await client.query("SELECT pg_advisory_unlock($1)", [MIGRATION_LOCK_ID]).catch(() => undefined);
+    client.release();
+    await pool.end();
+  }
+}
+```
+
+If `drizzle(client)` with a `PoolClient` doesn't typecheck on the installed drizzle-orm, trust the installed types, adapt the code, and note it in the report.
+
+Run (from `server/`): `npx vitest run src/db/migrate.test.ts`. Expected: PASS (2 tests).
+
+- [ ] **Step 3: Zero-key `listProjects` test**
+
+This case can happen: projects that existed before the upgrade have no `api_keys` rows. The Task 3 ledger note called it unreachable, which was wrong. Append this to the `describe("listProjects", ...)` block in `server/src/db/projects.test.ts`, and add `projects` to the existing `./schema` import:
+
+```ts
+it("reports zero active keys for a project that never had a key (pre-upgrade project)", async () => {
+  const db = getTestDb();
+  const [legacy] = await db.insert(projects).values({ name: "legacy" }).returning();
+
+  const result = await listProjects(db);
+
+  expect(result).toEqual([
+    { id: legacy.id, name: "legacy", createdAt: legacy.createdAt, activeKeyCount: 0 },
+  ]);
+});
+```
+
+Run (from `server/`): `npx vitest run src/db/projects.test.ts`. Expected: PASS. The implementation already handles this, so the test passes immediately: it's a characterization test.
+
+- [ ] **Step 4: Stop leaking test DB pools**
+
+`getTestDb()` creates a new `pg` `Pool` on every call and never closes it. The branch added about 50 more calls, and `admin.test.ts`'s `run()` alone makes one per CLI invocation, which heads toward Postgres's `max_connections` as the suite grows. Replace `getTestDb` in `server/test/db.ts` with a memoized version:
+
+```ts
+// One pool per test file: Vitest isolates each file's module graph, so this is
+// reset between files, and the connections close when the file's worker exits.
+let testDb: Database | undefined;
+
+export function getTestDb(): Database {
+  testDb ??= createDb(inject("databaseUrl"));
+  return testDb;
+}
+```
+
+Run: `npm test -w server`. Expected: all tests pass, same count as before plus the new tests from Steps 2–3.
+
+- [ ] **Step 5: `--help` / `-h`, and a `--` hint in the usage text**
+
+Right now `--help` exits 2 with "Unknown option". Also, a positional starting with `-` (e.g. project name `-beta`) is parsed as a flag, and the workaround `project create -- -beta` isn't documented.
+
+Add these tests to `server/src/admin.test.ts`, in `describe("command shape errors", ...)` or a new `describe("help", ...)`:
+
+```ts
+it.each([["--help"], ["-h"]])("prints usage to stdout and exits 0 for %s", async (flag) => {
+  const result = await run([flag]);
+  expect(result.code).toBe(0);
+  expect(result.stdout).toEqual([USAGE]);
+  expect(result.stderr).toEqual([]);
+});
+
+it("accepts a project name starting with '-' after --", async () => {
+  const result = await run(["project", "create", "--", "-beta"]);
+  expect(result.code).toBe(0);
+  const [project] = await listProjects(getTestDb());
+  expect(project.name).toBe("-beta");
+});
+```
+
+In `server/src/admin.ts`:
+- Append to `USAGE` (after the command list): a blank line, then `Put -- before an argument that starts with "-", e.g. project create -- -beta`.
+- Make `parsePositionals` return the parsed `values` too, and declare the option `help: { type: "boolean", short: "h" }` in its `parseArgs` call. Keep `strict: true` so other flags are still rejected.
+- At the top of `runCli`'s `try`, if `values.help` is set, print `USAGE` to stdout and return `0` before any other dispatch.
+
+Run (from `server/`): `npx vitest run src/admin.test.ts`. Expected: PASS, including the existing unknown-flag (`--json`) test.
+
+Update the README's CLI section with one line saying `--help` prints the usage.
+
+- [ ] **Step 6: Verify and commit**
+
+Run: `npm test -w server && npm run lint -w server && npm run typecheck -w server`. Expected: all pass.
+
+```bash
+git add server/README.md server/src/db/migrate.ts server/src/db/migrate.test.ts server/test/db.ts \
+  server/src/db/projects.test.ts server/src/admin.ts server/src/admin.test.ts
+git commit -m "fix(server): final-review fixes: upgrade note, migration lock, test pool reuse, CLI --help"
+```
+
+---
+
+## Handoff notes (end of session, 2026-09-22)
+
+**Status:** Tasks 1–5 are complete and each passed its review. Task 6 is not started and needs the user's go-ahead. Branch `feat/api-keys` is pushed to origin and not merged. After Task 6, get one scoped re-review of the Task 6 diff, then decide how to merge (finishing-a-development-branch).
+
+**Verification so far:** workspace build/test/lint/typecheck is green (108 tests: 50 in `packages/js`, 58 in `server`). The docker-compose smoke test passed: CLI project create → ingest 201 → no plaintext key in the DB → revoke → 401.
+
+**Decisions made during execution:**
+- **Smoke test on port 13000.** Task 5's smoke test ran through an untracked override (compose project `repro-smoke`, no Postgres host port, server on host port 13000) because unrelated containers (`web-chat`, `symbiotico-db-1`) hold 3000/5432. `docker-compose.yml` is unchanged. *If that was wrong:* the default 3000/5432 host-port mappings weren't exercised.
+- **Superseded notes, not rewrites.** Outdated `projects.api_key` passages in the ingest spec were annotated with "Superseded" notes instead of rewritten, to keep the original design record. *If that was wrong:* the old snippet stays, and readers need the note.
+
+**Deferred to the dashboard sub-project (from the final review):**
+- Wrap `createApiKey`'s existence check and insert in a transaction if project deletion is added. Worst case today is an FK error and exit 1, not bad data.
+- Reject or strip control characters in project names once tenants can create projects. `project list` prints names raw.
+- Consider rate-limiting or caching failed-key lookups before auth. Bad-key requests aren't rate-limited because the limit is keyed after the project lookup. This predates the branch.
+
+**Dismissed:** the `engines` pin for Node ≥ 15.7 (the image is `node:22-alpine`); the missing trailing newline in the generated `0001_square_whirlwind.sql` (drizzle-kit output, never hand-edited); the `formatTable` empty-rows concern (not a bug); `-w server` vs `-w @repro/server` in the README (both work).
