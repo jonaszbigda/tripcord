@@ -20,6 +20,11 @@ export default [
       "@typescript-eslint": tseslint,
       import: importPlugin,
     },
+    settings: {
+      "import/resolver": {
+        typescript: true,
+      },
+    },
     rules: {
       "no-unused-vars": "off",
       "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
