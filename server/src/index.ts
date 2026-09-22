@@ -3,6 +3,7 @@ import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Pool } from "pg";
 import { createDb } from "./db/client";
 import { buildApp } from "./app";
+import { scheduleCleanup } from "./retention";
 
 async function main(): Promise<void> {
   const databaseUrl = process.env.DATABASE_URL;
@@ -21,6 +22,9 @@ async function main(): Promise<void> {
     bodyLimit: process.env.BODY_LIMIT_BYTES ? Number(process.env.BODY_LIMIT_BYTES) : undefined,
     logLevel: process.env.LOG_LEVEL,
   });
+
+  const retentionDays = process.env.RETENTION_DAYS ? Number(process.env.RETENTION_DAYS) : 30;
+  scheduleCleanup(db, retentionDays);
 
   const port = process.env.PORT ? Number(process.env.PORT) : 3000;
   await app.listen({ port, host: "0.0.0.0" });
