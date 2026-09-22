@@ -77,6 +77,9 @@ export const timelines = pgTable("timelines", {
 }));
 ```
 
+> Superseded: `projects.api_key` was dropped; keys now live hashed in `api_keys` —
+> see `2026-09-22-repro-api-keys-design.md`.
+
 Design choices worth recording:
 
 - **`reason`/`events`/`meta` are `jsonb`, not exploded into per-field scalar columns.**
@@ -111,6 +114,11 @@ The endpoint the client's `endpoint` config points at. Request flow, in order:
    (indexed equality). Missing or unknown key → `401 Unauthorized`, body never
    processed. This runs *before* body validation so an invalid key can't be used to
    probe payload validation behavior.
+
+   > Superseded: the header is now hashed (SHA-256) and matched against an unrevoked
+   > row in `api_keys`. A revoked key returns the same `401 { error: "Invalid API
+   > key" }` as an unknown key — see `2026-09-22-repro-api-keys-design.md`.
+
 2. **Body validation** — Fastify's built-in JSON Schema route validation, with a schema
    mirroring `TimelinePayload` exactly. A shape mismatch → `400 Bad Request` with
    Fastify's standard validation-error body — no hand-written validation code needed.
