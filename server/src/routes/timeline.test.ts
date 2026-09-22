@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { getTestDb } from "../../test/db";
-import { projects, timelines } from "../db/schema";
+import { eq } from "drizzle-orm";
+import { createTestProject, getTestDb, resetDb } from "../../test/db";
+import { apiKeys, timelines } from "../db/schema";
+import { hashApiKey } from "../keys";
 import { buildApp } from "../app";
 
 const validPayload = {
@@ -12,9 +14,7 @@ const validPayload = {
 
 describe("POST /v1/timeline", () => {
   beforeEach(async () => {
-    const db = getTestDb();
-    await db.delete(timelines);
-    await db.delete(projects);
+    await resetDb(getTestDb());
   });
 
   it("returns 401 when the X-Repro-Key header is missing", async () => {
@@ -38,13 +38,13 @@ describe("POST /v1/timeline", () => {
 
   it("returns 400 for a malformed body, without inserting anything", async () => {
     const db = getTestDb();
-    await db.insert(projects).values({ name: "acme", apiKey: "key-valid" });
+    const { key } = await createTestProject(db);
     const app = await buildApp(db, { rateLimitMax: 1000, rateLimitWindow: "1 minute" });
 
     const response = await app.inject({
       method: "POST",
       url: "/v1/timeline",
-      headers: { "x-repro-key": "key-valid" },
+      headers: { "x-repro-key": key },
       payload: { sessionId: "session-1" }, // missing reason/events/meta
     });
 
@@ -56,13 +56,13 @@ describe("POST /v1/timeline", () => {
 
   it("returns 400 and inserts nothing for a payload with an unknown extra field, instead of silently stripping it", async () => {
     const db = getTestDb();
-    await db.insert(projects).values({ name: "acme", apiKey: "key-valid" });
+    const { key } = await createTestProject(db);
     const app = await buildApp(db, { rateLimitMax: 1000, rateLimitWindow: "1 minute" });
 
     const response = await app.inject({
       method: "POST",
       url: "/v1/timeline",
-      headers: { "x-repro-key": "key-valid" },
+      headers: { "x-repro-key": key },
       payload: { ...validPayload, futureField: "should be rejected, not stripped" },
     });
 
@@ -85,13 +85,13 @@ describe("POST /v1/timeline", () => {
 
   it("stores a valid payload and returns 201 with an id", async () => {
     const db = getTestDb();
-    const [project] = await db.insert(projects).values({ name: "acme", apiKey: "key-valid" }).returning();
+    const { project, key } = await createTestProject(db);
     const app = await buildApp(db, { rateLimitMax: 1000, rateLimitWindow: "1 minute" });
 
     const response = await app.inject({
       method: "POST",
       url: "/v1/timeline",
-      headers: { "x-repro-key": "key-valid" },
+      headers: { "x-repro-key": key },
       payload: validPayload,
     });
 
@@ -107,36 +107,53 @@ describe("POST /v1/timeline", () => {
     expect(row.events).toEqual(validPayload.events);
     expect(row.meta).toEqual(validPayload.meta);
   });
+
+  it("returns the same 401 for a revoked key as for an unknown key", async () => {
+    const db = getTestDb();
+    const { key } = await createTestProject(db);
+    await db.update(apiKeys).set({ revokedAt: new Date() }).where(eq(apiKeys.keyHash, hashApiKey(key)));
+    const app = await buildApp(db, { rateLimitMax: 1000, rateLimitWindow: "1 minute" });
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/v1/timeline",
+      headers: { "x-repro-key": key },
+      payload: validPayload,
+    });
+
+    expect(response.statusCode).toBe(401);
+    expect(response.json()).toEqual({ error: "Invalid API key" });
+    const rows = await db.select().from(timelines);
+    expect(rows).toHaveLength(0);
+  });
 });
 
 describe("POST /v1/timeline rate limiting", () => {
   beforeEach(async () => {
-    const db = getTestDb();
-    await db.delete(timelines);
-    await db.delete(projects);
+    await resetDb(getTestDb());
   });
 
   it("returns 429 after exceeding the per-project limit", async () => {
     const db = getTestDb();
-    await db.insert(projects).values({ name: "acme", apiKey: "key-valid" });
+    const { key } = await createTestProject(db);
     const app = await buildApp(db, { rateLimitMax: 2, rateLimitWindow: "1 minute" });
 
     const first = await app.inject({
       method: "POST",
       url: "/v1/timeline",
-      headers: { "x-repro-key": "key-valid" },
+      headers: { "x-repro-key": key },
       payload: validPayload,
     });
     const second = await app.inject({
       method: "POST",
       url: "/v1/timeline",
-      headers: { "x-repro-key": "key-valid" },
+      headers: { "x-repro-key": key },
       payload: validPayload,
     });
     const third = await app.inject({
       method: "POST",
       url: "/v1/timeline",
-      headers: { "x-repro-key": "key-valid" },
+      headers: { "x-repro-key": key },
       payload: validPayload,
     });
 

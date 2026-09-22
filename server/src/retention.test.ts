@@ -1,18 +1,16 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { getTestDb } from "../test/db";
-import { projects, timelines } from "./db/schema";
+import { createTestProject, getTestDb, resetDb } from "../test/db";
+import { timelines } from "./db/schema";
 import { cleanupOldTimelines } from "./retention";
 
 describe("cleanupOldTimelines", () => {
   beforeEach(async () => {
-    const db = getTestDb();
-    await db.delete(timelines);
-    await db.delete(projects);
+    await resetDb(getTestDb());
   });
 
   it("deletes timelines older than the retention window and keeps recent ones", async () => {
     const db = getTestDb();
-    const [project] = await db.insert(projects).values({ name: "acme", apiKey: "key-1" }).returning();
+    const { project } = await createTestProject(db);
 
     const old = new Date(Date.now() - 40 * 24 * 60 * 60 * 1000); // 40 days ago
     const recent = new Date(Date.now() - 1 * 24 * 60 * 60 * 1000); // 1 day ago
