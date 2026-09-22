@@ -683,7 +683,7 @@ git commit -m "feat(server): store API keys hashed in an api_keys table"
   - `export async function revokeApiKey(db: Database, keyId: string): Promise<RevokedApiKey | undefined>`
   - All functions assume ids are well-formed UUIDs (callers validate; the CLI does in Task 4).
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 In `server/src/db/projects.test.ts`, replace the `./projects` import line with:
 
@@ -836,12 +836,12 @@ describe("revokeApiKey", () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run (from `server/`): `npx vitest run src/db/projects.test.ts`
 Expected: FAIL — `createApiKey`, `listProjects`, `listApiKeys`, `revokeApiKey` are not exported.
 
-- [ ] **Step 3: Implement the service functions**
+- [x] **Step 3: Implement the service functions**
 
 In `server/src/db/projects.ts`, change the imports to:
 
@@ -938,12 +938,12 @@ export async function revokeApiKey(db: Database, keyId: string): Promise<Revoked
 
 Note on ordering: keys created in the same test can share a `created_at` down to the microsecond only in theory; `defaultNow()` is per-statement and each insert is its own statement, so ascending `created_at` is stable here. If the `listApiKeys` ordering test is ever flaky, add `asc(apiKeys.id)` as a secondary sort key rather than weakening the assertion.
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run (from `server/`): `npx vitest run src/db/projects.test.ts`
 Expected: PASS (all `createProject`, `findProjectByApiKey`, `createApiKey`, `listProjects`, `listApiKeys`, `revokeApiKey` tests).
 
-- [ ] **Step 5: Full suite, lint, typecheck, commit**
+- [x] **Step 5: Full suite, lint, typecheck, commit**
 
 Run: `npm test -w server && npm run lint -w server && npm run typecheck -w server`
 Expected: all pass.
