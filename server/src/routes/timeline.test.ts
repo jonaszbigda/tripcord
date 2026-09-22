@@ -18,14 +18,14 @@ describe("POST /v1/timeline", () => {
   });
 
   it("returns 401 when the X-Repro-Key header is missing", async () => {
-    const app = buildApp(getTestDb());
+    const app = await buildApp(getTestDb(), { rateLimitMax: 1000, rateLimitWindow: "1 minute" });
     const response = await app.inject({ method: "POST", url: "/v1/timeline", payload: validPayload });
     expect(response.statusCode).toBe(401);
     expect(response.json()).toEqual({ error: "Missing X-Repro-Key header" });
   });
 
   it("returns 401 when the api key doesn't match any project", async () => {
-    const app = buildApp(getTestDb());
+    const app = await buildApp(getTestDb(), { rateLimitMax: 1000, rateLimitWindow: "1 minute" });
     const response = await app.inject({
       method: "POST",
       url: "/v1/timeline",
@@ -39,7 +39,7 @@ describe("POST /v1/timeline", () => {
   it("returns 400 for a malformed body, without inserting anything", async () => {
     const db = getTestDb();
     await db.insert(projects).values({ name: "acme", apiKey: "key-valid" });
-    const app = buildApp(db);
+    const app = await buildApp(db, { rateLimitMax: 1000, rateLimitWindow: "1 minute" });
 
     const response = await app.inject({
       method: "POST",
@@ -54,7 +54,7 @@ describe("POST /v1/timeline", () => {
   });
 
   it("returns 401 for an unknown api key even with a malformed body, proving auth runs before validation", async () => {
-    const app = buildApp(getTestDb());
+    const app = await buildApp(getTestDb(), { rateLimitMax: 1000, rateLimitWindow: "1 minute" });
     const response = await app.inject({
       method: "POST",
       url: "/v1/timeline",
@@ -67,7 +67,7 @@ describe("POST /v1/timeline", () => {
   it("stores a valid payload and returns 201 with an id", async () => {
     const db = getTestDb();
     const [project] = await db.insert(projects).values({ name: "acme", apiKey: "key-valid" }).returning();
-    const app = buildApp(db);
+    const app = await buildApp(db, { rateLimitMax: 1000, rateLimitWindow: "1 minute" });
 
     const response = await app.inject({
       method: "POST",
@@ -87,5 +87,42 @@ describe("POST /v1/timeline", () => {
     expect(row.reason).toEqual(validPayload.reason);
     expect(row.events).toEqual(validPayload.events);
     expect(row.meta).toEqual(validPayload.meta);
+  });
+});
+
+describe("POST /v1/timeline rate limiting", () => {
+  beforeEach(async () => {
+    const db = getTestDb();
+    await db.delete(timelines);
+    await db.delete(projects);
+  });
+
+  it("returns 429 after exceeding the per-project limit", async () => {
+    const db = getTestDb();
+    await db.insert(projects).values({ name: "acme", apiKey: "key-valid" });
+    const app = await buildApp(db, { rateLimitMax: 2, rateLimitWindow: "1 minute" });
+
+    const first = await app.inject({
+      method: "POST",
+      url: "/v1/timeline",
+      headers: { "x-repro-key": "key-valid" },
+      payload: validPayload,
+    });
+    const second = await app.inject({
+      method: "POST",
+      url: "/v1/timeline",
+      headers: { "x-repro-key": "key-valid" },
+      payload: validPayload,
+    });
+    const third = await app.inject({
+      method: "POST",
+      url: "/v1/timeline",
+      headers: { "x-repro-key": "key-valid" },
+      payload: validPayload,
+    });
+
+    expect(first.statusCode).toBe(201);
+    expect(second.statusCode).toBe(201);
+    expect(third.statusCode).toBe(429);
   });
 });

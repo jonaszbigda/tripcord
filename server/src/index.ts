@@ -15,7 +15,12 @@ async function main(): Promise<void> {
   await migrationPool.end();
 
   const db = createDb(databaseUrl);
-  const app = buildApp(db);
+  const app = await buildApp(db, {
+    rateLimitMax: process.env.RATE_LIMIT_MAX ? Number(process.env.RATE_LIMIT_MAX) : undefined,
+    rateLimitWindow: process.env.RATE_LIMIT_WINDOW,
+    bodyLimit: process.env.BODY_LIMIT_BYTES ? Number(process.env.BODY_LIMIT_BYTES) : undefined,
+    logLevel: process.env.LOG_LEVEL,
+  });
 
   const port = process.env.PORT ? Number(process.env.PORT) : 3000;
   await app.listen({ port, host: "0.0.0.0" });

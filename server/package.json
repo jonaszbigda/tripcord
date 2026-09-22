@@ -11,6 +11,7 @@
     "lint": "eslint src"
   },
   "dependencies": {
+    "@fastify/rate-limit": "^10.0.0",
     "@repro/js": "^0.1.0",
     "drizzle-orm": "^0.36.0",
     "fastify": "^5.0.0",

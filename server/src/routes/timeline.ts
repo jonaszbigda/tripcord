@@ -58,7 +58,12 @@ const timelinePayloadSchema = {
   additionalProperties: false,
 } as const;
 
-export function registerTimelineRoute(app: FastifyInstance, db: Database): void {
+export interface TimelineRouteOptions {
+  rateLimitMax: number;
+  rateLimitWindow: string;
+}
+
+export function registerTimelineRoute(app: FastifyInstance, db: Database, options: TimelineRouteOptions): void {
   app.post<{ Body: TimelinePayload }>(
     "/v1/timeline",
     {
@@ -73,6 +78,14 @@ export function registerTimelineRoute(app: FastifyInstance, db: Database): void 
           return reply.code(401).send({ error: "Invalid API key" });
         }
         request.project = project;
+      },
+      config: {
+        rateLimit: {
+          max: options.rateLimitMax,
+          timeWindow: options.rateLimitWindow,
+          hook: "preHandler",
+          keyGenerator: (request: FastifyRequest) => (request.project as Project).id,
+        },
       },
     },
     async (request, reply) => {
