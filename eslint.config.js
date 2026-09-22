@@ -16,6 +16,8 @@ export default [
       import: importPlugin,
     },
     rules: {
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": "error",
       "import/no-restricted-paths": [
         "error",
         {

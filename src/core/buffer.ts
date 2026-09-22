@@ -1,7 +1,6 @@
 import type { TimelineEvent } from "./types";
 
 export interface TimelineBuffer {
-  // eslint-disable-next-line no-unused-vars
   push(event: TimelineEvent): void;
   getAll(): TimelineEvent[];
 }
