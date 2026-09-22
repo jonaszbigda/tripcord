@@ -38,4 +38,10 @@ describe("browser storage", () => {
     expect(readBuffer()).toBeUndefined();
     expect(readSessionId()).toBeUndefined();
   });
+
+  it("returns undefined without throwing when the stored buffer JSON is not an array", () => {
+    sessionStorage.setItem("__repro_buffer", "{}");
+    expect(() => readBuffer()).not.toThrow();
+    expect(readBuffer()).toBeUndefined();
+  });
 });

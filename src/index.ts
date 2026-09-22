@@ -13,11 +13,14 @@ export function init(config: CreateTracerConfig): { dispose: () => void } {
     console.warn("[repro] init() called again — replacing the existing instance.");
     defaultTracer.dispose();
   }
-  defaultTracer = createTracer(config);
+  const instance = createTracer(config);
+  defaultTracer = instance;
   return {
     dispose() {
-      defaultTracer?.dispose();
-      defaultTracer = undefined;
+      instance.dispose();
+      if (defaultTracer === instance) {
+        defaultTracer = undefined;
+      }
     },
   };
 }

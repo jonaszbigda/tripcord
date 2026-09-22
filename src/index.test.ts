@@ -71,4 +71,25 @@ describe("public entry point", () => {
     expect(trackMock).not.toHaveBeenCalled();
     expect(warn).toHaveBeenCalledOnce();
   });
+
+  it("disposing a stale handle from an earlier init() does not tear down the current instance", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { init, track } = await import("./index");
+
+    const firstHandle = init({ endpoint: "https://ingest.example.com/timeline", apiKey: "key-123" });
+    const secondHandle = init({ endpoint: "https://ingest.example.com/timeline", apiKey: "key-456" });
+    void secondHandle;
+
+    vi.clearAllMocks();
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    // Disposing the FIRST (now-stale) handle must not tear down the currently
+    // active (second) instance.
+    firstHandle.dispose();
+
+    track("checkout.step");
+
+    expect(trackMock).toHaveBeenCalledWith("checkout.step", undefined);
+    expect(warn).not.toHaveBeenCalled();
+  });
 });

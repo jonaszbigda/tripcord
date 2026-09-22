@@ -3,7 +3,7 @@ import { createTracer } from "./tracer";
 import type { TimelinePayload } from "./types";
 
 function setup() {
-  const send = vi.fn<[TimelinePayload], void>();
+  const send = vi.fn<(payload: TimelinePayload) => void>();
   const getMeta = vi.fn(() => ({ url: "https://example.com", userAgent: "test-agent" }));
   const tracer = createTracer({ sessionId: "session-1", send, getMeta });
   return { send, getMeta, tracer };

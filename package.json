@@ -9,14 +9,12 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
+      "require": { "types": "./dist/index.d.cts", "default": "./dist/index.cjs" }
     },
     "./react": {
-      "types": "./dist/react.d.ts",
-      "import": "./dist/react.js",
-      "require": "./dist/react.cjs"
+      "import": { "types": "./dist/react.d.ts", "default": "./dist/react.js" },
+      "require": { "types": "./dist/react.d.cts", "default": "./dist/react.cjs" }
     }
   },
   "sideEffects": false,
@@ -25,7 +23,9 @@
   ],
   "scripts": {
     "build": "tsup",
+    "pretest": "npm run build",
     "test": "vitest run",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint src"
   },
   "peerDependencies": {

@@ -6,7 +6,9 @@ const SESSION_ID_KEY = "__repro_session_id";
 export function readBuffer(): TimelineEvent[] | undefined {
   try {
     const raw = sessionStorage.getItem(BUFFER_KEY);
-    return raw ? (JSON.parse(raw) as TimelineEvent[]) : undefined;
+    if (!raw) return undefined;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as TimelineEvent[]) : undefined;
   } catch {
     return undefined;
   }
