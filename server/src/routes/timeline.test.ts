@@ -49,6 +49,25 @@ describe("POST /v1/timeline", () => {
     });
 
     expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({ error: expect.any(String) });
+    const rows = await db.select().from(timelines);
+    expect(rows).toHaveLength(0);
+  });
+
+  it("returns 400 and inserts nothing for a payload with an unknown extra field, instead of silently stripping it", async () => {
+    const db = getTestDb();
+    await db.insert(projects).values({ name: "acme", apiKey: "key-valid" });
+    const app = await buildApp(db, { rateLimitMax: 1000, rateLimitWindow: "1 minute" });
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/v1/timeline",
+      headers: { "x-repro-key": "key-valid" },
+      payload: { ...validPayload, futureField: "should be rejected, not stripped" },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({ error: expect.any(String) });
     const rows = await db.select().from(timelines);
     expect(rows).toHaveLength(0);
   });

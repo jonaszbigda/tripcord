@@ -7,7 +7,9 @@ frontend bug reproduction.
 
 - [`packages/js`](packages/js) — `@repro/js`, the browser client library. Built,
   tested, not yet published to npm.
-- `server` — the ingest API that receives what the client sends. Coming soon.
+- [`server`](server) — `@repro/server`, the ingest API that receives what the client
+  sends. Built, tested, self-hostable via `docker compose up` — see
+  [`server/README.md`](server/README.md) for how to run it and provision an API key.
 
 See each package's own README for details, and
 [`docs/superpowers/specs/`](docs/superpowers/specs) for design rationale.
