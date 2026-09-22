@@ -13,6 +13,7 @@ FROM node:22-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=build /app/node_modules node_modules
+COPY --from=build /app/server/node_modules server/node_modules
 COPY --from=build /app/packages/js/dist packages/js/dist
 COPY --from=build /app/packages/js/package.json packages/js/package.json
 COPY --from=build /app/server/dist server/dist
