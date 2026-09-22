@@ -1,63 +1,14 @@
 {
-  "name": "@repro/js",
-  "version": "0.1.0",
-  "description": "Opt-in, developer-instrumented breadcrumb timeline for frontend bug reproduction.",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/jonaszbigda/repro.git"
-  },
-  "homepage": "https://github.com/jonaszbigda/repro#readme",
-  "bugs": {
-    "url": "https://github.com/jonaszbigda/repro/issues"
-  },
-  "type": "module",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "import": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
-      "require": { "types": "./dist/index.d.cts", "default": "./dist/index.cjs" }
-    },
-    "./react": {
-      "import": { "types": "./dist/react.d.ts", "default": "./dist/react.js" },
-      "require": { "types": "./dist/react.d.cts", "default": "./dist/react.cjs" }
-    }
-  },
-  "sideEffects": false,
-  "files": [
-    "dist"
+  "name": "repro",
+  "private": true,
+  "version": "0.0.0",
+  "workspaces": [
+    "packages/*"
   ],
   "scripts": {
-    "build": "tsup",
-    "pretest": "npm run build",
-    "test": "vitest run",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint src"
-  },
-  "peerDependencies": {
-    "react": ">=17"
-  },
-  "peerDependenciesMeta": {
-    "react": { "optional": true }
-  },
-  "devDependencies": {
-    "@eslint/js": "^9.0.0",
-    "@testing-library/react": "^16.0.0",
-    "@types/react": "^18.3.0",
-    "@types/react-dom": "^18.3.0",
-    "@typescript-eslint/eslint-plugin": "^8.0.0",
-    "@typescript-eslint/parser": "^8.0.0",
-    "eslint": "^9.0.0",
-    "eslint-import-resolver-typescript": "^4.4.5",
-    "eslint-plugin-import": "^2.29.0",
-    "globals": "^17.12.0",
-    "jsdom": "^25.0.0",
-    "react": "^18.3.0",
-    "react-dom": "^18.3.0",
-    "tsup": "^8.0.0",
-    "typescript": "^5.6.0",
-    "vitest": "^2.1.0"
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present"
   }
 }
