@@ -75,7 +75,7 @@ Docker must be running: every server test file shares a testcontainers Postgres 
   - `export function generateApiKey(): GeneratedApiKey`
   - `export function hashApiKey(key: string): string`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `server/src/keys.test.ts`:
 
@@ -122,12 +122,12 @@ describe("hashApiKey", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run (from `server/`): `npx vitest run src/keys.test.ts`
 Expected: FAIL — cannot resolve `./keys`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 Create `server/src/keys.ts`:
 
@@ -160,12 +160,12 @@ export function generateApiKey(): GeneratedApiKey {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run (from `server/`): `npx vitest run src/keys.test.ts`
 Expected: PASS (6 tests).
 
-- [ ] **Step 5: Lint and commit**
+- [x] **Step 5: Lint and commit**
 
 Run: `npm run lint -w server`
 Expected: no errors.
