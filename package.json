@@ -3,6 +3,14 @@
   "version": "0.1.0",
   "description": "Opt-in, developer-instrumented breadcrumb timeline for frontend bug reproduction.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jonaszbigda/repro.git"
+  },
+  "homepage": "https://github.com/jonaszbigda/repro#readme",
+  "bugs": {
+    "url": "https://github.com/jonaszbigda/repro/issues"
+  },
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
