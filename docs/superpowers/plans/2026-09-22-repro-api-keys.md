@@ -972,7 +972,7 @@ git commit -m "feat(server): add API key rotation, listing, and revocation servi
   - `server/src/admin.ts`: `export interface CliOutput { stdout(line: string): void; stderr(line: string): void }`, `export const USAGE: string`, `export async function runCli(argv: string[], db: Database, out: CliOutput): Promise<number>` (resolves to the exit code; throws only on unexpected errors).
   - `server/dist/cli.js` runnable as `node server/dist/cli.js <command>`.
 
-- [ ] **Step 1: Write the failing `runMigrations` test**
+- [x] **Step 1: Write the failing `runMigrations` test**
 
 Create `server/src/db/migrate.test.ts`:
 
@@ -991,7 +991,7 @@ describe("runMigrations", () => {
 Run (from `server/`): `npx vitest run src/db/migrate.test.ts`
 Expected: FAIL — cannot resolve `./migrate`.
 
-- [ ] **Step 2: Extract `runMigrations` and use it from the server entrypoint**
+- [x] **Step 2: Extract `runMigrations` and use it from the server entrypoint**
 
 Create `server/src/db/migrate.ts`:
 
@@ -1035,7 +1035,7 @@ In `server/src/index.ts`:
 Run (from `server/`): `npx vitest run src/db/migrate.test.ts`
 Expected: PASS.
 
-- [ ] **Step 3: Write the failing CLI tests**
+- [x] **Step 3: Write the failing CLI tests**
 
 Create `server/src/admin.test.ts`:
 
@@ -1255,7 +1255,7 @@ describe("runCli", () => {
 Run (from `server/`): `npx vitest run src/admin.test.ts`
 Expected: FAIL — cannot resolve `./admin`.
 
-- [ ] **Step 4: Implement `runCli`**
+- [x] **Step 4: Implement `runCli`**
 
 Create `server/src/admin.ts`:
 
@@ -1423,12 +1423,12 @@ async function keyRevoke(db: Database, out: CliOutput, keyId: string): Promise<n
 }
 ```
 
-- [ ] **Step 5: Run the CLI tests to verify they pass**
+- [x] **Step 5: Run the CLI tests to verify they pass**
 
 Run (from `server/`): `npx vitest run src/admin.test.ts`
 Expected: PASS. If the unknown-flag test fails only because Node's `parseArgs` message wording differs, fix the test's expectation of `stderr[0]` to match the installed Node's message — the assertion that matters is that it names `--json`, exits 2, and prints usage.
 
-- [ ] **Step 6: Add the process entrypoint and `admin` script**
+- [x] **Step 6: Add the process entrypoint and `admin` script**
 
 Create `server/src/cli.ts`:
 
@@ -1477,12 +1477,12 @@ In `server/package.json`, add to `"scripts"` (after `"start"`):
 "admin": "npm run build --silent && node dist/cli.js",
 ```
 
-- [ ] **Step 7: Verify the built CLI's missing-`DATABASE_URL` path**
+- [x] **Step 7: Verify the built CLI's missing-`DATABASE_URL` path**
 
 Run (from repo root): `npm run build -w server && node server/dist/cli.js project list; echo "exit=$?"`
 Expected (no `DATABASE_URL` set): stderr `DATABASE_URL is required`, `exit=1`.
 
-- [ ] **Step 8: Update the server README**
+- [x] **Step 8: Update the server README**
 
 In `server/README.md`, replace the entire `## Getting an API key` section (from that heading up to, not including, `## Environment variables`) with:
 
@@ -1530,7 +1530,7 @@ works on a fresh database before the server has started.
 
 ````
 
-- [ ] **Step 9: Full suite, lint, typecheck, commit**
+- [x] **Step 9: Full suite, lint, typecheck, commit**
 
 Run: `npm test -w server && npm run lint -w server && npm run typecheck -w server`
 Expected: all pass.
