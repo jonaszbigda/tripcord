@@ -1,8 +1,5 @@
-import path from "node:path";
-import { drizzle } from "drizzle-orm/node-postgres";
-import { migrate } from "drizzle-orm/node-postgres/migrator";
-import { Pool } from "pg";
 import { createDb } from "./db/client";
+import { runMigrations } from "./db/migrate";
 import { buildApp } from "./app";
 import { scheduleCleanup } from "./retention";
 
@@ -12,11 +9,7 @@ async function main(): Promise<void> {
     throw new Error("DATABASE_URL is required");
   }
 
-  const migrationPool = new Pool({ connectionString: databaseUrl });
-  await migrate(drizzle(migrationPool), {
-    migrationsFolder: path.join(__dirname, "..", "drizzle"),
-  });
-  await migrationPool.end();
+  await runMigrations(databaseUrl);
 
   const db = createDb(databaseUrl);
   const app = await buildApp(db, {

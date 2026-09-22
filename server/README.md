@@ -40,19 +40,46 @@ npm run build -w server
 DATABASE_URL=postgres://repro:repro@localhost:5432/repro npm run start -w server
 ```
 
-## Getting an API key
+## Creating projects and API keys
 
-There is no key-issuance endpoint or CLI yet — provisioning a project and its API
-key is a direct database insert. Once Postgres is up (e.g. via `docker compose`
-above), run:
+Projects and their API keys are managed with the admin CLI that ships in the
+server image. Keys are stored hashed, so a key is printed **once**, when it's
+created — copy it then.
+
+With `docker compose`:
 
 ```bash
-docker compose exec postgres psql -U repro -d repro -c \
-  "INSERT INTO projects (name, api_key) VALUES ('your-project-name', 'your-api-key');"
+docker compose exec server node server/dist/cli.js project create "your-project-name"
+# Created project "your-project-name" (<project-id>)
+# rpk_...
+# Store this API key now. It will not be shown again.
 ```
 
-Use `your-api-key` as the `apiKey` passed to `init()` in `@repro/js`, and send it
-as the `X-Repro-Key` header on requests to this server.
+Or locally, against a Postgres you're already running:
+
+```bash
+DATABASE_URL=postgres://repro:repro@localhost:5432/repro \
+  npm run admin -w server -- project create "your-project-name"
+```
+
+Use the printed `rpk_...` key as the `apiKey` passed to `init()` in `@repro/js`; it's
+sent as the `X-Repro-Key` header.
+
+All commands:
+
+| Command                        | What it does                                                   |
+| ------------------------------ | -------------------------------------------------------------- |
+| `project create <name>`        | Create a project and its first API key.                        |
+| `project list`                 | List projects with their number of active keys.                |
+| `key create <projectId>`       | Mint an additional key for a project.                          |
+| `key list <projectId>`         | List a project's keys (prefix, created, revoked).              |
+| `key revoke <keyId>`           | Revoke a key. Ingest rejects it immediately.                   |
+
+To rotate a key without dropping events: `key create`, deploy the new key to your
+app, then `key revoke` the old one.
+
+The CLI applies any pending database migrations before running a command, so it
+works on a fresh database before the server has started.
 
 ## Environment variables
 
