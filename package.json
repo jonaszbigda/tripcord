@@ -15,21 +15,24 @@
     }
   },
   "sideEffects": false,
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
     "test": "vitest run",
     "lint": "eslint src"
   },
   "devDependencies": {
-    "typescript": "^5.6.0",
-    "tsup": "^8.0.0",
-    "vitest": "^2.1.0",
-    "jsdom": "^25.0.0",
-    "eslint": "^9.0.0",
     "@eslint/js": "^9.0.0",
-    "@typescript-eslint/parser": "^8.0.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
-    "eslint-plugin-import": "^2.29.0"
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.0.0",
+    "eslint-plugin-import": "^2.29.0",
+    "globals": "^17.12.0",
+    "jsdom": "^25.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
   }
 }
