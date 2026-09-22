@@ -77,7 +77,7 @@ operators mint new keys with the CLI. No `pgcrypto` dependency.
 ## Key format
 
 `rpk_` + base64url encoding of 32 bytes from `crypto.randomBytes` (43 characters),
-51 characters total.
+47 characters total.
 
 - The `rpk_` prefix makes leaked keys greppable and recognizable by secret scanners.
 - Keys are high-entropy random values, so a fast hash (SHA-256) is correct; slow
@@ -104,9 +104,10 @@ operators mint new keys with the CLI. No `pgcrypto` dependency.
 - `listProjects(db)` — projects with a count of active (unrevoked) keys.
 - `listApiKeys(db, projectId)` — `id`, `prefix`, `createdAt`, `revokedAt` per key.
   Never returns `key_hash`.
-- `revokeApiKey(db, keyId) → { apiKey } | undefined` — sets `revoked_at` if not
-  already set. Idempotent: revoking an already-revoked key returns it with its
-  original `revokedAt` untouched. Returns `undefined` for an unknown id.
+- `revokeApiKey(db, keyId) → { apiKey, alreadyRevoked } | undefined` — sets
+  `revoked_at` if not already set. Idempotent: revoking an already-revoked key
+  returns it with `alreadyRevoked: true` and its original `revokedAt` untouched.
+  Returns `undefined` for an unknown id.
 - `findProjectByApiKey(db, key)` — same name and signature as today. Now hashes the
   key and joins `api_keys` → `projects` on `key_hash = $1 AND revoked_at IS NULL`.
   Still a single indexed query.
@@ -159,17 +160,21 @@ Behavior:
   `project create` works against a fresh database before the server has ever booted.
 - The CLI closes the DB pool (`db.$client.end()`) in a `finally` so the process
   exits promptly.
-- `cli.ts` is a thin entrypoint. Command dispatch lives in
+- `cli.ts` is a thin entrypoint (env check, migrations, pool lifecycle, process
+  exit code). Command dispatch lives in `server/src/admin.ts` as
   `runCli(argv, db, out) → Promise<number>` (exit code), where `out` is an output
   sink with `stdout`/`stderr` writers, so tests drive it without spawning a process.
+  Keeping it in a separate module means importing it in tests never runs `main()`.
 
 ### CLI errors
 
-Each prints one line to stderr (usage errors also print usage text) and exits:
+Each error prints one line to stderr and exits with the code shown. Only the first
+row (unknown command, missing or extra argument, unknown flag) also prints usage
+text. The already-revoked case is not an error: it prints to stdout and exits 0.
 
 | Case                                               | Exit | Message                                     |
 | -------------------------------------------------- | ---- | ------------------------------------------- |
-| Unknown command / missing argument                 | 2    | the error, then usage text                  |
+| Unknown command / missing or extra argument / unknown flag | 2 | the error, then usage text          |
 | `DATABASE_URL` unset                               | 1    | `DATABASE_URL is required`                  |
 | Malformed project/key id (not a UUID)              | 2    | `Invalid id: <x>`                           |
 | `key create` for a nonexistent project             | 1    | `Project not found: <id>`                   |
@@ -189,7 +194,7 @@ each test cleans up its own rows.
 - `server/test/db.ts` gains `createTestProject(db, name?) → { project, key }`
   (a thin wrapper over `createProject`). Tests stop inserting `projects` rows with
   `apiKey`.
-- `server/src/keys.test.ts` (unit, no DB): `rpk_` prefix and total length 51;
+- `server/src/keys.test.ts` (unit, no DB): `rpk_` prefix and total length 47;
   `prefix` is the first 12 characters; hash is deterministic, 64-char lowercase hex,
   and differs across keys; two generated keys differ.
 - `server/src/db/projects.test.ts` (rewritten): `createProject`'s key resolves via
@@ -198,7 +203,7 @@ each test cleans up its own rows.
   returns `undefined`; revoke is idempotent and preserves the original `revokedAt`;
   `listApiKeys` never exposes hashes; the stored row does not contain the plaintext
   key anywhere (read directly from `api_keys`).
-- `server/src/cli.test.ts`: drives `runCli` with a captured sink. Each command's
+- `server/src/admin.test.ts`: drives `runCli` with a captured sink. Each command's
   success path; each CLI error row above (except `DATABASE_URL`, which lives in
   `cli.ts`) with its exit code; key printed on creation and never by `list`.
 - Existing `timeline.test.ts`, `retention.test.ts`, `schema.test.ts` switch to
