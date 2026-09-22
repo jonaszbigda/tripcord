@@ -196,7 +196,7 @@ This task changes the schema, so every existing test that inserts `projects.apiK
   - `projects.ts`: `export interface CreatedProject { project: Project; key: string }`, `export async function createProject(db: Database, name: string): Promise<CreatedProject>`, `export async function findProjectByApiKey(db: Database, key: string): Promise<Project | undefined>`.
   - `test/db.ts`: `export async function resetDb(db: Database): Promise<void>`, `export async function createTestProject(db: Database, name?: string): Promise<CreatedProject>`.
 
-- [ ] **Step 1: Update the schema**
+- [x] **Step 1: Update the schema**
 
 Replace the `projects` table definition in `server/src/db/schema.ts` and add `apiKeys` after it. The full file becomes:
 
@@ -254,7 +254,7 @@ export type ApiKey = typeof apiKeys.$inferSelect;
 export type Timeline = typeof timelines.$inferSelect;
 ```
 
-- [ ] **Step 2: Generate the migration**
+- [x] **Step 2: Generate the migration**
 
 Run (from `server/`): `npx drizzle-kit generate`
 Expected: a new `drizzle/0001_<random_name>.sql`, a new `drizzle/meta/0001_snapshot.json`, and an updated `drizzle/meta/_journal.json`. drizzle-kit does not need a live database for `generate` (the config's placeholder URL is fine). If it prompts interactively about the column change, the answer is: `api_key` is **dropped**, not renamed.
@@ -267,7 +267,7 @@ Open the generated SQL and confirm it contains all of the following (drizzle-kit
 
 Do not hand-edit the generated files.
 
-- [ ] **Step 3: Add test helpers**
+- [x] **Step 3: Add test helpers**
 
 Replace `server/test/db.ts` with:
 
@@ -293,7 +293,7 @@ export async function createTestProject(db: Database, name = "acme"): Promise<Cr
 }
 ```
 
-- [ ] **Step 4: Write the failing service tests**
+- [x] **Step 4: Write the failing service tests**
 
 Replace `server/src/db/projects.test.ts` with:
 
@@ -369,12 +369,12 @@ describe("findProjectByApiKey", () => {
 });
 ```
 
-- [ ] **Step 5: Run the tests to verify they fail**
+- [x] **Step 5: Run the tests to verify they fail**
 
 Run (from `server/`): `npx vitest run src/db/projects.test.ts`
 Expected: FAIL — `createProject` is not exported from `./projects`, and `findProjectByApiKey` still queries the dropped `projects.api_key` column.
 
-- [ ] **Step 6: Implement `createProject` and the hashed lookup**
+- [x] **Step 6: Implement `createProject` and the hashed lookup**
 
 Replace `server/src/db/projects.ts` with:
 
@@ -416,12 +416,12 @@ export async function findProjectByApiKey(db: Database, key: string): Promise<Pr
 }
 ```
 
-- [ ] **Step 7: Run the service tests to verify they pass**
+- [x] **Step 7: Run the service tests to verify they pass**
 
 Run (from `server/`): `npx vitest run src/db/projects.test.ts`
 Expected: PASS (6 tests).
 
-- [ ] **Step 8: Migrate the remaining tests off `projects.apiKey`**
+- [x] **Step 8: Migrate the remaining tests off `projects.apiKey`**
 
 `server/src/db/schema.test.ts` — replace the whole file with:
 
@@ -649,12 +649,12 @@ Then confirm nothing still references the dropped column:
 Run (from repo root): `grep -rn "apiKey:" server/src server/test`
 Expected: no matches.
 
-- [ ] **Step 9: Run the full server suite, lint, and typecheck**
+- [x] **Step 9: Run the full server suite, lint, and typecheck**
 
 Run: `npm test -w server && npm run lint -w server && npm run typecheck -w server`
 Expected: all pass. `server/src/routes/timeline.ts` must be unchanged (`git diff --quiet server/src/routes/timeline.ts` exits 0).
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 git add server/src/db/schema.ts server/drizzle server/src/db/projects.ts server/src/db/projects.test.ts \
