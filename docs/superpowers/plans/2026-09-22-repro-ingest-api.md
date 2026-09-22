@@ -74,7 +74,7 @@ docker-compose.yml                # root: server + postgres
 
 This task moves already-shipped, already-pushed code. There is no new feature here — the "test" is proving the existing suite still passes unchanged after the move.
 
-- [ ] **Step 1: Move the files**
+- [x] **Step 1: Move the files**
 
 ```bash
 git mv src packages/js/src
@@ -86,7 +86,7 @@ git mv package.json packages/js/package.json
 git mv README.md packages/js/README.md
 ```
 
-- [ ] **Step 2: Create the new root `package.json`**
+- [x] **Step 2: Create the new root `package.json`**
 
 ```json
 {
@@ -105,7 +105,7 @@ git mv README.md packages/js/README.md
 }
 ```
 
-- [ ] **Step 3: Create the new root `README.md`**
+- [x] **Step 3: Create the new root `README.md`**
 
 ```markdown
 # repro
@@ -140,7 +140,7 @@ To work on a single package: `npm test -w packages/js` or `cd packages/js && npm
 MIT — see [`LICENSE`](LICENSE).
 ```
 
-- [ ] **Step 4: Install and verify**
+- [x] **Step 4: Install and verify**
 
 Run: `npm install` (from repo root)
 Expected: succeeds, `package-lock.json` is rewritten to reflect the workspace layout, a single root `node_modules/` is created.
@@ -148,7 +148,7 @@ Expected: succeeds, `package-lock.json` is rewritten to reflect the workspace la
 Run: `npm run build -w packages/js && npm test -w packages/js && npm run lint -w packages/js && npm run typecheck -w packages/js`
 Expected: all four succeed exactly as they did before the move (build produces `packages/js/dist/*`, 50 tests pass, lint clean, typecheck clean).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -168,7 +168,7 @@ git commit -m "chore: convert repo to npm workspaces, move client library to pac
 **Interfaces:**
 - Produces: a working `server` workspace toolchain (build/test/lint/typecheck), proven with a trivial smoke test before any real app code exists — same pattern as the client library's own Task 1.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `server/src/index.test.ts`:
 ```ts
@@ -182,7 +182,7 @@ describe("server toolchain smoke test", () => {
 });
 ```
 
-- [ ] **Step 2: Add `server` to the root workspaces list**
+- [x] **Step 2: Add `server` to the root workspaces list**
 
 Modify `package.json` (root):
 ```json
@@ -192,7 +192,7 @@ Modify `package.json` (root):
   ],
 ```
 
-- [ ] **Step 3: Create the server's config files**
+- [x] **Step 3: Create the server's config files**
 
 `server/package.json`:
 ```json
@@ -289,7 +289,7 @@ export default [
 export const VERSION = "0.0.1";
 ```
 
-- [ ] **Step 4: Install and run**
+- [x] **Step 4: Install and run**
 
 Run: `npm install` (from repo root)
 Expected: succeeds, `server` now appears in the workspace-aware `node_modules`/lockfile.
@@ -300,7 +300,7 @@ Expected: PASS — 1 test passed.
 Run: `npm run build -w server && npm run lint -w server && npm run typecheck -w server`
 Expected: build produces `server/dist/index.js`; lint and typecheck both clean.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add package.json package-lock.json server/package.json server/tsconfig.json server/vitest.config.ts server/eslint.config.js server/src/index.ts server/src/index.test.ts
@@ -323,7 +323,7 @@ git commit -m "chore: scaffold @repro/server workspace (build, test, lint toolch
 
 There's no live database to test against yet (that's Task 4) — this task's verification is that the schema compiles, and that `drizzle-kit generate` produces the expected SQL.
 
-- [ ] **Step 1: Add dependencies**
+- [x] **Step 1: Add dependencies**
 
 Modify `server/package.json` — add to `"dependencies"`:
 ```json
@@ -338,7 +338,7 @@ Add to `"devDependencies"`:
 
 Run: `npm install` (from repo root)
 
-- [ ] **Step 2: Write the schema**
+- [x] **Step 2: Write the schema**
 
 `server/src/db/schema.ts`:
 ```ts
@@ -389,7 +389,7 @@ export function createDb(connectionString: string) {
 export type Database = ReturnType<typeof createDb>;
 ```
 
-- [ ] **Step 3: Configure drizzle-kit and generate the initial migration**
+- [x] **Step 3: Configure drizzle-kit and generate the initial migration**
 
 `server/drizzle.config.ts`:
 ```ts
@@ -410,12 +410,12 @@ Expected: creates `server/drizzle/0000_<generated_name>.sql` containing `CREATE 
 
 Verify: `grep -l 'CREATE TABLE "projects"' server/drizzle/*.sql` and `grep -l 'CREATE TABLE "timelines"' server/drizzle/*.sql` both find the generated file.
 
-- [ ] **Step 4: Verify the server workspace still builds and typechecks**
+- [x] **Step 4: Verify the server workspace still builds and typechecks**
 
 Run: `npm run typecheck -w server && npm run build -w server && npm run lint -w server`
 Expected: all clean.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/package.json package-lock.json server/drizzle.config.ts server/src/db/schema.ts server/src/db/client.ts server/drizzle
@@ -437,7 +437,7 @@ git commit -m "feat(server): add Drizzle schema (projects, timelines) and initia
 - Produces: `getTestDb(): Database`, usable from any test file after `globalSetup` has run. `vitest`'s `ProvidedContext` gains a `databaseUrl: string` key.
 - Consumed by: Task 5, Task 7, Task 9's tests.
 
-- [ ] **Step 1: Add the testcontainers dependency**
+- [x] **Step 1: Add the testcontainers dependency**
 
 Modify `server/package.json` — add to `"devDependencies"`:
 ```json
@@ -446,7 +446,7 @@ Modify `server/package.json` — add to `"devDependencies"`:
 
 Run: `npm install` (from repo root)
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 `server/src/db/schema.test.ts`:
 ```ts
@@ -473,12 +473,12 @@ describe("schema wiring", () => {
 });
 ```
 
-- [ ] **Step 3: Run it to verify it fails**
+- [x] **Step 3: Run it to verify it fails**
 
 Run: `npx vitest run src/db/schema.test.ts` (from `server/`)
 Expected: FAIL — cannot find module `../../test/db` (doesn't exist yet).
 
-- [ ] **Step 4: Write the test infrastructure**
+- [x] **Step 4: Write the test infrastructure**
 
 `server/test/globalSetup.ts`:
 ```ts
@@ -536,12 +536,12 @@ export default defineConfig({
 });
 ```
 
-- [ ] **Step 5: Run it to verify it passes**
+- [x] **Step 5: Run it to verify it passes**
 
 Run: `npm test -w server`
 Expected: PASS. This will take longer than previous test runs (pulling/starting a real Postgres Docker container) — that's expected the first time; subsequent runs reuse the cached image.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add server/package.json package-lock.json server/vitest.config.ts server/test/globalSetup.ts server/test/db.ts server/src/db/schema.test.ts
@@ -561,7 +561,7 @@ git commit -m "test(server): add testcontainers Postgres test infrastructure"
 - Produces: `findProjectByApiKey(db: Database, apiKey: string): Promise<Project | undefined>`.
 - Consumed by: Task 7 (ingest route's `preValidation` auth check).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `server/src/db/projects.test.ts`:
 ```ts
@@ -598,12 +598,12 @@ describe("findProjectByApiKey", () => {
 });
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx vitest run src/db/projects.test.ts` (from `server/`)
 Expected: FAIL — cannot find module `./projects`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 `server/src/db/projects.ts`:
 ```ts
@@ -617,12 +617,12 @@ export async function findProjectByApiKey(db: Database, apiKey: string): Promise
 }
 ```
 
-- [ ] **Step 4: Run it to verify it passes**
+- [x] **Step 4: Run it to verify it passes**
 
 Run: `npm test -w server`
 Expected: PASS — all tests including the 2 new ones.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/src/db/projects.ts server/src/db/projects.test.ts
@@ -644,7 +644,7 @@ git commit -m "feat(server): add findProjectByApiKey()"
 - Produces: `buildApp(db: Database): FastifyInstance` (exposes `GET /health`; Task 7 adds the ingest route onto the same app), a real `server/src/index.ts` entry point that connects to Postgres, runs pending migrations, builds the app, and listens.
 - Consumed by: Task 7 (adds a route inside `buildApp`), Task 8 (rate-limit registration inside `buildApp`), Task 10 (Docker `CMD` runs this entry point).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `server/src/app.test.ts`:
 ```ts
@@ -662,12 +662,12 @@ describe("GET /health", () => {
 });
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx vitest run src/app.test.ts` (from `server/`)
 Expected: FAIL — cannot find module `./app`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 `server/src/app.ts`:
 ```ts
@@ -724,7 +724,7 @@ Replace `server/src/index.test.ts` — the toolchain smoke test is superseded by
 rm server/src/index.test.ts
 ```
 
-- [ ] **Step 4: Run it to verify it passes**
+- [x] **Step 4: Run it to verify it passes**
 
 Run: `npm test -w server`
 Expected: PASS — all tests.
@@ -732,7 +732,7 @@ Expected: PASS — all tests.
 Run: `npm run typecheck -w server && npm run build -w server && npm run lint -w server`
 Expected: all clean.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/src/app.ts server/src/app.test.ts server/src/index.ts
@@ -755,7 +755,7 @@ git commit -m "feat(server): add Fastify app factory, db wiring, and migrate-on-
 
 **Read the Global Constraints section's note on `preValidation` before writing this file** — the API key check MUST run in a `preValidation` hook, not inside the main handler function, or Fastify's automatic body-schema validation will run against an unauthenticated request's body first.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `server/src/routes/timeline.test.ts`:
 ```ts
@@ -852,12 +852,12 @@ describe("POST /v1/timeline", () => {
 });
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx vitest run src/routes/timeline.test.ts` (from `server/`)
 Expected: FAIL — every request returns 404 (route doesn't exist yet).
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 `server/src/routes/timeline.ts`:
 ```ts
@@ -977,12 +977,12 @@ export function buildApp(db: Database): FastifyInstance {
 }
 ```
 
-- [ ] **Step 4: Run it to verify it passes**
+- [x] **Step 4: Run it to verify it passes**
 
 Run: `npm test -w server`
 Expected: PASS — all tests, including the 5 new ones. Pay particular attention to the "returns 401 for an unknown api key even with a malformed body" test — this is the one that actually proves the `preValidation` ordering fix works; if it were failing before this implementation and now passes, that's direct evidence the ordering constraint is satisfied.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/src/routes/timeline.ts server/src/routes/timeline.test.ts server/src/app.ts
@@ -1003,7 +1003,7 @@ git commit -m "feat(server): add POST /v1/timeline ingest route"
 - Consumes: `buildApp`, `registerTimelineRoute` (Task 6, Task 7).
 - Produces: a `429 Too Many Responses` response once a project exceeds `RATE_LIMIT_MAX` requests within `RATE_LIMIT_WINDOW`.
 
-- [ ] **Step 1: Add the dependency**
+- [x] **Step 1: Add the dependency**
 
 Modify `server/package.json` — add to `"dependencies"`:
 ```json
@@ -1012,7 +1012,7 @@ Modify `server/package.json` — add to `"dependencies"`:
 
 Run: `npm install` (from repo root)
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 Append to `server/src/routes/timeline.test.ts`:
 ```ts
@@ -1056,12 +1056,12 @@ describe("POST /v1/timeline rate limiting", () => {
 
 Also modify the existing test file's other `buildApp(db)` / `buildApp(getTestDb())` calls in this same file to pass a permissive rate limit config, so the earlier tests in this file aren't affected by a default that's too strict for a test making several requests: change every existing `buildApp(db)` and `buildApp(getTestDb())` call in `server/src/routes/timeline.test.ts` (from Task 7) to `buildApp(db, { rateLimitMax: 1000, rateLimitWindow: "1 minute" })` / `buildApp(getTestDb(), { rateLimitMax: 1000, rateLimitWindow: "1 minute" })`.
 
-- [ ] **Step 3: Run it to verify it fails**
+- [x] **Step 3: Run it to verify it fails**
 
 Run: `npx vitest run src/routes/timeline.test.ts` (from `server/`)
 Expected: FAIL — `buildApp` doesn't accept a second argument yet (type error / runtime ignores it, and the 429 case never triggers because there's no rate limiting yet — third request also returns 201).
 
-- [ ] **Step 4: Write the implementation**
+- [x] **Step 4: Write the implementation**
 
 Modify `server/src/app.ts`. This is also the right point to make `bodyLimit` and the log level configurable (Task 6 hardcoded both) — `AppOptions` becomes the one place all of the spec's per-request-server config knobs live, so index.ts can wire every one of them from an env var in one place rather than some being hardcoded and others not:
 ```ts
@@ -1167,12 +1167,12 @@ Only the function signature, the `preValidation` hook's surrounding `config` blo
 
 The `config.rateLimit.hook: "preHandler"` is what makes this work correctly: `@fastify/rate-limit`'s default hook point (`onRequest`) runs *before* `preValidation`, which would mean `request.project` isn't set yet when the rate limiter's `keyGenerator` runs. Overriding to `"preHandler"` — which Fastify runs after `preValidation` and after schema validation — guarantees `request.project` is already populated by the time the rate limiter needs it.
 
-- [ ] **Step 5: Run it to verify it passes**
+- [x] **Step 5: Run it to verify it passes**
 
 Run: `npm test -w server`
 Expected: PASS — all tests, including the new 429 case.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add server/package.json package-lock.json server/src/app.ts server/src/routes/timeline.ts server/src/routes/timeline.test.ts server/src/app.test.ts server/src/index.ts
@@ -1192,7 +1192,7 @@ git commit -m "feat(server): add per-project rate limiting to the ingest route"
 - Consumes: `Database`, `timelines` table (Task 3), `getTestDb` (Task 4).
 - Produces: `cleanupOldTimelines(db: Database, retentionDays: number): Promise<number>` (returns count deleted), `scheduleCleanup(db: Database, retentionDays: number, intervalMs?: number): NodeJS.Timeout`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `server/src/retention.test.ts`:
 ```ts
@@ -1246,12 +1246,12 @@ describe("cleanupOldTimelines", () => {
 });
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npx vitest run src/retention.test.ts` (from `server/`)
 Expected: FAIL — cannot find module `./retention`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 `server/src/retention.ts`:
 ```ts
@@ -1318,7 +1318,7 @@ main().catch((error) => {
 });
 ```
 
-- [ ] **Step 4: Run it to verify it passes**
+- [x] **Step 4: Run it to verify it passes**
 
 Run: `npm test -w server`
 Expected: PASS — all tests.
@@ -1326,7 +1326,7 @@ Expected: PASS — all tests.
 Run: `npm run typecheck -w server && npm run build -w server && npm run lint -w server`
 Expected: all clean.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/src/retention.ts server/src/retention.test.ts server/src/index.ts
@@ -1345,7 +1345,7 @@ git commit -m "feat(server): add fixed-TTL retention cleanup job"
 - Consumes: the whole `server/` and `packages/js/` workspaces (built inside the image).
 - Produces: a runnable container image for the server, and a `docker-compose.yml` bringing up server + Postgres together.
 
-- [ ] **Step 1: Write the Dockerfile**
+- [x] **Step 1: Write the Dockerfile**
 
 `server/Dockerfile` (built with the repo root as context — see Step 3):
 ```dockerfile
@@ -1385,7 +1385,7 @@ await migrate(drizzle(migrationPool), {
 });
 ```
 
-- [ ] **Step 2: Write docker-compose.yml**
+- [x] **Step 2: Write docker-compose.yml**
 
 `docker-compose.yml` (repo root):
 ```yaml
@@ -1424,17 +1424,17 @@ volumes:
   repro-postgres-data:
 ```
 
-- [ ] **Step 3: Verify the image builds**
+- [x] **Step 3: Verify the image builds**
 
 Run (from repo root): `docker build -f server/Dockerfile -t repro-server .`
 Expected: builds successfully through both stages.
 
-- [ ] **Step 4: Verify the server workspace still passes after the `index.ts` path change**
+- [x] **Step 4: Verify the server workspace still passes after the `index.ts` path change**
 
 Run: `npm test -w server && npm run build -w server && npm run typecheck -w server`
 Expected: all pass (the `migrationsFolder` path change doesn't affect the test suite, which uses `test/globalSetup.ts`'s own `migrationsFolder: "./drizzle"` relative to `server/`, unchanged).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/Dockerfile server/src/index.ts docker-compose.yml
@@ -1451,12 +1451,12 @@ git commit -m "feat(server): add Dockerfile and docker-compose for self-host/loc
 **Interfaces:**
 - Consumes: everything built in Tasks 1–10.
 
-- [ ] **Step 1: Full workspace verification**
+- [x] **Step 1: Full workspace verification**
 
 Run (from repo root): `npm run build && npm test && npm run lint && npm run typecheck`
 Expected: all four succeed across both `packages/js` and `server`.
 
-- [ ] **Step 2: End-to-end docker-compose smoke test**
+- [x] **Step 2: End-to-end docker-compose smoke test**
 
 Run: `docker compose up -d --build`
 Wait for both containers to report healthy/running (`docker compose ps`).
@@ -1485,6 +1485,6 @@ Expected: one row, `smoke-session` / `manual`.
 Run: `docker compose down -v`
 Expected: containers stop and the volume is removed (clean teardown, no leftover state for future runs).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 If Step 1 or Step 2 required any fixes, commit them now with an appropriate message. If everything passed with no changes needed, there's nothing to commit for this task — note that in the report instead.

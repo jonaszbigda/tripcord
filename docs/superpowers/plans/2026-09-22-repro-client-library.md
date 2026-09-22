@@ -88,7 +88,7 @@ src/
 **Interfaces:**
 - Produces: an `index.ts` exporting `VERSION: string` — a placeholder proving the toolchain works end-to-end; Task 11 will replace this file's contents with the real public API.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `src/index.test.ts`:
 ```ts
@@ -102,7 +102,7 @@ describe("toolchain smoke test", () => {
 });
 ```
 
-- [ ] **Step 2: Create the config files**
+- [x] **Step 2: Create the config files**
 
 `package.json`:
 ```json
@@ -235,17 +235,17 @@ export default [
 export const VERSION = "0.1.0";
 ```
 
-- [ ] **Step 3: Install dependencies**
+- [x] **Step 3: Install dependencies**
 
 Run: `npm install`
 Expected: installs without error, creates `package-lock.json`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npm test`
 Expected: PASS — 1 test passed.
 
-- [ ] **Step 5: Verify build and lint**
+- [x] **Step 5: Verify build and lint**
 
 Run: `npm run build`
 Expected: creates `dist/index.js`, `dist/index.cjs`, `dist/index.d.ts`.
@@ -253,7 +253,7 @@ Expected: creates `dist/index.js`, `dist/index.cjs`, `dist/index.d.ts`.
 Run: `npm run lint`
 Expected: no errors.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add package.json package-lock.json tsconfig.json tsup.config.ts vitest.config.ts eslint.config.js src/index.ts src/index.test.ts
@@ -272,7 +272,7 @@ git commit -m "chore: scaffold @repro/js package (build, test, lint toolchain)"
 **Interfaces:**
 - Produces: `TimelineEvent` (`{ timestamp: number; type: "custom" | "error" | "unhandledrejection" | "trace"; name: string; data?: Record<string, unknown> }`), `createBuffer(maxEvents: number, seedEvents?: TimelineEvent[]): TimelineBuffer` where `TimelineBuffer = { push(event: TimelineEvent): void; getAll(): TimelineEvent[] }`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `src/core/buffer.test.ts`:
 ```ts
@@ -313,12 +313,12 @@ describe("createBuffer", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run src/core/buffer.test.ts`
 Expected: FAIL — cannot find module `./buffer`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 `src/core/types.ts`:
 ```ts
@@ -373,12 +373,12 @@ export function createBuffer(maxEvents: number, seedEvents: TimelineEvent[] = []
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run src/core/buffer.test.ts`
 Expected: PASS — 3 tests passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/types.ts src/core/buffer.ts src/core/buffer.test.ts
@@ -399,7 +399,7 @@ git commit -m "feat(core): add TimelineEvent type and ring buffer"
 - Consumes: nothing new.
 - Produces: `warnOnRiskyKeys(data: Record<string, unknown> | undefined): void`, `redact(value: unknown): string`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `src/core/guardrails.test.ts`:
 ```ts
@@ -446,12 +446,12 @@ describe("redact", () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run src/core/guardrails.test.ts src/core/redact.test.ts`
 Expected: FAIL — cannot find modules `./guardrails`, `./redact`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 `src/core/guardrails.ts`:
 ```ts
@@ -476,12 +476,12 @@ export function redact(value: unknown): string {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run src/core/guardrails.test.ts src/core/redact.test.ts`
 Expected: PASS — 5 tests passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/guardrails.ts src/core/guardrails.test.ts src/core/redact.ts src/core/redact.test.ts
@@ -500,7 +500,7 @@ git commit -m "feat(core): add risky-key guardrail warning and redact() helper"
 - Consumes: `TimelineEvent`, `TimelineReason`, `TimelineMeta`, `TimelinePayload` from `src/core/types.ts` (Task 2).
 - Produces: `buildPayload(sessionId: string, reason: TimelineReason, events: TimelineEvent[], meta: Omit<TimelineMeta, "capturedAt">): TimelinePayload`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `src/core/payload.test.ts`:
 ```ts
@@ -536,12 +536,12 @@ describe("buildPayload", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run src/core/payload.test.ts`
 Expected: FAIL — cannot find module `./payload`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 `src/core/payload.ts`:
 ```ts
@@ -562,12 +562,12 @@ export function buildPayload(
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run src/core/payload.test.ts`
 Expected: PASS — 1 test passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/payload.ts src/core/payload.test.ts
@@ -605,7 +605,7 @@ git commit -m "feat(core): add buildPayload()"
   ```
   `captureError`/`captureUnhandledRejection`/`traceElement` are consumed by `browser/hooks.ts` (Task 9) — they are not part of the public package API re-exported from `src/index.ts`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `src/core/tracer.test.ts`:
 ```ts
@@ -707,12 +707,12 @@ describe("createTracer", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run src/core/tracer.test.ts`
 Expected: FAIL — cannot find module `./tracer`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 `src/core/tracer.ts`:
 ```ts
@@ -773,12 +773,12 @@ export function createTracer(config: TracerConfig): Tracer {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run src/core/tracer.test.ts`
 Expected: PASS — 7 tests passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/core/tracer.ts src/core/tracer.test.ts
@@ -797,7 +797,7 @@ git commit -m "feat(core): add createTracer() — track/capture/error hooks/trac
 **Interfaces:**
 - Produces: `isBrowserEnvironment(): boolean`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `src/browser/env.test.ts` (default node environment — no `window`):
 ```ts
@@ -824,12 +824,12 @@ describe("isBrowserEnvironment (jsdom)", () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run src/browser/env.test.ts src/browser/env.jsdom.test.ts`
 Expected: FAIL — cannot find module `./env`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 `src/browser/env.ts`:
 ```ts
@@ -838,12 +838,12 @@ export function isBrowserEnvironment(): boolean {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run src/browser/env.test.ts src/browser/env.jsdom.test.ts`
 Expected: PASS — 2 tests passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/browser/env.ts src/browser/env.test.ts src/browser/env.jsdom.test.ts
@@ -862,7 +862,7 @@ git commit -m "feat(browser): add isBrowserEnvironment() guard"
 - Consumes: `TimelineEvent` (Task 2).
 - Produces: `readBuffer(): TimelineEvent[] | undefined`, `writeBuffer(events: TimelineEvent[]): void`, `readSessionId(): string | undefined`, `writeSessionId(id: string): void`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `src/browser/storage.test.ts`:
 ```ts
@@ -909,12 +909,12 @@ describe("browser storage", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run src/browser/storage.test.ts`
 Expected: FAIL — cannot find module `./storage`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 `src/browser/storage.ts`:
 ```ts
@@ -957,12 +957,12 @@ export function writeSessionId(id: string): void {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run src/browser/storage.test.ts`
 Expected: PASS — 4 tests passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/browser/storage.ts src/browser/storage.test.ts
@@ -981,7 +981,7 @@ git commit -m "feat(browser): add sessionStorage-backed buffer/session persisten
 - Consumes: `readSessionId`, `writeSessionId` (Task 7).
 - Produces: `getOrCreateSessionId(): string`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `src/browser/sessionId.test.ts`:
 ```ts
@@ -1008,12 +1008,12 @@ describe("getOrCreateSessionId", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run src/browser/sessionId.test.ts`
 Expected: FAIL — cannot find module `./sessionId`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 `src/browser/sessionId.ts`:
 ```ts
@@ -1028,12 +1028,12 @@ export function getOrCreateSessionId(): string {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run src/browser/sessionId.test.ts`
 Expected: PASS — 2 tests passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/browser/sessionId.ts src/browser/sessionId.test.ts
@@ -1052,7 +1052,7 @@ git commit -m "feat(browser): add getOrCreateSessionId()"
 - Consumes: `TimelinePayload` (Task 2).
 - Produces: `createSend(endpoint: string, apiKey: string): (payload: TimelinePayload) => void`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `src/browser/transport.test.ts`:
 ```ts
@@ -1106,12 +1106,12 @@ describe("createSend", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run src/browser/transport.test.ts`
 Expected: FAIL — cannot find module `./transport`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 `src/browser/transport.ts`:
 ```ts
@@ -1134,12 +1134,12 @@ export function createSend(endpoint: string, apiKey: string): (payload: Timeline
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run src/browser/transport.test.ts`
 Expected: PASS — 2 tests passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/browser/transport.ts src/browser/transport.test.ts
@@ -1158,7 +1158,7 @@ git commit -m "feat(browser): add fetch keepalive transport"
 - Consumes: `Tracer` type (Task 5) — specifically calls `captureError`, `captureUnhandledRejection`, `traceElement`.
 - Produces: `attachErrorHooks(tracer: Tracer): () => void`, `attachTraceAttributeListener(tracer: Tracer): () => void`. Both return a `dispose` function.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `src/browser/hooks.test.ts`:
 ```ts
@@ -1242,12 +1242,12 @@ describe("attachTraceAttributeListener", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run src/browser/hooks.test.ts`
 Expected: FAIL — cannot find module `./hooks`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 `src/browser/hooks.ts`:
 ```ts
@@ -1285,12 +1285,12 @@ export function attachTraceAttributeListener(tracer: Tracer): () => void {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run src/browser/hooks.test.ts`
 Expected: PASS — 6 tests passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/browser/hooks.ts src/browser/hooks.test.ts
@@ -1328,7 +1328,7 @@ git commit -m "feat(browser): add auto error hooks and data-trace click listener
   ```
   Consumed by `src/index.ts` (Task 12).
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `src/browser/createTracer.test.ts`:
 ```ts
@@ -1427,12 +1427,12 @@ describe("browser createTracer (non-browser environment)", () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run src/browser/createTracer.test.ts src/browser/createTracer.node.test.ts`
 Expected: FAIL — cannot find module `./createTracer`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 `src/browser/createTracer.ts`:
 ```ts
@@ -1495,12 +1495,12 @@ export function createTracer(config: CreateTracerConfig): BrowserTracer {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run src/browser/createTracer.test.ts src/browser/createTracer.node.test.ts`
 Expected: PASS — 7 tests passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/browser/createTracer.ts src/browser/createTracer.test.ts src/browser/createTracer.node.test.ts
@@ -1519,7 +1519,7 @@ git commit -m "feat(browser): wire core tracer to DOM hooks, storage, and transp
 - Consumes: `createTracer`, `CreateTracerConfig` (Task 11), `redact` (Task 3), `TimelineEvent`/`TimelinePayload`/`TimelineReason`/`TimelineMeta` (Task 2).
 - Produces: `init(config: CreateTracerConfig): { dispose: () => void }`, `track(name: string, data?: Record<string, unknown>): void`, `capture(name?: string, data?: Record<string, unknown>): void`, re-exports `createTracer`, `redact`, and the core types.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Replace `src/index.test.ts`:
 ```ts
@@ -1599,12 +1599,12 @@ describe("public entry point", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run src/index.test.ts`
 Expected: FAIL — `init`/`track`/`capture` are not exported from `./index` yet (current `index.ts` only exports `VERSION`).
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 Replace `src/index.ts`:
 ```ts
@@ -1649,17 +1649,17 @@ export function capture(name?: string, data?: Record<string, unknown>): void {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run src/index.test.ts`
 Expected: PASS — 4 tests passed.
 
-- [ ] **Step 5: Run the full test suite**
+- [x] **Step 5: Run the full test suite**
 
 Run: `npm test`
 Expected: PASS — all tests across every file pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/index.ts src/index.test.ts
@@ -1681,7 +1681,7 @@ git commit -m "feat: add public entry point (init/track/capture)"
 - Consumes: `capture` from `src/index.ts` (Task 12).
 - Produces: `ErrorBoundary` React component, `ErrorBoundaryProps`, exported from `@repro/js/react`.
 
-- [ ] **Step 1: Add test dependencies and configure the `./react` export**
+- [x] **Step 1: Add test dependencies and configure the `./react` export**
 
 Modify `package.json`: add to `"exports"`:
 ```json
@@ -1714,7 +1714,7 @@ Add to `"devDependencies"`:
 Run: `npm install`
 Expected: installs without error.
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 `src/react/ErrorBoundary.test.tsx`:
 ```tsx
@@ -1764,12 +1764,12 @@ describe("ErrorBoundary", () => {
 });
 ```
 
-- [ ] **Step 3: Run test to verify it fails**
+- [x] **Step 3: Run test to verify it fails**
 
 Run: `npx vitest run src/react/ErrorBoundary.test.tsx`
 Expected: FAIL — cannot find module `./ErrorBoundary`.
 
-- [ ] **Step 4: Write the implementation**
+- [x] **Step 4: Write the implementation**
 
 `src/react/ErrorBoundary.tsx`:
 ```tsx
@@ -1827,12 +1827,12 @@ export default defineConfig({
 });
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `npx vitest run src/react/ErrorBoundary.test.tsx`
 Expected: PASS — 2 tests passed.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add package.json package-lock.json tsup.config.ts src/react/ErrorBoundary.tsx src/react/index.ts src/react/ErrorBoundary.test.tsx
@@ -1850,17 +1850,17 @@ git commit -m "feat(react): add ErrorBoundary adapter, exported via @repro/js/re
 **Interfaces:**
 - Consumes: the built `dist/index.js` and `dist/react.js` output of the whole package.
 
-- [ ] **Step 1: Run the full test suite one more time**
+- [x] **Step 1: Run the full test suite one more time**
 
 Run: `npm test`
 Expected: PASS — every test file across `core/`, `browser/`, `react/`, and `index.test.ts` passes.
 
-- [ ] **Step 2: Run the build**
+- [x] **Step 2: Run the build**
 
 Run: `npm run build`
 Expected: creates `dist/index.js`, `dist/index.cjs`, `dist/index.d.ts`, `dist/react.js`, `dist/react.cjs`, `dist/react.d.ts`.
 
-- [ ] **Step 3: Write a smoke test against the built output**
+- [x] **Step 3: Write a smoke test against the built output**
 
 `src/dist-smoke.test.ts`:
 ```ts
@@ -1886,7 +1886,7 @@ describe("built package exports", () => {
 Run: `npx vitest run src/dist-smoke.test.ts`
 Expected: PASS — 2 tests passed. (If it fails, re-check Step 2's build output and the `package.json` `exports` map from Task 13 Step 1.)
 
-- [ ] **Step 4: Verify the ESLint core/browser boundary rule actually fires**
+- [x] **Step 4: Verify the ESLint core/browser boundary rule actually fires**
 
 Temporarily add a bad import to the top of `src/core/buffer.ts`:
 ```ts
@@ -1901,7 +1901,7 @@ Remove the line you just added from `src/core/buffer.ts`, restoring it to the Ta
 Run: `npm run lint`
 Expected: no errors.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/dist-smoke.test.ts
