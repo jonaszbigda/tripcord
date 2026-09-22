@@ -1,5 +1,6 @@
 import Fastify, { type FastifyInstance } from "fastify";
 import type { Database } from "./db/client";
+import { registerTimelineRoute } from "./routes/timeline";
 
 export function buildApp(db: Database): FastifyInstance {
   const app = Fastify({ logger: true, bodyLimit: 256 * 1024 });
@@ -8,8 +9,7 @@ export function buildApp(db: Database): FastifyInstance {
     return { status: "ok" };
   });
 
-  // Task 7 registers POST /v1/timeline onto this same `app`, using `db`.
-  void db;
+  registerTimelineRoute(app, db);
 
   return app;
 }
