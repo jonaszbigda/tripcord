@@ -97,9 +97,9 @@ Design choices worth recording:
   rather than one compound index covering all three columns — simpler, doesn't commit to
   one specific future query shape before real dashboard usage patterns are known.
   Postgres can combine separate indexes via bitmap index scans reasonably well.
-- **`apiKey` is stored as plain text**, looked up via indexed equality on every ingest
-  request. Hashing API keys at rest is a reasonable hardening step, deliberately
-  deferred rather than overlooked — flagged here so it's a conscious choice.
+- **API keys** were originally stored as plain text in `projects.api_key`. They now
+  live, hashed, in a separate `api_keys` table — see
+  `2026-09-22-repro-api-keys-design.md`.
 
 ## API surface
 
@@ -195,9 +195,8 @@ setup) and the reference self-host deployment — directly serving the original
 ## Explicitly out of scope (future sub-projects)
 
 - Dashboard / any read-side UI.
-- API key issuance flow (how a `projects` row + key actually gets created — for now,
-  assume direct DB insert or a future admin script).
-- Hashing API keys at rest (deliberately deferred hardening step, noted above).
+- API key issuance and hashing at rest — done in `2026-09-22-repro-api-keys-design.md`
+  (operator CLI; dashboard self-serve is part of the dashboard sub-project).
 - Self-host packaging polish beyond the docker-compose reference setup (install guide,
   versioned images, etc.).
 - Hosted SaaS-specific concerns (multi-region, backups, managed Postgres setup docs).
