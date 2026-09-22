@@ -124,5 +124,6 @@ describe("POST /v1/timeline rate limiting", () => {
     expect(first.statusCode).toBe(201);
     expect(second.statusCode).toBe(201);
     expect(third.statusCode).toBe(429);
+    expect(third.json()).toEqual({ error: expect.any(String) });
   });
 });

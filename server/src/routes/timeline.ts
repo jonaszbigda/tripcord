@@ -85,6 +85,17 @@ export function registerTimelineRoute(app: FastifyInstance, db: Database, option
           timeWindow: options.rateLimitWindow,
           hook: "preHandler",
           keyGenerator: (request: FastifyRequest) => (request.project as Project).id,
+          errorResponseBuilder: (_request, context) => {
+            const body = { error: `Rate limit exceeded, retry in ${context.after}` };
+            // @fastify/rate-limit throws this object and Fastify reads `.statusCode`
+            // off it to set the reply status. Define it non-enumerable so it drives
+            // the status code without leaking into the JSON body.
+            Object.defineProperty(body, "statusCode", {
+              value: context.statusCode,
+              enumerable: false,
+            });
+            return body;
+          },
         },
       },
     },
