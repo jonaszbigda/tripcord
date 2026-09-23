@@ -13,6 +13,11 @@ function handlers(extra: Record<string, MockHandler> = {}): Record<string, MockH
     "GET /api/me": { body: ME },
     [`GET /api/orgs/${ORG_ID}/projects`]: { body: { projects: [PROJECT] } },
     [`GET /api/orgs/${ORG_ID}/projects/proj-1/keys`]: { body: { keys: [KEY] } },
+    [`GET /api/orgs/${ORG_ID}/projects/proj-1/timelines`]: { body: { timelines: [], nextCursor: null } },
+    [`GET /api/orgs/${ORG_ID}/projects/proj-1/timelines/summary`]: {
+      body: { projectHasTimelines: false, bucket: "day", buckets: [], topReasons: [] },
+    },
+    [`GET /api/orgs/${ORG_ID}/projects/proj-1/timelines/tags`]: { body: { tags: [] } },
     ...extra,
   };
 }
@@ -59,7 +64,7 @@ describe("projects page", () => {
 describe("project page", () => {
   it("shows the ingest endpoint and the key prefixes", async () => {
     mockApi(handlers());
-    renderApp(`/orgs/${ORG_ID}/projects/proj-1`);
+    renderApp(`/orgs/${ORG_ID}/projects/proj-1/keys`);
 
     expect(await screen.findByRole("heading", { name: "web" })).toBeInTheDocument();
     expect(screen.getByText(/\/v1\/timeline$/)).toBeInTheDocument();
@@ -76,14 +81,15 @@ describe("project page", () => {
       })
     );
     const user = userEvent.setup();
-    renderApp(`/orgs/${ORG_ID}/projects/proj-1`);
+    renderApp(`/orgs/${ORG_ID}/projects/proj-1/keys`);
 
     await user.click(await screen.findByRole("button", { name: "Create key" }));
     expect(await screen.findByText("rpk_second_full_key")).toBeInTheDocument();
 
     await user.click(screen.getByRole("link", { name: "Projects" }));
     await user.click(await screen.findByRole("link", { name: "web" }));
-    await screen.findByRole("heading", { name: "web" });
+    await user.click(await screen.findByRole("link", { name: "Keys" }));
+    await screen.findByText("rpk_AbCdEfGh…");
     expect(screen.queryByText("rpk_second_full_key")).not.toBeInTheDocument();
   });
 
@@ -96,13 +102,32 @@ describe("project page", () => {
       })
     );
     const user = userEvent.setup();
-    renderApp(`/orgs/${ORG_ID}/projects/proj-1`);
+    renderApp(`/orgs/${ORG_ID}/projects/proj-1/keys`);
 
     await user.click(await screen.findByRole("button", { name: "Revoke" }));
     expect(calls.some((c) => c.path.endsWith("/revoke"))).toBe(false);
 
     await user.click(screen.getByRole("button", { name: "Confirm revoke" }));
     await waitFor(() => expect(calls.some((c) => c.method === "POST" && c.path.endsWith("/key-1/revoke"))).toBe(true));
+  });
+
+  it("opens on the Timelines tab and switches to Keys", async () => {
+    mockApi(handlers());
+    const user = userEvent.setup();
+    renderApp(`/orgs/${ORG_ID}/projects/proj-1`);
+
+    expect(await screen.findByRole("heading", { name: "web" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Timelines" })).toHaveAttribute("aria-current", "page");
+
+    await user.click(screen.getByRole("link", { name: "Keys" }));
+    await waitFor(() => expect(location()).toHaveTextContent(`/orgs/${ORG_ID}/projects/proj-1/keys`));
+    expect(await screen.findByText("rpk_AbCdEfGh…")).toBeInTheDocument();
+  });
+
+  it("says so for a project that isn't in the org", async () => {
+    mockApi(handlers());
+    renderApp(`/orgs/${ORG_ID}/projects/nope`);
+    expect(await screen.findByRole("heading", { name: "Project not found" })).toBeInTheDocument();
   });
 });
 

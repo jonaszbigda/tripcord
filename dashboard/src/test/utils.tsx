@@ -20,8 +20,8 @@ export interface ApiCall {
 }
 
 /**
- * Replaces fetch with handlers keyed by "METHOD /path". Unhandled requests get a
- * 404. Handlers are looked up per request, so a test can reassign one mid-test.
+ * Replaces fetch with handlers keyed by "METHOD /path" (falling back to the path
+ * without its query string). Unhandled requests get a 404. Handlers are looked up per request, so a test can reassign one mid-test.
  * Returns the list of calls made.
  */
 export function mockApi(handlers: Record<string, MockHandler>): ApiCall[] {
@@ -33,7 +33,9 @@ export function mockApi(handlers: Record<string, MockHandler>): ApiCall[] {
       const path = String(input);
       const body = typeof init?.body === "string" ? JSON.parse(init.body) : undefined;
       calls.push({ method, path, body });
-      const handler = handlers[`${method} ${path}`];
+      // Exact "METHOD /path?query" first, then the path alone, so a test can
+      // answer every query of one endpoint with a single handler.
+      const handler = handlers[`${method} ${path}`] ?? handlers[`${method} ${path.split("?")[0]}`];
       const result: MockResponse =
         handler === undefined
           ? { status: 404, body: { error: "Not Found" } }

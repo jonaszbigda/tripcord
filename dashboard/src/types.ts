@@ -65,3 +65,71 @@ export interface InvitePreview {
   orgName: string;
   role: Role;
 }
+
+export type ReasonType = "error" | "unhandledrejection" | "manual";
+export type Range = "24h" | "7d" | "30d";
+
+export interface TimelineRow {
+  id: string;
+  receivedAt: string;
+  sessionId: string;
+  reasonType: ReasonType;
+  reasonName: string | null;
+  reasonMessage: string | null;
+  url: string | null;
+  tags: string[];
+  eventCount: number;
+}
+
+export interface TimelinePage {
+  timelines: TimelineRow[];
+  nextCursor: string | null;
+}
+
+export interface VolumeBucket {
+  start: string;
+  error: number;
+  unhandledrejection: number;
+  manual: number;
+}
+
+export interface TopReason {
+  key: string;
+  type: ReasonType;
+  name: string | null;
+  message: string | null;
+  count: number;
+  lastSeen: string;
+}
+
+export interface TimelineSummary {
+  projectHasTimelines: boolean;
+  bucket: "hour" | "day";
+  buckets: VolumeBucket[];
+  topReasons: TopReason[];
+}
+
+export interface TagCount {
+  tag: string;
+  count: number;
+}
+
+export interface TimelineEvent {
+  timestamp: number;
+  type: "custom" | "error" | "unhandledrejection" | "trace";
+  name: string;
+  data?: Record<string, unknown>;
+}
+
+export interface TimelineDetail {
+  timeline: {
+    id: string;
+    receivedAt: string;
+    sessionId: string;
+    tags: string[];
+    reason: { type: ReasonType; name?: string; message?: string; data?: Record<string, unknown> };
+    events: TimelineEvent[];
+    meta: { url: string; userAgent: string; capturedAt: number };
+  };
+  siblings: { id: string; receivedAt: string; reasonType: ReasonType; reasonName: string | null }[];
+}

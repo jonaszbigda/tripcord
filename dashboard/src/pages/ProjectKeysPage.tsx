@@ -1,16 +1,15 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router";
+import { useParams } from "react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ApiError, api } from "../api";
+import { api } from "../api";
 import { OnceSecret } from "../components/OnceSecret";
-import { Button, Card, ConfirmButton, ErrorText, PageHeader } from "../components/ui";
+import { Button, Card, ConfirmButton, ErrorText } from "../components/ui";
 import { formatDate } from "../format";
-import { queryKeys, useKeys, useProjects } from "../queries";
+import { queryKeys, useKeys } from "../queries";
 import type { CreatedApiKey } from "../types";
 
-export function ProjectPage() {
+export function ProjectKeysPage() {
   const { orgId = "", projectId = "" } = useParams();
-  const project = useProjects(orgId).data?.find((p) => p.id === projectId);
   const keys = useKeys(orgId, projectId);
   const queryClient = useQueryClient();
   const [newKey, setNewKey] = useState<string | null>(null);
@@ -34,26 +33,8 @@ export function ProjectPage() {
     onSuccess: () => void refresh(),
   });
 
-  if (keys.error instanceof ApiError && keys.error.status === 404) {
-    return (
-      <Card className="space-y-2">
-        <h1 className="text-lg font-semibold">Project not found</h1>
-        <Link to={`/orgs/${orgId}/projects`} className="text-sm text-accent hover:underline">
-          All projects
-        </Link>
-      </Card>
-    );
-  }
-
   return (
     <div className="space-y-6">
-      <div className="space-y-1">
-        <Link to={`/orgs/${orgId}/projects`} className="text-sm text-muted hover:text-fg">
-          ← All projects
-        </Link>
-        <PageHeader title={project?.name ?? "Project"} />
-      </div>
-
       <Card className="space-y-2">
         <h2 className="font-medium">Ingest endpoint</h2>
         <p className="text-sm text-muted">
@@ -103,11 +84,6 @@ export function ProjectPage() {
             </tbody>
           </table>
         )}
-      </Card>
-
-      <Card className="space-y-1">
-        <h2 className="font-medium">Timelines</h2>
-        <p className="text-sm text-muted">Captured timelines will appear here.</p>
       </Card>
     </div>
   );

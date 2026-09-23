@@ -128,3 +128,65 @@ export function ConfirmButton({
     </span>
   );
 }
+
+/** One-of-n buttons, e.g. a time range. Each button reports aria-pressed. */
+export function Segmented<T extends string>({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: readonly (readonly [T, string])[];
+  value: T;
+  onChange: (value: T) => void;
+}) {
+  return (
+    <div role="group" aria-label={label} className="inline-flex rounded-md border border-border bg-surface p-0.5">
+      {options.map(([option, text]) => (
+        <button
+          key={option}
+          type="button"
+          aria-pressed={option === value}
+          onClick={() => onChange(option)}
+          className={`rounded px-2.5 py-1 text-sm ${option === value ? "bg-bg font-medium text-fg" : "text-muted hover:text-fg"}`}
+        >
+          {text}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** A series' color next to its label. Identity never rests on color alone. */
+export function Swatch({ color }: { color: string }) {
+  return <span aria-hidden="true" className="inline-block size-2.5 shrink-0 rounded-sm" style={{ background: color }} />;
+}
+
+export function Chip({ children, onRemove, removeLabel }: { children: ReactNode; onRemove?: () => void; removeLabel?: string }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border border-border bg-bg px-2 py-0.5 text-xs">
+      {children}
+      {onRemove && (
+        <button type="button" aria-label={removeLabel} onClick={onRemove} className="text-muted hover:text-fg">
+          ×
+        </button>
+      )}
+    </span>
+  );
+}
+
+export function CopyButton({ value }: { value: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <Button
+      variant="secondary"
+      onClick={async () => {
+        await navigator.clipboard?.writeText(value);
+        setCopied(true);
+      }}
+    >
+      {copied ? "Copied" : "Copy"}
+    </Button>
+  );
+}

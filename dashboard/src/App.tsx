@@ -9,7 +9,9 @@ import { NewOrgPage } from "./pages/NewOrgPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { OrgLayout } from "./pages/OrgLayout";
 import { OrgSettingsPage } from "./pages/OrgSettingsPage";
-import { ProjectPage } from "./pages/ProjectPage";
+import { ProjectKeysPage } from "./pages/ProjectKeysPage";
+import { ProjectLayout } from "./pages/ProjectLayout";
+import { TimelinesPage } from "./pages/TimelinesPage";
 import { ProjectsPage } from "./pages/ProjectsPage";
 import { SignupPage } from "./pages/SignupPage";
 import { UserSettingsPage } from "./pages/UserSettingsPage";
@@ -28,7 +30,10 @@ export function AppRoutes() {
           <Route path="orgs/:orgId" element={<OrgLayout />}>
             <Route index element={<Navigate to="projects" replace />} />
             <Route path="projects" element={<ProjectsPage />} />
-            <Route path="projects/:projectId" element={<ProjectPage />} />
+            <Route path="projects/:projectId" element={<ProjectLayout />}>
+              <Route index element={<TimelinesPage />} />
+              <Route path="keys" element={<ProjectKeysPage />} />
+            </Route>
             <Route path="members" element={<MembersPage />} />
             <Route path="settings" element={<OrgSettingsPage />} />
           </Route>

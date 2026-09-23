@@ -14,6 +14,11 @@
   --color-accent: #4f46e5;
   --color-accent-fg: #ffffff;
   --color-danger: #dc2626;
+  /* Chart series, one per reason type. Checked with the dataviz palette
+     validator against the surfaces above (all pairs, light and dark). */
+  --color-series-error: #4f46e5;
+  --color-series-rejection: #eb6834;
+  --color-series-manual: #1baf7a;
 }
 
 @layer base {
@@ -27,6 +32,9 @@
       --color-accent: #818cf8;
       --color-accent-fg: #0c0c0e;
       --color-danger: #f87171;
+      --color-series-error: #7c83f5;
+      --color-series-rejection: #d95926;
+      --color-series-manual: #199e70;
     }
   }
 
