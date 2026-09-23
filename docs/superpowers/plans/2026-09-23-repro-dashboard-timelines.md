@@ -628,7 +628,7 @@ git commit -m "feat(js): scoped and per-capture tags; 0.2.0"
 - Create: `server/src/tags.ts`, `server/drizzle/0003_*.sql` (generated), `server/drizzle/meta/0003_snapshot.json` (generated)
 - Modify: `server/src/db/schema.ts`, `server/drizzle/meta/_journal.json` (generated), `server/src/routes/timeline.ts`, `server/src/routes/timeline.test.ts`, `server/src/db/migrations.test.ts`, `server/test/db.ts`
 
-- [ ] **Step 1: Write the failing ingest tests**
+- [x] **Step 1: Write the failing ingest tests**
 
 Append to the first `describe("POST /v1/timeline", …)` block in `server/src/routes/timeline.test.ts`:
 
@@ -672,12 +672,12 @@ Append to the first `describe("POST /v1/timeline", …)` block in `server/src/ro
 
 These cases deliberately leave out non-string items and a bare string. Fastify's default Ajv has `coerceTypes: "array"`, which turns `"checkout"` into `["checkout"]` and `42` into `"42"`, and both are valid. The client never sends either.
 
-- [ ] **Step 2: Run to verify they fail**
+- [x] **Step 2: Run to verify they fail**
 
 Run: `npm test -w server -- src/routes/timeline.test.ts`
 Expected: the storing test FAILS, because `timelines.tags` is undefined. The five 400 cases already pass, since today any `tags` field is rejected as an unknown property. They stay as regression tests once `tags` is allowed.
 
-- [ ] **Step 3: Add the server's tag rule**
+- [x] **Step 3: Add the server's tag rule**
 
 Create `server/src/tags.ts`:
 
@@ -691,7 +691,7 @@ export const MAX_TAGS = 10;
 export const tagSchema = { type: "string", pattern: TAG_PATTERN_SOURCE } as const;
 ```
 
-- [ ] **Step 4: Add the column and indexes**
+- [x] **Step 4: Add the column and indexes**
 
 In `server/src/db/schema.ts`, add `sql` to the imports:
 
@@ -727,7 +727,7 @@ export const timelines = pgTable(
 );
 ```
 
-- [ ] **Step 5: Generate the migration**
+- [x] **Step 5: Generate the migration**
 
 Run: `cd server && npx drizzle-kit generate`
 Expected: a new `server/drizzle/0003_<name>.sql`, plus `meta/0003_snapshot.json` and a journal entry with `idx: 3`. The SQL should be equivalent to:
@@ -740,7 +740,7 @@ CREATE INDEX IF NOT EXISTS "timelines_tags_idx" ON "timelines" USING gin ("tags"
 
 Don't hand-edit it. If drizzle-kit emits something materially different, such as a table rewrite or a missing index, stop and report it rather than patching the SQL.
 
-- [ ] **Step 6: Accept and store tags at ingest**
+- [x] **Step 6: Accept and store tags at ingest**
 
 In `server/src/routes/timeline.ts`, import the rule:
 
@@ -762,7 +762,7 @@ In the handler's `.values({…})`, add:
 
 `request.body` is typed as `@repro/js`'s `TimelinePayload`, which now has `tags?: string[]`, because Task 1 rebuilt the package.
 
-- [ ] **Step 7: Write the migration test**
+- [x] **Step 7: Write the migration test**
 
 In `server/src/db/migrations.test.ts`, generalize the journal helper so a test can stop before any migration. Replace `migrationsBeforeOrgs` with:
 
@@ -812,7 +812,7 @@ describe("tags migration (0003)", () => {
 });
 ```
 
-- [ ] **Step 8: Add the timeline test helpers**
+- [x] **Step 8: Add the timeline test helpers**
 
 The read tasks need rows with chosen times and tags. In `server/test/db.ts`, add `sql` to the imports (`import { sql } from "drizzle-orm";`) and append:
 
@@ -852,12 +852,12 @@ export function pgTimestampAgo(ms: number): string {
 }
 ```
 
-- [ ] **Step 9: Run the server checks**
+- [x] **Step 9: Run the server checks**
 
 Run: `npm test -w server -- src/routes/timeline.test.ts src/db/migrations.test.ts && npm run typecheck -w server && npm run lint -w server`
 Expected: PASS.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 git add server
