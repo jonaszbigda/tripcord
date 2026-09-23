@@ -3742,7 +3742,7 @@ git commit -m "feat(dashboard): timelines tab: filters, volume chart, top reason
 - Create: `dashboard/src/pages/TimelinePage.tsx`, `dashboard/src/pages/timeline.test.tsx`
 - Modify: `dashboard/src/App.tsx`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `dashboard/src/pages/timeline.test.tsx`:
 
@@ -3837,12 +3837,12 @@ describe("timeline detail", () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `npm test -w dashboard -- src/pages/timeline.test.tsx`
 Expected: FAIL. The route doesn't exist, so the page renders the not-found page.
 
-- [ ] **Step 3: Implement the page and route**
+- [x] **Step 3: Implement the page and route**
 
 Create `dashboard/src/pages/TimelinePage.tsx`:
 
@@ -4032,12 +4032,14 @@ import { TimelinePage } from "./pages/TimelinePage";
 
 React Router ranks this route above `projects/:projectId`, because more of its segments match.
 
-- [ ] **Step 4: Run to verify it passes**
+- [x] **Step 4: Run to verify it passes**
 
 Run: `npm test -w dashboard && npm run typecheck -w dashboard && npm run lint -w dashboard`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+> Mutation-checked: with `safeHref` returning any parsed URL, "never links a javascript: URL" fails.
+
+- [x] **Step 5: Commit**
 
 ```bash
 git add dashboard/src
