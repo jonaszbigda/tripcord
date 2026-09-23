@@ -4614,7 +4614,7 @@ git commit -m "feat(server): add org-scoped project and key routes with a tenant
     - `/login?error=`: `github_state`, `github_failed`, `github_no_email`, `github_email_exists`, `signup_closed`, `invite_invalid`, `not_logged_in`
     - `/settings?error=`: `github_taken`, `github_failed`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `server/src/auth/github.test.ts`:
 
@@ -4947,12 +4947,12 @@ describe("DELETE /api/me/github", () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npm test -w server -- src/auth/github.test.ts src/routes/github.test.ts src/routes/me.test.ts`
 Expected: FAIL. `./github` can't be resolved and the routes return 404.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Create `server/src/auth/github.ts`:
 
@@ -5203,12 +5203,12 @@ import { setGithubId, setPasswordHash } from "../db/users";
 
 In `server/src/app.ts`, add `import { registerGithubRoutes } from "./routes/github";` and, after `registerProjectRoutes(app, ctx);`, add `registerGithubRoutes(app, ctx);`.
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `npm test -w server -- src/auth src/routes`
 Expected: PASS.
 
-- [ ] **Step 5: Full suite, typecheck, lint, commit**
+- [x] **Step 5: Full suite, typecheck, lint, commit**
 
 Run: `npm test -w server && npm run typecheck -w server && npm run lint -w server`
 

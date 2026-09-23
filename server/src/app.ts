@@ -8,6 +8,7 @@ import type { Database } from "./db/client";
 import { csrfGuard } from "./auth/http";
 import type { ApiContext } from "./routes/context";
 import { registerAuthRoutes } from "./routes/auth";
+import { registerGithubRoutes } from "./routes/github";
 import { registerInviteRoutes } from "./routes/invites";
 import { registerMeRoutes } from "./routes/me";
 import { registerOrgRoutes } from "./routes/orgs";
@@ -142,6 +143,7 @@ export async function buildApp(db: Database, options: AppOptions = {}): Promise<
   registerOrgRoutes(app, ctx);
   registerInviteRoutes(app, ctx);
   registerProjectRoutes(app, ctx);
+  registerGithubRoutes(app, ctx);
 
   return app;
 }

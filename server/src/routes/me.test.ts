@@ -4,6 +4,9 @@ import { buildTestApp, call } from "../../test/http";
 import { hashToken } from "../auth/tokens";
 import { createOrgWithOwner } from "../db/orgs";
 import { sessions } from "../db/schema";
+import { createSession, findSessionUser } from "../db/sessions";
+import { findUserById } from "../db/users";
+import { verifyPassword } from "../auth/password";
 
 describe("GET /api/me", () => {
   beforeEach(async () => {
@@ -48,5 +51,85 @@ describe("GET /api/me", () => {
       orgs: [{ id: org.id, name: "Acme", role: "owner" }],
     });
     expect(response.body).not.toContain("scrypt");
+  });
+});
+
+describe("POST /api/me/password", () => {
+  beforeEach(async () => {
+    await resetDb(getTestDb());
+  });
+
+  it("changes the password and logs out every other session", async () => {
+    const db = getTestDb();
+    const user = await createTestUser(db, { password: "old-password" });
+    const current = await createSession(db, user.id);
+    const other = await createSession(db, user.id);
+    const app = await buildTestApp(db);
+
+    const response = await call(app, "POST", "/api/me/password", {
+      cookie: `repro_session=${current.token}`,
+      body: { currentPassword: "old-password", newPassword: "new-password" },
+    });
+
+    expect(response.statusCode).toBe(204);
+    const updated = await findUserById(db, user.id);
+    expect(await verifyPassword("new-password", updated!.passwordHash!)).toBe(true);
+    expect(await findSessionUser(db, current.token)).toBeDefined();
+    expect(await findSessionUser(db, other.token)).toBeUndefined();
+  });
+
+  it("requires the correct current password", async () => {
+    const db = getTestDb();
+    const user = await createTestUser(db, { password: "old-password" });
+    const app = await buildTestApp(db);
+    const cookie = await sessionCookie(db, user.id);
+
+    for (const body of [{ currentPassword: "wrong-password", newPassword: "new-password" }, { newPassword: "new-password" }]) {
+      const response = await call(app, "POST", "/api/me/password", { cookie, body });
+      expect(response.statusCode).toBe(403);
+      expect(response.json()).toEqual({ error: "Current password is incorrect" });
+    }
+  });
+
+  it("lets a GitHub-only user set a first password", async () => {
+    const db = getTestDb();
+    const user = await createTestUser(db, { githubId: "9" });
+    const app = await buildTestApp(db);
+
+    const response = await call(app, "POST", "/api/me/password", {
+      cookie: await sessionCookie(db, user.id),
+      body: { newPassword: "first-password" },
+    });
+
+    expect(response.statusCode).toBe(204);
+    expect((await findUserById(db, user.id))?.passwordHash).toMatch(/^scrypt\$/);
+  });
+});
+
+describe("DELETE /api/me/github", () => {
+  beforeEach(async () => {
+    await resetDb(getTestDb());
+  });
+
+  it("disconnects GitHub when the user has a password", async () => {
+    const db = getTestDb();
+    const user = await createTestUser(db, { githubId: "9", password: "a-password" });
+    const app = await buildTestApp(db);
+
+    const response = await call(app, "DELETE", "/api/me/github", { cookie: await sessionCookie(db, user.id) });
+
+    expect(response.statusCode).toBe(204);
+    expect((await findUserById(db, user.id))?.githubId).toBeNull();
+  });
+
+  it("refuses when it would leave no way to log in", async () => {
+    const db = getTestDb();
+    const user = await createTestUser(db, { githubId: "9" });
+    const app = await buildTestApp(db);
+
+    const response = await call(app, "DELETE", "/api/me/github", { cookie: await sessionCookie(db, user.id) });
+
+    expect(response.statusCode).toBe(409);
+    expect(response.json()).toEqual({ error: "Set a password before disconnecting GitHub" });
   });
 });
