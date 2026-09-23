@@ -8,7 +8,9 @@ import type { Database } from "./db/client";
 import { csrfGuard } from "./auth/http";
 import type { ApiContext } from "./routes/context";
 import { registerAuthRoutes } from "./routes/auth";
+import { registerInviteRoutes } from "./routes/invites";
 import { registerMeRoutes } from "./routes/me";
+import { registerOrgRoutes } from "./routes/orgs";
 import { registerTimelineRoute } from "./routes/timeline";
 
 export interface AppOptions {
@@ -136,6 +138,8 @@ export async function buildApp(db: Database, options: AppOptions = {}): Promise<
   };
   registerAuthRoutes(app, ctx);
   registerMeRoutes(app, ctx);
+  registerOrgRoutes(app, ctx);
+  registerInviteRoutes(app, ctx);
 
   return app;
 }

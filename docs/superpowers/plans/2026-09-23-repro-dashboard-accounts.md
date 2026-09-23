@@ -3717,7 +3717,7 @@ git commit -m "feat(server): add signup and login routes with per-IP rate limits
     - `GET /api/invites/:token` → `{ orgName, role }`
     - `POST /api/invites/:token/accept` → `{ orgId }`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `server/src/routes/orgs.test.ts`:
 
@@ -3961,12 +3961,12 @@ describe("invite routes", () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npm test -w server -- src/routes/orgs.test.ts src/routes/invites.test.ts`
 Expected: FAIL. The routes return 404.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Create `server/src/routes/orgs.ts`:
 
@@ -4160,12 +4160,12 @@ After `registerMeRoutes(app, ctx);`, add:
   registerInviteRoutes(app, ctx);
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `npm test -w server -- src/routes`
 Expected: PASS.
 
-- [ ] **Step 5: Full suite, typecheck, lint, commit**
+- [x] **Step 5: Full suite, typecheck, lint, commit**
 
 Run: `npm test -w server && npm run typecheck -w server && npm run lint -w server`
 
