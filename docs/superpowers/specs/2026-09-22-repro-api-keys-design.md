@@ -219,7 +219,7 @@ each test cleans up its own rows.
 
 ## Explicitly out of scope
 
-- Tenancy / project ownership, user accounts, login — dashboard spec.
+- Tenancy / project ownership, user accounts, login — see 2026-09-23-repro-dashboard-accounts-design.md.
 - `last_used_at` tracking — dashboard spec, if wanted.
 - Per-key rate limits, key expiry dates.
 - `--json` CLI output.

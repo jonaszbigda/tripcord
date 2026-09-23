@@ -10,6 +10,9 @@ frontend bug reproduction.
 - [`server`](server) — `@repro/server`, the ingest API that receives what the client
   sends. Built, tested, self-hostable via `docker compose up` — see
   [`server/README.md`](server/README.md) for how to run it and provision an API key.
+- [`dashboard`](dashboard) — `@repro/dashboard`, the web dashboard (React SPA) where
+  users sign up, manage orgs and members, and create projects and API keys. Built into
+  and served by the server.
 
 See each package's own README for details, and
 [`docs/superpowers/specs/`](docs/superpowers/specs) for design rationale.

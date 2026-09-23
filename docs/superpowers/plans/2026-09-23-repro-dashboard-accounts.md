@@ -7934,7 +7934,7 @@ git commit -m "feat(dashboard): add members, invites, invite acceptance and sett
 - Consumes: everything above.
 - Produces: user-facing docs, plus a verified build of the Docker image.
 
-- [ ] **Step 1: Update `server/README.md`**
+- [x] **Step 1: Update `server/README.md`**
 
 Make these changes:
 
@@ -8002,7 +8002,7 @@ server's same-origin check expects requests from the Vite origin.
 
 7. In the "## API" section, add after the `/health` paragraph: "`/api/*` holds the dashboard's JSON API. It's cookie-authenticated, same-origin only, and has no CORS. See `docs/superpowers/specs/2026-09-23-repro-dashboard-accounts-design.md`."
 
-- [ ] **Step 2: Update the root README and the API keys spec**
+- [x] **Step 2: Update the root README and the API keys spec**
 
 In `README.md`, add to the Packages list:
 
@@ -8015,7 +8015,7 @@ In `README.md`, add to the Packages list:
 In `docs/superpowers/specs/2026-09-22-repro-api-keys-design.md`, change the first out-of-scope bullet to:
 `- Tenancy / project ownership, user accounts, login — see 2026-09-23-repro-dashboard-accounts-design.md.`
 
-- [ ] **Step 3: Verify the whole repo**
+- [x] **Step 3: Verify the whole repo**
 
 Run from the repo root:
 
@@ -8025,7 +8025,7 @@ npm run build && npm run typecheck && npm run lint && npm test
 
 Expected: every workspace builds, typechecks, lints and passes its tests. Record the test counts per workspace in the task report.
 
-- [ ] **Step 4: Commit the docs**
+- [x] **Step 4: Commit the docs**
 
 ```bash
 git add README.md server/README.md docs/superpowers/specs/2026-09-22-repro-api-keys-design.md
