@@ -6598,7 +6598,7 @@ git commit -m "feat(dashboard): scaffold the dashboard SPA with login, signup an
   - `OrgLayout`, with a `TABS` array that Task 14 extends.
   - Routes `/orgs/:orgId/projects` and `/orgs/:orgId/projects/:projectId`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `dashboard/src/pages/projects.test.tsx`:
 
@@ -6742,12 +6742,12 @@ describe("app shell", () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npm test -w dashboard -- src/pages/projects.test.tsx`
 Expected: FAIL. The routes don't exist, so `NotFoundPage` renders.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `dashboard/src/components/ui.tsx`, add `import { useState } from "react";` at the top and append:
 
@@ -7199,12 +7199,12 @@ export function AppRoutes() {
 }
 ```
 
-- [ ] **Step 4: Run all dashboard tests**
+- [x] **Step 4: Run all dashboard tests**
 
 Run: `npm test -w dashboard`
 Expected: PASS, both `auth.test.tsx` and `projects.test.tsx`.
 
-- [ ] **Step 5: Build, lint, commit**
+- [x] **Step 5: Build, lint, commit**
 
 Run: `npm run build -w dashboard && npm run lint -w dashboard`
 

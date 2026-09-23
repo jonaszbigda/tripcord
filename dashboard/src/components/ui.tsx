@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from "react";
 
 type Variant = "primary" | "secondary" | "danger";
@@ -86,5 +87,44 @@ export function AuthCard({ title, children }: { title: string; children: ReactNo
         {children}
       </Card>
     </div>
+  );
+}
+
+/** Two-step button for destructive actions: the first click asks, the second acts. */
+export function ConfirmButton({
+  label,
+  confirmLabel,
+  onConfirm,
+  disabled = false,
+}: {
+  label: string;
+  confirmLabel: string;
+  onConfirm: () => void;
+  disabled?: boolean;
+}) {
+  const [confirming, setConfirming] = useState(false);
+  if (!confirming) {
+    return (
+      <Button variant="secondary" disabled={disabled} onClick={() => setConfirming(true)}>
+        {label}
+      </Button>
+    );
+  }
+  return (
+    <span className="inline-flex gap-2">
+      <Button
+        variant="danger"
+        disabled={disabled}
+        onClick={() => {
+          setConfirming(false);
+          onConfirm();
+        }}
+      >
+        {confirmLabel}
+      </Button>
+      <Button variant="secondary" onClick={() => setConfirming(false)}>
+        Cancel
+      </Button>
+    </span>
   );
 }
