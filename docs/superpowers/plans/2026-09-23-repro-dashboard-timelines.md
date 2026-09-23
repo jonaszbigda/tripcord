@@ -871,7 +871,7 @@ git commit -m "feat(server): store timeline tags at ingest"
 **Files:**
 - Create: `server/src/db/timelines.ts`, `server/src/db/timelines.test.ts`
 
-- [ ] **Step 1: Write the failing service tests**
+- [x] **Step 1: Write the failing service tests**
 
 Create `server/src/db/timelines.test.ts`:
 
@@ -1060,14 +1060,18 @@ describe("timeline read service", () => {
     it("cuts days at the viewer's midnight", async () => {
       const db = getTestDb();
       const projectId = await newProject();
-      const anHourAgo = pgTimestampAgo(HOUR);
-      await insertTestTimeline(db, projectId, { receivedAt: anHourAgo });
+      // 20:00 UTC two days ago is 01:30 the next day in Kolkata, so a bucket cut
+      // at UTC midnight would put it on the wrong day whatever the time is now.
+      const twoDaysAgo = new Date(Date.now() - 2 * DAY);
+      twoDaysAgo.setUTCHours(20, 0, 0, 0);
+      const receivedAt = twoDaysAgo.toISOString().replace("T", " ").replace("Z", "");
+      await insertTestTimeline(db, projectId, { receivedAt });
 
       // Asia/Kolkata is UTC+05:30 with no DST, so local midnight is always 18:30Z.
       const summary = await summarizeTimelines(db, projectId, { ...ALL, range: "7d" }, "Asia/Kolkata");
 
       summary.buckets.forEach((b) => expect(b.start).toMatch(/T18:30:00\.000Z$/));
-      const at = epochOf(anHourAgo);
+      const at = epochOf(receivedAt);
       const holding = summary.buckets.find((b) => at >= Date.parse(b.start) && at < Date.parse(b.start) + DAY);
       expect(holding?.error).toBe(1);
     });
@@ -1193,12 +1197,12 @@ describe("timeline read service", () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `npm test -w server -- src/db/timelines.test.ts`
 Expected: FAIL. `./timelines` doesn't exist.
 
-- [ ] **Step 3: Implement the service**
+- [x] **Step 3: Implement the service**
 
 Create `server/src/db/timelines.ts`:
 
@@ -1495,12 +1499,14 @@ export async function getTimeline(db: Database, projectId: string, timelineId: s
 
 If Postgres rejects the top-reasons query with `column "timelines.reason" must appear in the GROUP BY clause`, the select-list expressions and the `GROUP BY` expressions have stopped rendering identically. That happens, for example, if someone interpolates a JS value such as `${300}` into `MESSAGE_PREVIEW`, which turns it into a bound parameter. Keep those fragments free of parameters. Don't work around it with a subquery.
 
-- [ ] **Step 4: Run to verify it passes**
+- [x] **Step 4: Run to verify it passes**
 
 Run: `npm test -w server -- src/db/timelines.test.ts`
 Expected: PASS, 22 tests.
 
-- [ ] **Step 5: Typecheck, lint, commit**
+> Deviation: a mutation check (bucketing counts at UTC midnight instead of the viewer's) showed the original midnight test only failed when the current UTC time was between 18:30 and 24:00. It now inserts a row at 20:00 UTC two days ago, which always falls on a different day in Kolkata, and fails against that bug every time. The microsecond test was mutation-checked too: it catches a cursor that goes through a JS `Date`.
+
+- [x] **Step 5: Typecheck, lint, commit**
 
 Run: `npm run typecheck -w server && npm run lint -w server`
 Expected: PASS.
