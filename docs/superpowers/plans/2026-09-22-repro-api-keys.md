@@ -1640,7 +1640,7 @@ If Step 2 or Step 3 required code fixes, commit those separately with a `fix(ser
 
 ### Task 6: Final-review fixes
 
-Added after the final whole-branch review of Tasks 1–5 (verdict: ready to merge **with fixes**: 0 Critical, 1 Important, 6 Minor). Items 1–5 below were proposed and still need the user's go-ahead before they're implemented. The Important item (Step 1) is the only must-fix before merge.
+Added after the final whole-branch review of Tasks 1–5 (verdict: ready to merge **with fixes**: 0 Critical, 1 Important, 6 Minor). Items 1–5 below were approved by the user on 2026-09-23 and implemented in `48cf8dc`. The Important item (Step 1) is the only must-fix before merge.
 
 **Files:**
 - Modify: `server/README.md` (upgrade note)
@@ -1652,7 +1652,7 @@ Added after the final whole-branch review of Tasks 1–5 (verdict: ready to merg
 **Interfaces:**
 - Consumes: everything from Tasks 1–5. Public signatures do not change: `runMigrations(databaseUrl)`, `getTestDb()` and `runCli(argv, db, out)` keep their current types.
 
-- [ ] **Step 1 (Important): README upgrade note**
+- [x] **Step 1 (Important): README upgrade note**
 
 The clean-break migration drops `projects.api_key`. After upgrading, every existing key returns 401, and because `@repro/js` fire-and-forget delivery never reads the response, instrumented apps silently drop events. Projects created before the upgrade survive the migration with zero keys.
 
@@ -1673,7 +1673,7 @@ After upgrading, for each existing project:
 3. Deploy the new key to the app's `init({ apiKey })` config.
 ```
 
-- [ ] **Step 2: Serialize concurrent migrations with an advisory lock**
+- [x] **Step 2: Serialize concurrent migrations with an advisory lock**
 
 Drizzle's migrator takes no lock. If the server and the CLI both migrate a fresh database at the same moment, one of them fails. When the server loses, it calls `process.exit(1)`, and compose has no `restart:` policy, so it stays down.
 
@@ -1719,7 +1719,7 @@ If `drizzle(client)` with a `PoolClient` doesn't typecheck on the installed driz
 
 Run (from `server/`): `npx vitest run src/db/migrate.test.ts`. Expected: PASS (2 tests).
 
-- [ ] **Step 3: Zero-key `listProjects` test**
+- [x] **Step 3: Zero-key `listProjects` test**
 
 This case can happen: projects that existed before the upgrade have no `api_keys` rows. The Task 3 ledger note called it unreachable, which was wrong. Append this to the `describe("listProjects", ...)` block in `server/src/db/projects.test.ts`, and add `projects` to the existing `./schema` import:
 
@@ -1738,7 +1738,7 @@ it("reports zero active keys for a project that never had a key (pre-upgrade pro
 
 Run (from `server/`): `npx vitest run src/db/projects.test.ts`. Expected: PASS. The implementation already handles this, so the test passes immediately: it's a characterization test.
 
-- [ ] **Step 4: Stop leaking test DB pools**
+- [x] **Step 4: Stop leaking test DB pools**
 
 `getTestDb()` creates a new `pg` `Pool` on every call and never closes it. The branch added about 50 more calls, and `admin.test.ts`'s `run()` alone makes one per CLI invocation, which heads toward Postgres's `max_connections` as the suite grows. Replace `getTestDb` in `server/test/db.ts` with a memoized version:
 
@@ -1755,7 +1755,7 @@ export function getTestDb(): Database {
 
 Run: `npm test -w server`. Expected: all tests pass, same count as before plus the new tests from Steps 2–3.
 
-- [ ] **Step 5: `--help` / `-h`, and a `--` hint in the usage text**
+- [x] **Step 5: `--help` / `-h`, and a `--` hint in the usage text**
 
 Right now `--help` exits 2 with "Unknown option". Also, a positional starting with `-` (e.g. project name `-beta`) is parsed as a flag, and the workaround `project create -- -beta` isn't documented.
 
@@ -1786,7 +1786,7 @@ Run (from `server/`): `npx vitest run src/admin.test.ts`. Expected: PASS, includ
 
 Update the README's CLI section with one line saying `--help` prints the usage.
 
-- [ ] **Step 6: Verify and commit**
+- [x] **Step 6: Verify and commit**
 
 Run: `npm test -w server && npm run lint -w server && npm run typecheck -w server`. Expected: all pass.
 
@@ -1800,7 +1800,7 @@ git commit -m "fix(server): final-review fixes: upgrade note, migration lock, te
 
 ## Handoff notes (end of session, 2026-09-22)
 
-**Status:** Tasks 1–5 are complete and each passed its review. Task 6 is not started and needs the user's go-ahead. Branch `feat/api-keys` is pushed to origin and not merged. After Task 6, get one scoped re-review of the Task 6 diff, then decide how to merge (finishing-a-development-branch).
+**Status:** Tasks 1–6 are complete and each passed its review (Task 6: `48cf8dc`, review clean, 63 server tests). Branch `feat/api-keys` is not merged yet; the next step is deciding how to merge (finishing-a-development-branch).
 
 **Verification so far:** workspace build/test/lint/typecheck is green (108 tests: 50 in `packages/js`, 58 in `server`). The docker-compose smoke test passed: CLI project create → ingest 201 → no plaintext key in the DB → revoke → 401.
 
