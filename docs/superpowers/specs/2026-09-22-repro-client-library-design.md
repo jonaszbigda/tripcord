@@ -141,6 +141,10 @@ developer's responsibility (see below). `meta` is deliberately minimal: no IP ca
 fingerprinting, keeping the "anonymized by design" claim true at the type level, not just in
 docs.
 
+> Extended by `2026-09-23-repro-dashboard-timelines-design.md`: payloads gain an
+> optional top-level `tags` array, set with `setTags()` / `capture(…, { tags })`
+> (see that spec's "Tags" section).
+
 ## Declarative capture: `data-trace`
 
 Elements can opt into capture declaratively instead of requiring a manual `track()` call in

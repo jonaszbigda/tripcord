@@ -151,11 +151,18 @@ After upgrading, for each existing project:
 
 `POST /v1/timeline` — accepts a timeline payload (see `@repro/js`'s `TimelinePayload`
 type), authenticated via the `X-Repro-Key` header. Returns `201 { id }` on success.
+It accepts an optional `tags` array (at most 10 tags, each matching
+`^[a-z0-9][a-z0-9_.:-]{0,49}$`).
 
 `GET /health` — liveness check, always `200 { status: "ok" }`.
 
 `/api/*` holds the dashboard's JSON API. It's cookie-authenticated, same-origin only,
 and has no CORS. See `docs/superpowers/specs/2026-09-23-repro-dashboard-accounts-design.md`.
+
+The timeline viewer reads through `GET /api/orgs/:orgId/projects/:projectId/timelines`
+(filtered, keyset-paginated list), `…/timelines/summary` (volume buckets and top
+reasons), `…/timelines/tags` and `…/timelines/:timelineId`. Any member of the org
+can call them. See `docs/superpowers/specs/2026-09-23-repro-dashboard-timelines-design.md`.
 
 Every error response, on any route, is `{ "error": "message" }` — 4xx bodies include
 a client-facing reason (e.g. a validation failure), 5xx bodies are deliberately

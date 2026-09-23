@@ -136,6 +136,9 @@ for testability, debugging, and any future non-fire-and-forget caller.
 ~64KB practical `keepalive` ceiling (per the client library's design doc), small enough
 to bound abuse from a sender that isn't the real client.
 
+> Extended by `2026-09-23-repro-dashboard-timelines-design.md`: the body accepts an
+> optional `tags` array, stored in `timelines.tags` (`text[]`, GIN-indexed).
+
 ### `GET /health`
 
 Trivial liveness check (`200 { status: "ok" }`, no DB query) for container
