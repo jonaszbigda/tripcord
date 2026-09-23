@@ -1725,7 +1725,7 @@ git commit -m "feat(server): add users and sessions service, expire sessions in 
   - `changeRole(ex: Executor, orgId: string, userId: string, role: Role): Promise<MembershipChange>`
   - `removeMember(ex: Executor, orgId: string, userId: string): Promise<MembershipChange>`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Append to `server/src/db/orgs.test.ts`. Extend its imports: add `createTestUser` from `../../test/db`, and add every new function listed above to the `./orgs` import.
 
@@ -1859,12 +1859,12 @@ describe("changeRole / removeMember", () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npm test -w server -- src/db/orgs.test.ts`
 Expected: FAIL. `addMember`, `createOrgWithOwner` and the other new functions are not exported.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `server/src/db/orgs.ts`:
 - Change the drizzle import to `import { and, asc, eq, isNull, sql } from "drizzle-orm";`.
@@ -2001,12 +2001,12 @@ export async function removeMember(ex: Executor, orgId: string, userId: string):
 }
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `npm test -w server -- src/db/orgs.test.ts`
 Expected: PASS. If the concurrency test is flaky (both succeed), the `.for("update")` lock is missing.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/src/db/orgs.ts server/src/db/orgs.test.ts
