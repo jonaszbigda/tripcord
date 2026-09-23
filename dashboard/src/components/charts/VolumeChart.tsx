@@ -142,7 +142,7 @@ export function VolumeChart({ summary, series }: { summary: TimelineSummary; ser
             {series.map((s) => (
               <p key={s.key} className="flex items-center gap-2 text-muted">
                 <Swatch color={s.color} />
-                <span>{s.label}</span>
+                <span className="whitespace-nowrap">{s.label}</span>
                 <span className="ml-auto pl-3 font-medium tabular-nums text-fg">{hoveredBucket[s.key]}</span>
               </p>
             ))}

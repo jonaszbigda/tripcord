@@ -27,6 +27,7 @@ describe("urlPath", () => {
   it("shows the path and query, or the raw value if it isn't a URL", () => {
     expect(urlPath("https://shop.example.com/cart?step=2")).toBe("/cart?step=2");
     expect(urlPath("weird")).toBe("weird");
+    expect(urlPath("javascript:alert(1)")).toBe("javascript:alert(1)");
     expect(urlPath(null)).toBe("");
   });
 });

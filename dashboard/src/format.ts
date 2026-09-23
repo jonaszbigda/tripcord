@@ -36,11 +36,13 @@ export function formatOffset(ms: number): string {
   return `${sign}${Math.floor(seconds / 3600)}h ${String(Math.floor(seconds / 60) % 60).padStart(2, "0")}m`;
 }
 
-/** Path and query of a captured URL, or the raw value if it doesn't parse. */
+/** Path and query of a captured http(s) URL; anything else is shown whole. */
 export function urlPath(url: string | null): string {
   if (url === null) return "";
   try {
     const parsed = new URL(url);
+    // A javascript: or data: "path" would hide what the URL really is.
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return url;
     return parsed.pathname + parsed.search;
   } catch {
     return url;
