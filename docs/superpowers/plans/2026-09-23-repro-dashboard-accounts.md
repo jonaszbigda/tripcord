@@ -1274,7 +1274,7 @@ git commit -m "feat(server): orgs own projects — schema, backfill migration, o
     - `createTestUser(db, options?: TestUserOptions): Promise<User>`
     - `sessionCookie(db, userId): Promise<string>`: returns `"repro_session=<token>"`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `server/src/db/users.test.ts`:
 
@@ -1479,12 +1479,12 @@ Append this block inside the top-level `describe("runCli", ...)`:
   });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npm test -w server -- src/db/users.test.ts src/db/sessions.test.ts src/admin.test.ts`
 Expected: FAIL. `./users` and `./sessions` can't be resolved, and `createTestUser` is missing.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Create `server/src/db/users.ts`:
 
@@ -1690,12 +1690,12 @@ async function userResetPassword(db: Database, out: CliOutput, email: string): P
 }
 ```
 
-- [ ] **Step 4: Run all server tests**
+- [x] **Step 4: Run all server tests**
 
 Run: `npm test -w server`
 Expected: PASS. Then run `npm run typecheck -w server && npm run lint -w server`. Both should exit 0.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/src server/test

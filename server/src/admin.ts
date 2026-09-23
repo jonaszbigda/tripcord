@@ -3,6 +3,10 @@ import type { Database } from "./db/client";
 import { findOrg, listOrgs } from "./db/orgs";
 import { createApiKey, createProject, listApiKeys, listProjects, revokeApiKey } from "./db/projects";
 import { isUuid } from "./uuid";
+import { hashPassword } from "./auth/password";
+import { generatePassword } from "./auth/tokens";
+import { deleteUserSessions } from "./db/sessions";
+import { findUserByEmail, setPasswordHash } from "./db/users";
 
 export interface CliOutput {
   stdout(line: string): void;
@@ -18,6 +22,7 @@ Commands:
   key create <projectId>                  Create an additional API key for a project
   key list <projectId>                    List a project's API keys
   key revoke <keyId>                      Revoke an API key
+  user reset-password <email>             Set a new random password and log the user out everywhere
 
 Put -- before an argument that starts with "-", e.g. project create --org <orgId> -- -beta`;
 
@@ -70,6 +75,8 @@ export async function runCli(argv: string[], db: Database, out: CliOutput): Prom
         return await keyList(db, out, parseId(singleArg(rest, "<projectId>")));
       case "key revoke":
         return await keyRevoke(db, out, parseId(singleArg(rest, "<keyId>")));
+      case "user reset-password":
+        return await userResetPassword(db, out, singleArg(rest, "<email>"));
       default:
         throw new CliError(`Unknown command: ${[group, action].filter(Boolean).join(" ")}`, 2, true);
     }
@@ -197,5 +204,19 @@ async function keyRevoke(db: Database, out: CliOutput, keyId: string): Promise<n
   } else {
     out.stdout(`Revoked key ${apiKey.prefix} (${apiKey.id})`);
   }
+  return 0;
+}
+
+async function userResetPassword(db: Database, out: CliOutput, email: string): Promise<number> {
+  const user = await findUserByEmail(db, email);
+  if (!user) {
+    throw new CliError(`User not found: ${email}`, 1);
+  }
+  const password = generatePassword();
+  await setPasswordHash(db, user.id, await hashPassword(password));
+  await deleteUserSessions(db, user.id);
+  out.stdout(`Reset password for ${user.email}`);
+  out.stdout(password);
+  out.stdout("Store this password now. It will not be shown again. The user was logged out everywhere.");
   return 0;
 }

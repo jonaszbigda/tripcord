@@ -1,7 +1,10 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { createTestOrg, createTestProject, getTestDb, resetDb } from "../test/db";
+import { createTestOrg, createTestProject, createTestUser, getTestDb, resetDb } from "../test/db";
 import { findProjectByApiKey, listApiKeys, listProjects, revokeApiKey } from "./db/projects";
 import { runCli, USAGE } from "./admin";
+import { verifyPassword } from "./auth/password";
+import { createSession, findSessionUser } from "./db/sessions";
+import { findUserById } from "./db/users";
 
 const MISSING_ID = "00000000-0000-0000-0000-000000000000";
 const KEY_PATTERN = /^rpk_[A-Za-z0-9_-]{43}$/;
@@ -271,6 +274,30 @@ describe("runCli", () => {
       const result = await run(["key", "revoke", "123"]);
       expect(result.code).toBe(2);
       expect(result.stderr).toEqual(["Invalid id: 123"]);
+    });
+  });
+
+  describe("user reset-password", () => {
+    it("sets a new password, prints it once, and logs the user out everywhere", async () => {
+      const db = getTestDb();
+      const user = await createTestUser(db, { email: "ana@example.com", password: "old-password" });
+      const { token } = await createSession(db, user.id);
+
+      const result = await run(["user", "reset-password", "ANA@example.com"]);
+
+      expect(result.code).toBe(0);
+      expect(result.stdout[0]).toBe("Reset password for ana@example.com");
+      expect(result.stdout[1]).toMatch(/^[A-Za-z0-9_-]{24}$/);
+      expect(result.stdout[2]).toBe("Store this password now. It will not be shown again. The user was logged out everywhere.");
+      const updated = await findUserById(db, user.id);
+      expect(await verifyPassword(result.stdout[1], updated!.passwordHash!)).toBe(true);
+      expect(await findSessionUser(db, token)).toBeUndefined();
+    });
+
+    it("exits 1 for an unknown email", async () => {
+      const result = await run(["user", "reset-password", "nobody@example.com"]);
+      expect(result.code).toBe(1);
+      expect(result.stderr).toEqual(["User not found: nobody@example.com"]);
     });
   });
 });
