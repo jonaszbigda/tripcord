@@ -3207,7 +3207,7 @@ git commit -m "feat(dashboard): hand-rolled volume chart: stacked bars, lines, t
 - Create: `dashboard/src/components/timelines/FilterBar.tsx`, `TagPicker.tsx`, `TopReasons.tsx`, `TimelineList.tsx`, `TagChips.tsx`, `EmptyState.tsx`, `dashboard/src/pages/timelines.test.tsx`
 - Modify: `dashboard/src/pages/TimelinesPage.tsx` (replace the placeholder)
 
-- [ ] **Step 1: Write the failing page tests**
+- [x] **Step 1: Write the failing page tests**
 
 Create `dashboard/src/pages/timelines.test.tsx`:
 
@@ -3348,12 +3348,12 @@ describe("timelines tab", () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `npm test -w dashboard -- src/pages/timelines.test.tsx`
 Expected: FAIL. The placeholder page renders none of this.
 
-- [ ] **Step 3: Implement the pieces**
+- [x] **Step 3: Implement the pieces**
 
 Create `dashboard/src/components/timelines/TagChips.tsx`:
 
@@ -3720,14 +3720,14 @@ export function TimelinesPage() {
 }
 ```
 
-- [ ] **Step 4: Run to verify it passes**
+- [x] **Step 4: Run to verify it passes**
 
 Run: `npm test -w dashboard && npm run typecheck -w dashboard && npm run lint -w dashboard`
 Expected: PASS, including the Task 5 project-tab tests, which now render the real Timelines tab with their empty-summary handlers.
 
 The tag test clicks the `<summary>` before the checkbox. If this jsdom version doesn't toggle `<details>` on a summary click, the checkbox is still clickable, because user-event only checks `pointer-events`. So the test doesn't depend on that.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add dashboard/src
