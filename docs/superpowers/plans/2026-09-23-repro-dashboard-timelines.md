@@ -2624,7 +2624,7 @@ git commit -m "feat(dashboard): project tabs, timeline queries, URL filters and 
 **Files:**
 - Create: `dashboard/src/components/charts/scale.ts`, `series.ts`, `ChartFrame.tsx`, `StackedBars.tsx`, `Lines.tsx`, `VolumeChart.tsx`, `charts.test.tsx`
 
-- [ ] **Step 1: Write the failing chart tests**
+- [x] **Step 1: Write the failing chart tests**
 
 Create `dashboard/src/components/charts/charts.test.tsx`:
 
@@ -2731,12 +2731,12 @@ describe("VolumeChart", () => {
 
 The last assertion relies on the row's cells rendering as "…date…", then `5`, `0`, `2`, `7`, with no whitespace between cells in `textContent`.
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `npm test -w dashboard -- src/components/charts`
 Expected: FAIL. The modules don't exist yet.
 
-- [ ] **Step 3: Implement scale and series**
+- [x] **Step 3: Implement scale and series**
 
 Create `dashboard/src/components/charts/scale.ts`:
 
@@ -2790,7 +2790,7 @@ export const SERIES: SeriesDef[] = (["error", "unhandledrejection", "manual"] as
 }));
 ```
 
-- [ ] **Step 4: Implement the frame and the two mark layers**
+- [x] **Step 4: Implement the frame and the two mark layers**
 
 Create `dashboard/src/components/charts/ChartFrame.tsx`:
 
@@ -2840,7 +2840,9 @@ interface ChartFrameProps {
 // and one full-height hover target per bucket (larger than any mark). Marks are
 // drawn by the children, in plot coordinates.
 export function ChartFrame({ width, geometry: g, ticks, labels, label, onHover, children }: ChartFrameProps) {
-  const every = Math.max(1, Math.ceil(labels.length / 6));
+  // At most 6 x labels, and fewer on narrow screens: about 72px per label.
+  const maxLabels = Math.max(2, Math.min(6, Math.floor(g.width / 72)));
+  const every = Math.max(1, Math.ceil(labels.length / maxLabels));
   return (
     <svg width={width} height={CHART_HEIGHT} role="img" aria-label={label} className="block">
       <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
@@ -2986,7 +2988,7 @@ export function Lines({
 }
 ```
 
-- [ ] **Step 5: Implement the chart container**
+- [x] **Step 5: Implement the chart container**
 
 Create `dashboard/src/components/charts/VolumeChart.tsx`:
 
@@ -3183,12 +3185,14 @@ export function VolumeChart({ summary, series }: { summary: TimelineSummary; ser
 }
 ```
 
-- [ ] **Step 6: Run to verify it passes**
+- [x] **Step 6: Run to verify it passes**
 
 Run: `npm test -w dashboard -- src/components/charts && npm run typecheck -w dashboard && npm run lint -w dashboard`
 Expected: PASS, 12 tests.
 
-- [ ] **Step 7: Commit**
+> Deviation: rendering the real components to static SVG (light and dark; 900px and 343px; daily and hourly) showed six x labels crowding at phone width. `ChartFrame` now shows at most 6, and fewer when that would leave under ~72px per label. The rendered bars, gaps, rounded tops, crosshair and both themes otherwise looked as specified.
+
+- [x] **Step 7: Commit**
 
 ```bash
 git add dashboard/src/components/charts
