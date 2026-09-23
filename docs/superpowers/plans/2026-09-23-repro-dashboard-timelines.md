@@ -1524,7 +1524,7 @@ git commit -m "feat(server): timeline read service: filters, keyset list, summar
 - Create: `server/src/routes/timelines.ts`, `server/src/routes/timelines.test.ts`
 - Modify: `server/src/routes/projects.ts`, `server/src/app.ts`, `server/src/routes/isolation.test.ts`
 
-- [ ] **Step 1: Write the failing route tests**
+- [x] **Step 1: Write the failing route tests**
 
 Create `server/src/routes/timelines.test.ts`:
 
@@ -1658,12 +1658,12 @@ describe("timeline read routes", () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `npm test -w server -- src/routes/timelines.test.ts`
 Expected: FAIL. Every route returns `404`.
 
-- [ ] **Step 3: Share the project check**
+- [x] **Step 3: Share the project check**
 
 In `server/src/routes/projects.ts`:
 
@@ -1685,7 +1685,7 @@ export async function requireProject(db: Database, { orgId, projectId }: Project
 
 3. Delete the inner `async function requireProject(…)` from `registerProjectRoutes`, and change its two callers to `await requireProject(db, request.params);`.
 
-- [ ] **Step 4: Implement the routes**
+- [x] **Step 4: Implement the routes**
 
 Create `server/src/routes/timelines.ts`:
 
@@ -1834,12 +1834,12 @@ import { registerTimelineReadRoutes } from "./routes/timelines";
   registerTimelineReadRoutes(app, ctx);
 ```
 
-- [ ] **Step 5: Run to verify it passes**
+- [x] **Step 5: Run to verify it passes**
 
 Run: `npm test -w server -- src/routes/timelines.test.ts src/routes/projects.test.ts`
 Expected: PASS. The project route tests still pass after the `requireProject` refactor.
 
-- [ ] **Step 6: Extend the tenant-isolation test**
+- [x] **Step 6: Extend the tenant-isolation test**
 
 Run: `npm test -w server -- src/routes/isolation.test.ts`
 Expected: FAIL. "covers every registered org-scoped route" now sees four routes that aren't in `CASES`.
@@ -1873,7 +1873,9 @@ In `server/src/routes/isolation.test.ts`:
 Run: `npm test -w server -- src/routes/isolation.test.ts`
 Expected: PASS. An outsider gets `404` on all four routes, crossing through their own org id also gets `404`, and the owner reaches them.
 
-- [ ] **Step 7: Whole server check and commit**
+> Mutation-checked: with `requireProject` removed from the detail route, the "can't reach another org's resources through their own org id" isolation case fails. Timelines are looked up by project id alone, so that check is what enforces tenancy.
+
+- [x] **Step 7: Whole server check and commit**
 
 Run: `npm test -w server && npm run typecheck -w server && npm run lint -w server`
 Expected: PASS.
