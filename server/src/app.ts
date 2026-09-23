@@ -11,6 +11,7 @@ import { registerAuthRoutes } from "./routes/auth";
 import { registerInviteRoutes } from "./routes/invites";
 import { registerMeRoutes } from "./routes/me";
 import { registerOrgRoutes } from "./routes/orgs";
+import { registerProjectRoutes } from "./routes/projects";
 import { registerTimelineRoute } from "./routes/timeline";
 
 export interface AppOptions {
@@ -140,6 +141,7 @@ export async function buildApp(db: Database, options: AppOptions = {}): Promise<
   registerMeRoutes(app, ctx);
   registerOrgRoutes(app, ctx);
   registerInviteRoutes(app, ctx);
+  registerProjectRoutes(app, ctx);
 
   return app;
 }

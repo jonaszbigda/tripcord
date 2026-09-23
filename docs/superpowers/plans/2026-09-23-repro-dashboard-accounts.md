@@ -4195,7 +4195,7 @@ git commit -m "feat(server): add org, member and invite routes"
   - `POST …/projects/:projectId/keys` → `201 { apiKey, key }`
   - `POST …/keys/:keyId/revoke` → `{ apiKey, alreadyRevoked }`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `server/src/routes/projects.test.ts`:
 
@@ -4475,12 +4475,12 @@ describe("tenant isolation", () => {
 
 In the cross-org test, `split("/").length > 5` selects the routes that have a nested id after `:orgId`, such as `/api/orgs/:orgId/members/:userId` and the project routes. Org-level routes like `/api/orgs/:orgId/projects` are excluded, because through the outsider's own org id they are legitimately reachable.
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npm test -w server -- src/routes/projects.test.ts src/routes/isolation.test.ts`
 Expected: FAIL. The project routes return 404 for the owner, and the coverage test lists the missing project routes.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Create `server/src/routes/projects.ts`:
 
@@ -4570,12 +4570,12 @@ export function registerProjectRoutes(app: FastifyInstance, ctx: ApiContext): vo
 
 In `server/src/app.ts`, add `import { registerProjectRoutes } from "./routes/projects";` and, after `registerInviteRoutes(app, ctx);`, add `registerProjectRoutes(app, ctx);`.
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `npm test -w server -- src/routes`
 Expected: PASS.
 
-- [ ] **Step 5: Full suite, typecheck, lint, commit**
+- [x] **Step 5: Full suite, typecheck, lint, commit**
 
 Run: `npm test -w server && npm run typecheck -w server && npm run lint -w server`
 
