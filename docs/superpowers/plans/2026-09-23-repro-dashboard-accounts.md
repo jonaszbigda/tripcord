@@ -2042,7 +2042,7 @@ git commit -m "feat(server): add org membership service with a locked last-owner
     - `type AcceptInviteResult = { ok: true; orgId: string } | { ok: false; reason: "not_found" | "already_member" }`
     - `acceptInvite(db: Database, token: string, userId: string): Promise<AcceptInviteResult>`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `server/src/db/invites.test.ts`:
 
@@ -2317,12 +2317,12 @@ describe("acceptInvite", () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npm test -w server -- src/db/invites.test.ts src/accounts.test.ts`
 Expected: FAIL. `./invites` and `./accounts` can't be resolved.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Create `server/src/db/invites.ts`:
 
@@ -2543,17 +2543,17 @@ export async function acceptInvite(db: Database, token: string, userId: string):
 }
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `npm test -w server -- src/db/invites.test.ts src/accounts.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Run the full suite, typecheck, lint**
+- [x] **Step 5: Run the full suite, typecheck, lint**
 
 Run: `npm test -w server && npm run typecheck -w server && npm run lint -w server`
 Expected: all PASS / exit 0.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add server/src/db/invites.ts server/src/db/invites.test.ts server/src/accounts.ts server/src/accounts.test.ts
