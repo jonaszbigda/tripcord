@@ -1,6 +1,8 @@
 import { parseArgs } from "node:util";
 import type { Database } from "./db/client";
+import { findOrg, listOrgs } from "./db/orgs";
 import { createApiKey, createProject, listApiKeys, listProjects, revokeApiKey } from "./db/projects";
+import { isUuid } from "./uuid";
 
 export interface CliOutput {
   stdout(line: string): void;
@@ -10,16 +12,16 @@ export interface CliOutput {
 export const USAGE = `Usage: repro-admin <command>
 
 Commands:
-  project create <name>      Create a project and its first API key
-  project list               List projects
-  key create <projectId>     Create an additional API key for a project
-  key list <projectId>       List a project's API keys
-  key revoke <keyId>         Revoke an API key
+  org list                                List orgs
+  project create --org <orgId> <name>     Create a project in an org, with its first API key
+  project list                            List projects
+  key create <projectId>                  Create an additional API key for a project
+  key list <projectId>                    List a project's API keys
+  key revoke <keyId>                      Revoke an API key
 
-Put -- before an argument that starts with "-", e.g. project create -- -beta`;
+Put -- before an argument that starts with "-", e.g. project create --org <orgId> -- -beta`;
 
 const KEY_WARNING = "Store this API key now. It will not be shown again.";
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 class CliError extends Error {
   constructor(
@@ -44,9 +46,21 @@ export async function runCli(argv: string[], db: Database, out: CliOutput): Prom
     if (!group) {
       throw new CliError("Missing command", 2, true);
     }
-    switch (`${group} ${action ?? ""}`) {
-      case "project create":
-        return await projectCreate(db, out, singleArg(rest, "<name>"));
+    const command = `${group} ${action ?? ""}`;
+    if (values.org !== undefined && command !== "project create") {
+      throw new CliError("Unknown option: --org", 2, true);
+    }
+    switch (command) {
+      case "org list":
+        noArgs(rest);
+        return await orgList(db, out);
+      case "project create": {
+        if (values.org === undefined) {
+          throw new CliError("Missing option: --org <orgId>", 2, true);
+        }
+        const orgId = parseId(values.org);
+        return await projectCreate(db, out, orgId, singleArg(rest, "<name>"));
+      }
       case "project list":
         noArgs(rest);
         return await projectList(db, out);
@@ -71,15 +85,14 @@ export async function runCli(argv: string[], db: Database, out: CliOutput): Prom
   }
 }
 
-function parsePositionals(argv: string[]): { values: { help?: boolean }; positionals: string[] } {
+function parsePositionals(argv: string[]): { values: { help?: boolean; org?: string }; positionals: string[] } {
   try {
-    // help is the only defined option, so strict mode still rejects any other
-    // flag (e.g. --json).
+    // Strict mode still rejects any flag not listed here (e.g. --json).
     return parseArgs({
       args: argv,
       allowPositionals: true,
       strict: true,
-      options: { help: { type: "boolean", short: "h" } },
+      options: { help: { type: "boolean", short: "h" }, org: { type: "string" } },
     });
   } catch (error) {
     throw new CliError(error instanceof Error ? error.message : String(error), 2, true);
@@ -102,7 +115,7 @@ function noArgs(rest: string[]): void {
 
 // Validated up front so Postgres never raises a uuid cast error.
 function parseId(value: string): string {
-  if (!UUID_PATTERN.test(value)) {
+  if (!isUuid(value)) {
     throw new CliError(`Invalid id: ${value}`, 2);
   }
   return value;
@@ -114,12 +127,26 @@ function formatTable(headers: string[], rows: string[][]): string[] {
   return [line(headers), ...rows.map(line)];
 }
 
-async function projectCreate(db: Database, out: CliOutput, rawName: string): Promise<number> {
+async function orgList(db: Database, out: CliOutput): Promise<number> {
+  const orgs = await listOrgs(db);
+  if (orgs.length === 0) {
+    out.stdout("No orgs.");
+    return 0;
+  }
+  const rows = orgs.map((o) => [o.id, o.name, o.createdAt.toISOString(), String(o.memberCount), String(o.projectCount)]);
+  formatTable(["ID", "NAME", "CREATED", "MEMBERS", "PROJECTS"], rows).forEach((line) => out.stdout(line));
+  return 0;
+}
+
+async function projectCreate(db: Database, out: CliOutput, orgId: string, rawName: string): Promise<number> {
   const name = rawName.trim();
   if (!name) {
     throw new CliError("Project name is required", 2);
   }
-  const { project, key } = await createProject(db, name);
+  if (!(await findOrg(db, orgId))) {
+    throw new CliError(`Org not found: ${orgId}`, 1);
+  }
+  const { project, key } = await createProject(db, orgId, name);
   out.stdout(`Created project "${project.name}" (${project.id})`);
   out.stdout(key);
   out.stdout(KEY_WARNING);
@@ -132,8 +159,8 @@ async function projectList(db: Database, out: CliOutput): Promise<number> {
     out.stdout("No projects.");
     return 0;
   }
-  const rows = projects.map((p) => [p.id, p.name, p.createdAt.toISOString(), String(p.activeKeyCount)]);
-  formatTable(["ID", "NAME", "CREATED", "ACTIVE KEYS"], rows).forEach((line) => out.stdout(line));
+  const rows = projects.map((p) => [p.id, p.orgId, p.name, p.createdAt.toISOString(), String(p.activeKeyCount)]);
+  formatTable(["ID", "ORG", "NAME", "CREATED", "ACTIVE KEYS"], rows).forEach((line) => out.stdout(line));
   return 0;
 }
 

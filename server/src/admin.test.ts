@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { createTestProject, getTestDb, resetDb } from "../test/db";
+import { createTestOrg, createTestProject, getTestDb, resetDb } from "../test/db";
 import { findProjectByApiKey, listApiKeys, listProjects, revokeApiKey } from "./db/projects";
 import { runCli, USAGE } from "./admin";
 
@@ -35,13 +35,13 @@ describe("runCli", () => {
     });
 
     it("exits 2 with usage for a missing argument", async () => {
-      const result = await run(["project", "create"]);
+      const result = await run(["project", "create", "--org", MISSING_ID]);
       expect(result.code).toBe(2);
       expect(result.stderr).toEqual(["Missing argument: <name>", USAGE]);
     });
 
     it("exits 2 with usage for an extra argument", async () => {
-      const result = await run(["project", "create", "My", "Project"]);
+      const result = await run(["project", "create", "--org", MISSING_ID, "My", "Project"]);
       expect(result.code).toBe(2);
       expect(result.stderr).toEqual(["Unexpected argument: Project", USAGE]);
     });
@@ -64,7 +64,8 @@ describe("runCli", () => {
     });
 
     it("accepts a project name starting with '-' after --", async () => {
-      const result = await run(["project", "create", "--", "-beta"]);
+      const org = await createTestOrg(getTestDb());
+      const result = await run(["project", "create", "--org", org.id, "--", "-beta"]);
       expect(result.code).toBe(0);
       const [project] = await listProjects(getTestDb());
       expect(project.name).toBe("-beta");
@@ -72,13 +73,15 @@ describe("runCli", () => {
   });
 
   describe("project create", () => {
-    it("creates the project and prints its id and a working key once", async () => {
-      const result = await run(["project", "create", "Acme"]);
+    it("creates the project in the org and prints its id and a working key once", async () => {
+      const org = await createTestOrg(getTestDb());
+      const result = await run(["project", "create", "--org", org.id, "Acme"]);
 
       expect(result.code).toBe(0);
       expect(result.stderr).toEqual([]);
       const [project] = await listProjects(getTestDb());
       expect(project.name).toBe("Acme");
+      expect(project.orgId).toBe(org.id);
       expect(result.stdout[0]).toBe(`Created project "Acme" (${project.id})`);
       expect(result.stdout[1]).toMatch(KEY_PATTERN);
       expect(result.stdout[2]).toBe("Store this API key now. It will not be shown again.");
@@ -86,16 +89,43 @@ describe("runCli", () => {
     });
 
     it("trims the project name", async () => {
-      await run(["project", "create", "  Acme  "]);
+      const org = await createTestOrg(getTestDb());
+      await run(["project", "create", "--org", org.id, "  Acme  "]);
       const [project] = await listProjects(getTestDb());
       expect(project.name).toBe("Acme");
     });
 
     it("exits 2 without usage for a whitespace-only name", async () => {
-      const result = await run(["project", "create", "   "]);
+      const org = await createTestOrg(getTestDb());
+      const result = await run(["project", "create", "--org", org.id, "   "]);
       expect(result.code).toBe(2);
       expect(result.stderr).toEqual(["Project name is required"]);
       expect(await listProjects(getTestDb())).toEqual([]);
+    });
+
+    it("exits 2 with usage when --org is missing", async () => {
+      const result = await run(["project", "create", "Acme"]);
+      expect(result.code).toBe(2);
+      expect(result.stderr).toEqual(["Missing option: --org <orgId>", USAGE]);
+    });
+
+    it("exits 2 for a malformed org id", async () => {
+      const result = await run(["project", "create", "--org", "nope", "Acme"]);
+      expect(result.code).toBe(2);
+      expect(result.stderr).toEqual(["Invalid id: nope"]);
+    });
+
+    it("exits 1 when the org doesn't exist", async () => {
+      const result = await run(["project", "create", "--org", MISSING_ID, "Acme"]);
+      expect(result.code).toBe(1);
+      expect(result.stderr).toEqual([`Org not found: ${MISSING_ID}`]);
+      expect(await listProjects(getTestDb())).toEqual([]);
+    });
+
+    it("rejects --org on other commands", async () => {
+      const result = await run(["project", "list", "--org", MISSING_ID]);
+      expect(result.code).toBe(2);
+      expect(result.stderr).toEqual(["Unknown option: --org", USAGE]);
     });
   });
 
@@ -112,12 +142,32 @@ describe("runCli", () => {
       const result = await run(["project", "list"]);
 
       expect(result.code).toBe(0);
-      expect(result.stdout[0]).toMatch(/^ID\s+NAME\s+CREATED\s+ACTIVE KEYS$/);
+      expect(result.stdout[0]).toMatch(/^ID\s+ORG\s+NAME\s+CREATED\s+ACTIVE KEYS$/);
+      expect(result.stdout[1]).toContain(project.orgId);
       expect(result.stdout[1]).toContain(project.id);
       expect(result.stdout[1]).toContain("Acme");
       expect(result.stdout[1]).toContain(project.createdAt.toISOString());
       expect(result.stdout[1]).toMatch(/\s1$/);
       expect(result.stdout.join("\n")).not.toContain(key);
+    });
+  });
+
+  describe("org list", () => {
+    it("prints a message when there are no orgs", async () => {
+      const result = await run(["org", "list"]);
+      expect(result.code).toBe(0);
+      expect(result.stdout).toEqual(["No orgs."]);
+    });
+
+    it("prints orgs with member and project counts", async () => {
+      const { project } = await createTestProject(getTestDb(), "web");
+
+      const result = await run(["org", "list"]);
+
+      expect(result.code).toBe(0);
+      expect(result.stdout[0]).toMatch(/^ID\s+NAME\s+CREATED\s+MEMBERS\s+PROJECTS$/);
+      expect(result.stdout[1]).toContain(project.orgId);
+      expect(result.stdout[1]).toMatch(/\s0\s+1$/);
     });
   });
 

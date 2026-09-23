@@ -1,12 +1,14 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { eq } from "drizzle-orm";
-import { createTestProject, getTestDb, resetDb } from "../../test/db";
+import { createTestOrg, createTestProject, getTestDb, resetDb } from "../../test/db";
 import { hashApiKey } from "../keys";
 import { apiKeys, projects } from "./schema";
 import {
   createApiKey,
   createProject,
+  findApiKeyInOrg,
   findProjectByApiKey,
+  findProjectInOrg,
   listApiKeys,
   listProjects,
   revokeApiKey,
@@ -17,17 +19,20 @@ describe("createProject", () => {
     await resetDb(getTestDb());
   });
 
-  it("creates the project and returns a plaintext rpk_ key", async () => {
+  it("creates the project in the org and returns a plaintext rpk_ key", async () => {
     const db = getTestDb();
-    const { project, key } = await createProject(db, "widgets-inc");
+    const org = await createTestOrg(db);
+    const { project, key } = await createProject(db, org.id, "widgets-inc");
 
     expect(project.name).toBe("widgets-inc");
+    expect(project.orgId).toBe(org.id);
     expect(key).toMatch(/^rpk_[A-Za-z0-9_-]{43}$/);
   });
 
   it("stores only the hash and display prefix, never the plaintext key", async () => {
     const db = getTestDb();
-    const { project, key } = await createProject(db, "widgets-inc");
+    const org = await createTestOrg(db);
+    const { project, key } = await createProject(db, org.id, "widgets-inc");
 
     const rows = await db.select().from(apiKeys).where(eq(apiKeys.projectId, project.id));
     expect(rows).toHaveLength(1);
@@ -39,8 +44,9 @@ describe("createProject", () => {
 
   it("allows two projects with the same name", async () => {
     const db = getTestDb();
-    const first = await createProject(db, "web");
-    const second = await createProject(db, "web");
+    const org = await createTestOrg(db);
+    const first = await createProject(db, org.id, "web");
+    const second = await createProject(db, org.id, "web");
     expect(first.project.id).not.toBe(second.project.id);
   });
 });
@@ -139,12 +145,13 @@ describe("listProjects", () => {
 
   it("reports zero active keys for a project that never had a key (pre-upgrade project)", async () => {
     const db = getTestDb();
-    const [legacy] = await db.insert(projects).values({ name: "legacy" }).returning();
+    const org = await createTestOrg(db);
+    const [legacy] = await db.insert(projects).values({ name: "legacy", orgId: org.id }).returning();
 
     const result = await listProjects(db);
 
     expect(result).toEqual([
-      { id: legacy.id, name: "legacy", createdAt: legacy.createdAt, activeKeyCount: 0 },
+      { id: legacy.id, orgId: org.id, name: "legacy", createdAt: legacy.createdAt, activeKeyCount: 0 },
     ]);
   });
 });
@@ -217,5 +224,44 @@ describe("revokeApiKey", () => {
 
   it("returns undefined for an unknown key id", async () => {
     expect(await revokeApiKey(getTestDb(), MISSING_ID)).toBeUndefined();
+  });
+});
+
+describe("org scoping", () => {
+  beforeEach(async () => {
+    await resetDb(getTestDb());
+  });
+
+  it("listProjects filters by org when asked", async () => {
+    const db = getTestDb();
+    const { project: mine } = await createTestProject(db, "mine");
+    await createTestProject(db, "theirs");
+
+    const result = await listProjects(db, { orgId: mine.orgId });
+
+    expect(result.map((p) => p.id)).toEqual([mine.id]);
+    expect(await listProjects(db)).toHaveLength(2);
+  });
+
+  it("findProjectInOrg only finds a project through its own org", async () => {
+    const db = getTestDb();
+    const { project } = await createTestProject(db);
+    const other = await createTestOrg(db, "Other");
+
+    expect((await findProjectInOrg(db, project.orgId, project.id))?.id).toBe(project.id);
+    expect(await findProjectInOrg(db, other.id, project.id)).toBeUndefined();
+  });
+
+  it("findApiKeyInOrg requires the key to belong to that project in that org", async () => {
+    const db = getTestDb();
+    const { project } = await createTestProject(db);
+    const { project: sibling } = await createTestProject(db, "sibling", project.orgId);
+    const other = await createTestOrg(db, "Other");
+    const [key] = await listApiKeys(db, project.id);
+
+    const found = await findApiKeyInOrg(db, project.orgId, project.id, key.id);
+    expect(found).toEqual(key);
+    expect(await findApiKeyInOrg(db, project.orgId, sibling.id, key.id)).toBeUndefined();
+    expect(await findApiKeyInOrg(db, other.id, project.id, key.id)).toBeUndefined();
   });
 });

@@ -15,6 +15,13 @@
       "when": 1790102513368,
       "tag": "0001_square_whirlwind",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790174027125,
+      "tag": "0002_burly_reavers",
+      "breakpoints": true
     }
   ]
 }

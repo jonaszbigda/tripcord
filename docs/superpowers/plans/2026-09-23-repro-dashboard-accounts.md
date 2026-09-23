@@ -346,7 +346,7 @@ git commit -m "feat(server): add scrypt password hashing and random token primit
     - `createTestOrg(db, name = "Acme"): Promise<Org>`
     - `createTestProject(db, name = "acme", orgId?: string)`, which creates an org when none is given.
 
-- [ ] **Step 1: Add the `Executor` type**
+- [x] **Step 1: Add the `Executor` type**
 
 In `server/src/db/client.ts`, replace the whole file with:
 
@@ -371,7 +371,7 @@ export type Database = ReturnType<typeof createDb>;
 export type Executor = PgDatabase<NodePgQueryResultHKT, typeof schema>;
 ```
 
-- [ ] **Step 2: Extend the schema**
+- [x] **Step 2: Extend the schema**
 
 Replace `server/src/db/schema.ts` with:
 
@@ -525,7 +525,7 @@ export type ApiKey = typeof apiKeys.$inferSelect;
 export type Timeline = typeof timelines.$inferSelect;
 ```
 
-- [ ] **Step 3: Generate the migration**
+- [x] **Step 3: Generate the migration**
 
 Run (from `server/`): `npx drizzle-kit generate`
 Expected: new `drizzle/0002_<random_name>.sql`, `drizzle/meta/0002_snapshot.json`, updated `drizzle/meta/_journal.json`. No live database is needed. If drizzle-kit asks about a rename, every table and column is **new** (create, don't rename).
@@ -536,7 +536,7 @@ Open the generated SQL and confirm that it contains `CREATE TABLE` statements fo
 ALTER TABLE "projects" ADD COLUMN "org_id" uuid NOT NULL;--> statement-breakpoint
 ```
 
-- [ ] **Step 4: Hand-edit the migration to backfill existing projects**
+- [x] **Step 4: Hand-edit the migration to backfill existing projects**
 
 A `NOT NULL` column can't be added to a table that already has rows. In `drizzle/0002_*.sql`, replace that single `ADD COLUMN` line with the block below. Put it **after** every `CREATE TABLE` statement (drizzle-kit normally emits the creates first; if the `ALTER` came earlier, move it). Keep the generated FK `DO $$ ... $$` block and `CREATE INDEX` statements unchanged.
 
@@ -551,7 +551,7 @@ ALTER TABLE "projects" ALTER COLUMN "org_id" SET NOT NULL;--> statement-breakpoi
 
 Do not touch `meta/0002_snapshot.json`: the final schema is identical, and only the path to it differs.
 
-- [ ] **Step 5: Write the migration test**
+- [x] **Step 5: Write the migration test**
 
 Create `server/src/db/migrations.test.ts`:
 
@@ -633,12 +633,12 @@ describe("org migration (0002)", () => {
 });
 ```
 
-- [ ] **Step 6: Run the migration test**
+- [x] **Step 6: Run the migration test**
 
 Run: `npm test -w server -- src/db/migrations.test.ts`
 Expected: PASS (2 tests). The test only needs the SQL files, not the service code. If the first test fails with `column "org_id" ... contains null values`, the backfill block is in the wrong position (Step 4).
 
-- [ ] **Step 7: Write the failing service tests**
+- [x] **Step 7: Write the failing service tests**
 
 Create `server/src/db/orgs.test.ts`:
 
@@ -903,12 +903,12 @@ In `server/src/admin.test.ts`:
   });
 ```
 
-- [ ] **Step 8: Run the tests to verify they fail**
+- [x] **Step 8: Run the tests to verify they fail**
 
 Run: `npm test -w server`
 Expected: FAIL. `./orgs` can't be resolved, `createTestOrg` and `createTestUserRow` are missing, and `createProject`'s signature has changed.
 
-- [ ] **Step 9: Implement**
+- [x] **Step 9: Implement**
 
 Create `server/src/uuid.ts`:
 
@@ -1225,12 +1225,12 @@ async function projectList(db: Database, out: CliOutput): Promise<number> {
 }
 ```
 
-- [ ] **Step 10: Run all server tests**
+- [x] **Step 10: Run all server tests**
 
 Run: `npm test -w server`
 Expected: PASS, the whole suite including existing ingest, retention and CLI tests. Then run `npm run typecheck -w server` and `npm run lint -w server`. Both should exit 0.
 
-- [ ] **Step 11: Commit**
+- [x] **Step 11: Commit**
 
 ```bash
 git add server/src server/test server/drizzle

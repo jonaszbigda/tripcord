@@ -36,9 +36,9 @@ const apiKeySummaryColumns = {
   revokedAt: apiKeys.revokedAt,
 };
 
-export async function createProject(db: Database, name: string): Promise<CreatedProject> {
+export async function createProject(db: Database, orgId: string, name: string): Promise<CreatedProject> {
   return db.transaction(async (tx) => {
-    const [project] = await tx.insert(projects).values({ name }).returning();
+    const [project] = await tx.insert(projects).values({ orgId, name }).returning();
     const generated = generateApiKey();
     await tx.insert(apiKeys).values({
       projectId: project.id,
@@ -74,16 +74,19 @@ export async function createApiKey(db: Database, projectId: string): Promise<Cre
   return { apiKey, key: generated.key };
 }
 
-export async function listProjects(db: Database): Promise<ProjectSummary[]> {
+/** All projects (CLI), or one org's projects when `orgId` is given (dashboard). */
+export async function listProjects(db: Database, filter: { orgId?: string } = {}): Promise<ProjectSummary[]> {
   return db
     .select({
       id: projects.id,
+      orgId: projects.orgId,
       name: projects.name,
       createdAt: projects.createdAt,
       activeKeyCount: sql<number>`count(${apiKeys.id}) filter (where ${apiKeys.revokedAt} is null)`.mapWith(Number),
     })
     .from(projects)
     .leftJoin(apiKeys, eq(apiKeys.projectId, projects.id))
+    .where(filter.orgId ? eq(projects.orgId, filter.orgId) : undefined)
     .groupBy(projects.id)
     .orderBy(asc(projects.createdAt));
 }
@@ -108,4 +111,31 @@ export async function revokeApiKey(db: Database, keyId: string): Promise<Revoked
   }
   const [existing] = await db.select(apiKeySummaryColumns).from(apiKeys).where(eq(apiKeys.id, keyId)).limit(1);
   return existing ? { apiKey: existing, alreadyRevoked: true } : undefined;
+}
+
+// Dashboard routes look a project up through its org, so an id from another
+// tenant resolves to undefined (→ 404) rather than to someone else's project.
+// Callers must pass syntactically valid UUIDs.
+export async function findProjectInOrg(db: Database, orgId: string, projectId: string): Promise<Project | undefined> {
+  const [project] = await db
+    .select()
+    .from(projects)
+    .where(and(eq(projects.id, projectId), eq(projects.orgId, orgId)))
+    .limit(1);
+  return project;
+}
+
+export async function findApiKeyInOrg(
+  db: Database,
+  orgId: string,
+  projectId: string,
+  keyId: string
+): Promise<ApiKeySummary | undefined> {
+  const [apiKey] = await db
+    .select(apiKeySummaryColumns)
+    .from(apiKeys)
+    .innerJoin(projects, eq(apiKeys.projectId, projects.id))
+    .where(and(eq(apiKeys.id, keyId), eq(apiKeys.projectId, projectId), eq(projects.orgId, orgId)))
+    .limit(1);
+  return apiKey;
 }

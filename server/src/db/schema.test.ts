@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { getTestDb, resetDb } from "../../test/db";
+import { createTestOrg, getTestDb, resetDb } from "../../test/db";
 import { apiKeys, projects } from "./schema";
 
 describe("schema wiring", () => {
@@ -10,7 +10,8 @@ describe("schema wiring", () => {
   it("can insert a project with an api key row and read both back", async () => {
     const db = getTestDb();
 
-    const [inserted] = await db.insert(projects).values({ name: "test project" }).returning();
+    const org = await createTestOrg(db);
+    const [inserted] = await db.insert(projects).values({ name: "test project", orgId: org.id }).returning();
     await db.insert(apiKeys).values({ projectId: inserted.id, keyHash: "hash-123", prefix: "rpk_prefix12" });
 
     const found = await db.query.projects.findFirst({
