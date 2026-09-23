@@ -14,6 +14,7 @@ import { ProjectLayout } from "./pages/ProjectLayout";
 import { TimelinesPage } from "./pages/TimelinesPage";
 import { ProjectsPage } from "./pages/ProjectsPage";
 import { SignupPage } from "./pages/SignupPage";
+import { TimelinePage } from "./pages/TimelinePage";
 import { UserSettingsPage } from "./pages/UserSettingsPage";
 
 export function AppRoutes() {
@@ -34,6 +35,7 @@ export function AppRoutes() {
               <Route index element={<TimelinesPage />} />
               <Route path="keys" element={<ProjectKeysPage />} />
             </Route>
+            <Route path="projects/:projectId/timelines/:timelineId" element={<TimelinePage />} />
             <Route path="members" element={<MembersPage />} />
             <Route path="settings" element={<OrgSettingsPage />} />
           </Route>
