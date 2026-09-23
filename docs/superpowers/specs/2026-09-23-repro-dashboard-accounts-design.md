@@ -1,6 +1,6 @@
 # repro — dashboard: accounts, orgs & self-serve keys design
 
-Status: draft
+Status: approved
 Date: 2026-09-23
 Scope: sub-project 4a — user accounts and login, orgs with members and invites, tenant
 ownership of projects, and a dashboard SPA for self-serve project and API key
