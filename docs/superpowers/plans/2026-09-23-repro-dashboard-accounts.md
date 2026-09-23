@@ -113,7 +113,7 @@ Test files sit next to their modules (`*.test.ts`) as today.
   - `hashToken(token: string): string`: SHA-256 as lowercase hex.
   - `generatePassword(): string`: 24 base64url characters.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `server/src/auth/password.test.ts`:
 
@@ -203,12 +203,12 @@ describe("generatePassword", () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npm test -w server -- src/auth`
 Expected: FAIL. The modules `./password` and `./tokens` cannot be resolved.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Create `server/src/auth/password.ts`:
 
@@ -299,12 +299,12 @@ export function generatePassword(): string {
 }
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `npm test -w server -- src/auth`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/src/auth
