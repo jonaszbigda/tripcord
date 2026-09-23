@@ -206,9 +206,11 @@ For `intent=connect` (user must be logged in): set `github_id` on the current us
 If that GitHub account is already linked to another user: refuse with
 `This GitHub account is linked to another user`.
 
-The callback always ends with a redirect into the SPA (`/` on success, or
-`/login?error=<code>` on failure, where the SPA maps the code to the messages
-above). It never renders JSON.
+The callback always ends with a redirect into the SPA, never JSON; the SPA maps
+`error` codes to the messages above. Login intent: `/` on success (or back to
+`/invite/<token>` for an existing user who started from an invite link), else
+`/login?error=<code>`. Connect intent: `/settings` on success, else
+`/settings?error=<code>` (or `/login?error=not_logged_in` without a session).
 
 ### Account settings
 
@@ -222,8 +224,11 @@ above). It never renders JSON.
 
 - Session cookie `repro_session`: `HttpOnly`, `SameSite=Lax`, `Path=/`, `Secure` when
   `PUBLIC_URL` is https. Handled with `@fastify/cookie` (new dependency).
-- Every non-GET `/api/*` request must have `Content-Type: application/json` and an
-  `Origin` header equal to `PUBLIC_URL`'s origin, else `403`. The GitHub endpoints
+- Every non-GET `/api/*` request must have an `Origin` header equal to
+  `PUBLIC_URL`'s origin, and any `Content-Type` it carries must be
+  `application/json`, else `403`. Body-less POSTs/DELETEs (logout, accept invite,
+  revoke) send no `Content-Type`, because Fastify rejects an empty body declared as
+  JSON. The GitHub endpoints
   are GETs and are protected by `state`. HTML forms cannot send JSON without a
   preflight, and there is no CORS on `/api`, so cross-site requests cannot pass.
 - The existing permissive CORS registration (`origin: true`) is moved so it applies
