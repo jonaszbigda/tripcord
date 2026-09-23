@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { eq } from "drizzle-orm";
-import { createTestProject, createTestUser, getTestDb, resetDb, sessionCookie } from "../../test/db";
+import { createTestProject, createTestUser, getTestDb, insertTestTimeline, resetDb, sessionCookie } from "../../test/db";
 import { buildTestApp, call } from "../../test/http";
 import { createInvite, listPendingInvites } from "../db/invites";
 import { addMember, createOrgWithOwner, getMembership } from "../db/orgs";
@@ -15,6 +15,7 @@ interface Fixture {
   projectId: string;
   keyId: string;
   inviteId: string;
+  timelineId: string;
 }
 
 interface RouteCase {
@@ -51,6 +52,22 @@ const CASES: RouteCase[] = [
     route: "POST /api/orgs/:orgId/projects/:projectId/keys/:keyId/revoke",
     url: (f) => `/api/orgs/${f.orgId}/projects/${f.projectId}/keys/${f.keyId}/revoke`,
   },
+  {
+    route: "GET /api/orgs/:orgId/projects/:projectId/timelines",
+    url: (f) => `/api/orgs/${f.orgId}/projects/${f.projectId}/timelines`,
+  },
+  {
+    route: "GET /api/orgs/:orgId/projects/:projectId/timelines/summary",
+    url: (f) => `/api/orgs/${f.orgId}/projects/${f.projectId}/timelines/summary`,
+  },
+  {
+    route: "GET /api/orgs/:orgId/projects/:projectId/timelines/tags",
+    url: (f) => `/api/orgs/${f.orgId}/projects/${f.projectId}/timelines/tags`,
+  },
+  {
+    route: "GET /api/orgs/:orgId/projects/:projectId/timelines/:timelineId",
+    url: (f) => `/api/orgs/${f.orgId}/projects/${f.projectId}/timelines/${f.timelineId}`,
+  },
   { route: "DELETE /api/orgs/:orgId/members/:userId", url: (f) => `/api/orgs/${f.orgId}/members/${f.memberId}` },
 ];
 
@@ -66,12 +83,13 @@ async function setup() {
   await addMember(db, org.id, member.id, "member");
   const { project } = await createTestProject(db, "web", org.id);
   const [key] = await listApiKeys(db, project.id);
+  const timelineId = await insertTestTimeline(db, project.id);
   const { invite } = await createInvite(db, { orgId: org.id, role: "member", createdBy: owner.id });
 
   const outsider = await createTestUser(db);
   const outsiderOrg = await createOrgWithOwner(db, outsider.id, "Attacker");
 
-  const victim: Fixture = { orgId: org.id, memberId: member.id, projectId: project.id, keyId: key.id, inviteId: invite.id };
+  const victim: Fixture = { orgId: org.id, memberId: member.id, projectId: project.id, keyId: key.id, inviteId: invite.id, timelineId };
   return {
     db,
     victim,

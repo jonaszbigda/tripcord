@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { requireMembership, requireUser } from "../auth/http";
+import type { Database } from "../db/client";
 import {
   createApiKey,
   createProject,
@@ -15,20 +16,21 @@ import { httpError, requireName } from "./errors";
 import { nameBodySchema } from "./orgs";
 
 type OrgParams = { orgId: string };
-type ProjectParams = OrgParams & { projectId: string };
+export type ProjectParams = OrgParams & { projectId: string };
 type KeyParams = ProjectParams & { keyId: string };
+
+/** 404 unless the project exists in the org. Every project-scoped route calls it first. */
+export async function requireProject(db: Database, { orgId, projectId }: ProjectParams): Promise<void> {
+  if (!isUuid(projectId) || !(await findProjectInOrg(db, orgId, projectId))) {
+    throw httpError(404, "Not Found");
+  }
+}
 
 // Key logic lives in db/projects.ts (shared with the CLI). These routes only add
 // the tenant check: every project and key is looked up through :orgId first.
 export function registerProjectRoutes(app: FastifyInstance, ctx: ApiContext): void {
   const { db } = ctx;
   const asMember = [requireUser(db), requireMembership(db, "member")];
-
-  async function requireProject({ orgId, projectId }: ProjectParams): Promise<void> {
-    if (!isUuid(projectId) || !(await findProjectInOrg(db, orgId, projectId))) {
-      throw httpError(404, "Not Found");
-    }
-  }
 
   app.get<{ Params: OrgParams }>("/api/orgs/:orgId/projects", { preValidation: asMember }, async (request) => ({
     projects: await listProjects(db, { orgId: request.params.orgId }),
@@ -47,7 +49,7 @@ export function registerProjectRoutes(app: FastifyInstance, ctx: ApiContext): vo
     "/api/orgs/:orgId/projects/:projectId/keys",
     { preValidation: asMember },
     async (request) => {
-      await requireProject(request.params);
+      await requireProject(db, request.params);
       return { keys: await listApiKeys(db, request.params.projectId) };
     }
   );
@@ -56,7 +58,7 @@ export function registerProjectRoutes(app: FastifyInstance, ctx: ApiContext): vo
     "/api/orgs/:orgId/projects/:projectId/keys",
     { preValidation: asMember },
     async (request, reply) => {
-      await requireProject(request.params);
+      await requireProject(db, request.params);
       const created = await createApiKey(db, request.params.projectId);
       if (!created) {
         throw httpError(404, "Not Found");

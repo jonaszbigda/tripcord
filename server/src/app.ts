@@ -17,6 +17,7 @@ import { registerMeRoutes } from "./routes/me";
 import { registerOrgRoutes } from "./routes/orgs";
 import { registerProjectRoutes } from "./routes/projects";
 import { registerTimelineRoute } from "./routes/timeline";
+import { registerTimelineReadRoutes } from "./routes/timelines";
 
 export interface AppOptions {
   rateLimitMax?: number;
@@ -167,6 +168,7 @@ export async function buildApp(db: Database, options: AppOptions = {}): Promise<
   registerOrgRoutes(app, ctx);
   registerInviteRoutes(app, ctx);
   registerProjectRoutes(app, ctx);
+  registerTimelineReadRoutes(app, ctx);
   registerGithubRoutes(app, ctx);
 
   return app;
