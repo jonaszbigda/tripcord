@@ -7231,7 +7231,7 @@ git commit -m "feat(dashboard): add app shell, org switcher, projects and API ke
   - `/settings`
   - `/invite/:token` (public)
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `dashboard/src/pages/members.test.tsx`:
 
@@ -7482,12 +7482,12 @@ describe("org settings", () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npm test -w dashboard`
 Expected: FAIL. The new tests render `NotFoundPage`, while Tasks 12–13's tests still pass.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Create `dashboard/src/pages/MembersPage.tsx`:
 
@@ -7909,12 +7909,12 @@ In `dashboard/src/App.tsx`:
             <Route path="settings" element={<OrgSettingsPage />} />
 ```
 
-- [ ] **Step 4: Run all dashboard tests**
+- [x] **Step 4: Run all dashboard tests**
 
 Run: `npm test -w dashboard`
 Expected: PASS, all four test files.
 
-- [ ] **Step 5: Build, lint, commit**
+- [x] **Step 5: Build, lint, commit**
 
 Run: `npm run build -w dashboard && npm run lint -w dashboard`
 

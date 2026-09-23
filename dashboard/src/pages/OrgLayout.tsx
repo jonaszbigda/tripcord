@@ -3,7 +3,11 @@ import { Card } from "../components/ui";
 import { useMe } from "../queries";
 
 // `ownerOnly` tabs are hidden from members (the server enforces it regardless).
-const TABS: { path: string; label: string; ownerOnly?: boolean }[] = [{ path: "projects", label: "Projects" }];
+const TABS: { path: string; label: string; ownerOnly?: boolean }[] = [
+  { path: "projects", label: "Projects" },
+  { path: "members", label: "Members" },
+  { path: "settings", label: "Settings", ownerOnly: true },
+];
 
 export function OrgLayout() {
   const { orgId = "" } = useParams();
