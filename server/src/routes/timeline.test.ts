@@ -126,6 +126,42 @@ describe("POST /v1/timeline", () => {
     const rows = await db.select().from(timelines);
     expect(rows).toHaveLength(0);
   });
+
+  it("stores tags, and {} when the payload has none", async () => {
+    const db = getTestDb();
+    const { key } = await createTestProject(db);
+    const app = await buildApp(db, { rateLimitMax: 1000, logLevel: "silent" });
+
+    for (const payload of [{ ...validPayload, tags: ["checkout", "payments"] }, validPayload]) {
+      const response = await app.inject({ method: "POST", url: "/v1/timeline", headers: { "x-repro-key": key }, payload });
+      expect(response.statusCode).toBe(201);
+    }
+
+    const rows = await db.select({ tags: timelines.tags }).from(timelines);
+    expect(rows.map((row) => row.tags).sort((a, b) => b.length - a.length)).toEqual([["checkout", "payments"], []]);
+  });
+
+  it.each([
+    ["an uppercase tag", ["Checkout"]],
+    ["a tag with a space", ["check out"]],
+    ["a 51-character tag", ["x".repeat(51)]],
+    ["a duplicate", ["checkout", "checkout"]],
+    ["11 tags", Array.from({ length: 11 }, (_, i) => `t${i}`)],
+  ])("returns 400 and stores nothing for %s", async (_label, tags) => {
+    const db = getTestDb();
+    const { key } = await createTestProject(db);
+    const app = await buildApp(db, { rateLimitMax: 1000, logLevel: "silent" });
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/v1/timeline",
+      headers: { "x-repro-key": key },
+      payload: { ...validPayload, tags },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(await db.select().from(timelines)).toHaveLength(0);
+  });
 });
 
 describe("POST /v1/timeline invalid-key limiting", () => {

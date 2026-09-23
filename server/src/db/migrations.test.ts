@@ -8,13 +8,13 @@ import { migrate } from "drizzle-orm/node-postgres/migrator";
 
 const MIGRATIONS = path.join(__dirname, "..", "..", "drizzle");
 
-// A copy of the migrations folder whose journal stops before the org migration (idx 2).
-function migrationsBeforeOrgs(): string {
+// A copy of the migrations folder whose journal stops before migration `idx`.
+function migrationsBefore(idx: number): string {
   const dir = mkdtempSync(path.join(os.tmpdir(), "repro-migrations-"));
   cpSync(MIGRATIONS, dir, { recursive: true });
   const journalPath = path.join(dir, "meta", "_journal.json");
   const journal = JSON.parse(readFileSync(journalPath, "utf8")) as { entries: { idx: number }[] };
-  journal.entries = journal.entries.filter((entry) => entry.idx < 2);
+  journal.entries = journal.entries.filter((entry) => entry.idx < idx);
   writeFileSync(journalPath, JSON.stringify(journal));
   return dir;
 }
@@ -42,7 +42,7 @@ describe("org migration (0002)", () => {
   it("moves projects that existed before orgs into a single Default org", async () => {
     await withFreshDatabase(async (pool) => {
       const db = drizzle(pool);
-      const before = migrationsBeforeOrgs();
+      const before = migrationsBefore(2);
       try {
         await migrate(db, { migrationsFolder: before });
       } finally {
@@ -70,6 +70,35 @@ describe("org migration (0002)", () => {
         `SELECT is_nullable FROM information_schema.columns WHERE table_name = 'projects' AND column_name = 'org_id'`
       );
       expect(column.rows[0].is_nullable).toBe("NO");
+    });
+  });
+});
+
+describe("tags migration (0003)", () => {
+  it("gives existing timelines an empty tags array", async () => {
+    await withFreshDatabase(async (pool) => {
+      const db = drizzle(pool);
+      const before = migrationsBefore(3);
+      try {
+        await migrate(db, { migrationsFolder: before });
+      } finally {
+        rmSync(before, { recursive: true, force: true });
+      }
+      const org = await pool.query<{ id: string }>(`INSERT INTO orgs (name) VALUES ('o') RETURNING id`);
+      const project = await pool.query<{ id: string }>(
+        `INSERT INTO projects (org_id, name) VALUES ($1, 'p') RETURNING id`,
+        [org.rows[0].id]
+      );
+      await pool.query(
+        `INSERT INTO timelines (project_id, session_id, reason_type, reason, events, meta)
+         VALUES ($1, 's', 'manual', '{"type":"manual"}', '[]', '{"url":"u","userAgent":"a","capturedAt":1}')`,
+        [project.rows[0].id]
+      );
+
+      await migrate(db, { migrationsFolder: MIGRATIONS });
+
+      const rows = await pool.query<{ tags: string[] }>(`SELECT tags FROM timelines`);
+      expect(rows.rows).toEqual([{ tags: [] }]);
     });
   });
 });

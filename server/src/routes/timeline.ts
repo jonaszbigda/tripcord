@@ -6,6 +6,7 @@ import { findProjectByApiKey } from "../db/projects";
 import { FailureLimiter } from "../failure-limiter";
 import { timelines } from "../db/schema";
 import { rateLimitErrorBody } from "../rate-limit";
+import { MAX_TAGS, tagSchema } from "../tags";
 
 declare module "fastify" {
   interface FastifyRequest {
@@ -56,6 +57,7 @@ const timelinePayloadSchema = {
     reason: timelineReasonSchema,
     events: { type: "array", items: timelineEventSchema },
     meta: timelineMetaSchema,
+    tags: { type: "array", maxItems: MAX_TAGS, uniqueItems: true, items: tagSchema },
   },
   additionalProperties: false,
 } as const;
@@ -119,6 +121,7 @@ export function registerTimelineRoute(app: FastifyInstance, db: Database, option
           reason: request.body.reason,
           events: request.body.events,
           meta: request.body.meta,
+          tags: request.body.tags ?? [],
         })
         .returning({ id: timelines.id });
 

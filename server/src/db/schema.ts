@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import { pgTable, uuid, text, timestamp, jsonb, index, primaryKey } from "drizzle-orm/pg-core";
 
 export const ROLES = ["owner", "member"] as const;
@@ -129,11 +130,15 @@ export const timelines = pgTable(
     reason: jsonb("reason").notNull(),
     events: jsonb("events").notNull(),
     meta: jsonb("meta").notNull(),
+    // Where the error happened, set by the client (see server/src/tags.ts).
+    tags: text("tags").array().notNull().default(sql`'{}'::text[]`),
     receivedAt: timestamp("received_at").notNull().defaultNow(),
   },
   (table) => ({
     projectReceivedIdx: index("timelines_project_received_idx").on(table.projectId, table.receivedAt),
     projectReasonTypeIdx: index("timelines_project_reason_type_idx").on(table.projectId, table.reasonType),
+    projectSessionIdx: index("timelines_project_session_idx").on(table.projectId, table.sessionId),
+    tagsIdx: index("timelines_tags_idx").using("gin", table.tags),
   })
 );
 

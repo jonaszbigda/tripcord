@@ -1,4 +1,5 @@
 import { inject } from "vitest";
+import { sql } from "drizzle-orm";
 import { createDb, type Database } from "../src/db/client";
 import {
   apiKeys,
@@ -85,4 +86,38 @@ export async function sessionCookie(db: Database, userId: string): Promise<strin
   const { token } = await createSession(db, userId);
   // Must match SESSION_COOKIE in src/auth/http.ts.
   return `repro_session=${token}`;
+}
+
+export interface TestTimelineOptions {
+  sessionId?: string;
+  reason?: { type: "error" | "unhandledrejection" | "manual"; name?: string; message?: string };
+  tags?: string[];
+  events?: unknown[];
+  url?: string;
+  /** UTC timestamp text as Postgres prints `timestamp`, e.g. from pgTimestampAgo(). Default: now. */
+  receivedAt?: string;
+}
+
+/** Inserts a timeline directly (bypassing ingest) and returns its id. */
+export async function insertTestTimeline(db: Database, projectId: string, options: TestTimelineOptions = {}): Promise<string> {
+  const reason = options.reason ?? { type: "error", name: "TypeError", message: "boom" };
+  const [row] = await db
+    .insert(timelines)
+    .values({
+      projectId,
+      sessionId: options.sessionId ?? "session-1",
+      reasonType: reason.type,
+      reason,
+      events: options.events ?? [{ timestamp: 1, type: "custom", name: "step" }],
+      meta: { url: options.url ?? "https://shop.example.com/checkout", userAgent: "test-agent", capturedAt: 1 },
+      tags: options.tags ?? [],
+      ...(options.receivedAt === undefined ? {} : { receivedAt: sql`${options.receivedAt}::timestamp` }),
+    })
+    .returning({ id: timelines.id });
+  return row.id;
+}
+
+/** UTC wall-clock text for `ms` milliseconds ago, millisecond precision: "2026-09-23 10:15:02.123". */
+export function pgTimestampAgo(ms: number): string {
+  return new Date(Date.now() - ms).toISOString().replace("T", " ").replace("Z", "");
 }
