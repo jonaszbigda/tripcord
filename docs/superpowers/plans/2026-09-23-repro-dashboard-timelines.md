@@ -94,7 +94,7 @@ Commands: `npm test -w packages/js`, `npm test -w server` (a single file: `npm t
 - Create: `packages/js/src/core/tags.ts`, `packages/js/src/core/tags.test.ts`
 - Modify: `packages/js/src/core/types.ts`, `packages/js/src/core/payload.ts`, `packages/js/src/core/tracer.ts`, `packages/js/src/core/tracer.test.ts`, `packages/js/src/browser/createTracer.ts`, `packages/js/src/browser/createTracer.test.ts`, `packages/js/src/browser/createTracer.node.test.ts`, `packages/js/src/index.ts`, `packages/js/src/index.test.ts`, `packages/js/src/react/ErrorBoundary.tsx`, `packages/js/src/react/ErrorBoundary.test.tsx`, `packages/js/src/dist-smoke.test.ts`
 
-- [ ] **Step 1: Write the failing tag-rule tests**
+- [x] **Step 1: Write the failing tag-rule tests**
 
 Create `packages/js/src/core/tags.test.ts`:
 
@@ -138,12 +138,12 @@ describe("normalizeTags", () => {
 });
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [x] **Step 2: Run it to verify it fails**
 
 Run: `npm test -w packages/js -- src/core/tags.test.ts`
 Expected: FAIL. `./tags` doesn't exist.
 
-- [ ] **Step 3: Implement the tag rule**
+- [x] **Step 3: Implement the tag rule**
 
 Create `packages/js/src/core/tags.ts`:
 
@@ -183,12 +183,12 @@ export function normalizeTags(tags: unknown): string[] {
 }
 ```
 
-- [ ] **Step 4: Run it to verify it passes**
+- [x] **Step 4: Run it to verify it passes**
 
 Run: `npm test -w packages/js -- src/core/tags.test.ts`
 Expected: PASS, 5 tests.
 
-- [ ] **Step 5: Write the failing tracer tests**
+- [x] **Step 5: Write the failing tracer tests**
 
 Append inside the `describe("createTracer", …)` block of `packages/js/src/core/tracer.test.ts`:
 
@@ -234,12 +234,12 @@ Append inside the `describe("createTracer", …)` block of `packages/js/src/core
   });
 ```
 
-- [ ] **Step 6: Run to verify they fail**
+- [x] **Step 6: Run to verify they fail**
 
 Run: `npm test -w packages/js -- src/core/tracer.test.ts`
 Expected: FAIL. `tracer.setTags is not a function`.
 
-- [ ] **Step 7: Implement tags in core**
+- [x] **Step 7: Implement tags in core**
 
 In `packages/js/src/core/types.ts`, add `tags` to `TimelinePayload` and add `CaptureOptions`:
 
@@ -358,12 +358,12 @@ export function createTracer(config: TracerConfig): Tracer {
 }
 ```
 
-- [ ] **Step 8: Run the core tests**
+- [x] **Step 8: Run the core tests**
 
 Run: `npm test -w packages/js -- src/core`
 Expected: PASS, including the existing `payload.test.ts`, because untagged payloads are unchanged.
 
-- [ ] **Step 9: Write the failing browser and entry-point tests**
+- [x] **Step 9: Write the failing browser and entry-point tests**
 
 Append to the `describe("browser createTracer", …)` block in `packages/js/src/browser/createTracer.test.ts`:
 
@@ -463,12 +463,12 @@ In `packages/js/src/dist-smoke.test.ts`, add to the first test:
     expect(typeof pkg.clearTags).toBe("function");
 ```
 
-- [ ] **Step 10: Run to verify they fail**
+- [x] **Step 10: Run to verify they fail**
 
 Run: `npm test -w packages/js`
 Expected: FAIL. `setTags` isn't exported, `tracer.setTags` isn't a function in the browser tracer, and the `ErrorBoundary` `tags` assertion fails.
 
-- [ ] **Step 11: Implement the browser, entry-point and React changes**
+- [x] **Step 11: Implement the browser, entry-point and React changes**
 
 In `packages/js/src/browser/createTracer.ts`:
 
@@ -566,12 +566,14 @@ export interface ErrorBoundaryProps {
 
 With no `tags` prop this passes `{ tags: undefined }`, and the core tracer treats an undefined `tags` as "no capture tags", with no warning.
 
-- [ ] **Step 12: Run the package's checks**
+- [x] **Step 12: Run the package's checks**
 
 Run: `npm test -w packages/js && npm run typecheck -w packages/js && npm run lint -w packages/js`
 Expected: all PASS. `pretest` rebuilds `dist/`, so `dist-smoke.test.ts` sees the new exports. The lint boundary rule still passes, because `core/tags.ts` imports nothing.
 
-- [ ] **Step 13: Bump the version and the server's range**
+> Done in `c516aec`. Deviation: `packages/js/src/browser/hooks.test.ts` builds a full `Tracer` mock, so it also needed `setTags: vi.fn(), clearTags: vi.fn()` for `tsc` to pass. The plan's file list missed it.
+
+- [x] **Step 13: Bump the version and the server's range**
 
 In `packages/js/package.json` set `"version": "0.2.0"`. In `server/package.json` change `"@repro/js": "^0.1.0"` to `"@repro/js": "^0.2.0"`. Then from the repo root:
 
@@ -581,7 +583,7 @@ npm install
 
 Expected: `package-lock.json` updates the workspace link to 0.2.0, with no registry fetch for `@repro/js`. Check with `npm ls @repro/js`: it should show `@repro/js@0.2.0 -> ./packages/js` under `@repro/server`.
 
-- [ ] **Step 14: Document tags in the client README**
+- [x] **Step 14: Document tags in the client README**
 
 In `packages/js/README.md`, add this section after the React error boundary example in "## Quick start":
 
@@ -611,7 +613,7 @@ server rejects any payload with a `tags` field. A client that never sets tags
 doesn't send the field and works with any server.
 ````
 
-- [ ] **Step 15: Commit**
+- [x] **Step 15: Commit**
 
 ```bash
 git add packages/js server/package.json package-lock.json
