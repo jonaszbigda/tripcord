@@ -102,6 +102,28 @@ warning, never thrown.
 server rejects any payload with a `tags` field. A client that never sets tags
 doesn't send the field and works with any server.
 
+### Page URLs
+
+Each timeline records the page it came from. By default that's the origin and
+path only (`https://shop.example.com/checkout`). The query string and `#fragment`
+are dropped, because they often carry tokens, emails or session ids. To keep
+something you know is safe, pass `sanitizeUrl`:
+
+```ts
+init({
+  endpoint: "…",
+  apiKey: "…",
+  // Keep ?step=, drop everything else.
+  sanitizeUrl: (url) => {
+    const step = url.searchParams.get("step");
+    return `${url.origin}${url.pathname}${step ? `?step=${encodeURIComponent(step)}` : ""}`;
+  },
+});
+```
+
+If `sanitizeUrl` throws or doesn't return a string, the default is used and a
+warning is logged.
+
 ## Development
 
 ```bash

@@ -145,6 +145,13 @@ docs.
 > optional top-level `tags` array, set with `setTags()` / `capture(…, { tags })`
 > (see that spec's "Tags" section).
 
+> Superseded (2026-09-23): `meta.url` is no longer the full `location.href`. By
+> default it is origin + path only, because query strings and fragments often
+> carry tokens and emails, and the dashboard now displays the URL. Apps can
+> choose what to send with the `sanitizeUrl(url: URL) => string` config option.
+> A sanitizer that throws or returns a non-string falls back to the default,
+> with a warning.
+
 ## Declarative capture: `data-trace`
 
 Elements can opt into capture declaratively instead of requiring a manual `track()` call in

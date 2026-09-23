@@ -53,6 +53,29 @@ describe("browser createTracer", () => {
     expect(fetchMock).toHaveBeenCalledOnce();
   });
 
+  it("sends the page URL without its query or fragment unless sanitizeUrl says otherwise", () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const original = location.href;
+    history.replaceState(null, "", "/checkout?token=secret#pay");
+
+    try {
+      const tracer = trackedCreateTracer({ endpoint: "https://ingest.example.com/timeline", apiKey: "key-123" });
+      tracer.capture("default");
+      const custom = trackedCreateTracer({
+        endpoint: "https://ingest.example.com/timeline",
+        apiKey: "key-123",
+        sanitizeUrl: (url) => `${url.pathname}${url.hash}`,
+      });
+      custom.capture("custom");
+    } finally {
+      history.replaceState(null, "", original);
+    }
+
+    const urls = fetchMock.mock.calls.map((call) => JSON.parse(call[1].body).meta.url);
+    expect(urls).toEqual([`${location.origin}/checkout`, "/checkout#pay"]);
+  });
+
   it("does not auto-flush on error when captureErrors is false", () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);

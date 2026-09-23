@@ -5,6 +5,7 @@ import { readBuffer, writeBuffer } from "./storage";
 import { createSend } from "./transport";
 import { attachErrorHooks, attachTraceAttributeListener } from "./hooks";
 import { isBrowserEnvironment } from "./env";
+import { pageUrl } from "./url";
 
 export interface CreateTracerConfig {
   endpoint: string;
@@ -14,6 +15,11 @@ export interface CreateTracerConfig {
   seedEvents?: TimelineEvent[];
   captureErrors?: boolean;
   captureTraceAttribute?: boolean;
+  /**
+   * What to send as the page URL. By default only the origin and path are
+   * sent: query strings and fragments often hold tokens and emails.
+   */
+  sanitizeUrl?: (url: URL) => string;
 }
 
 export interface BrowserTracer {
@@ -37,7 +43,7 @@ export function createTracer(config: CreateTracerConfig): BrowserTracer {
     maxEvents: config.maxEvents,
     seedEvents,
     send: createSend(config.endpoint, config.apiKey),
-    getMeta: () => ({ url: location.href, userAgent: navigator.userAgent }),
+    getMeta: () => ({ url: pageUrl(location.href, config.sanitizeUrl), userAgent: navigator.userAgent }),
     onBufferChange: writeBuffer,
   });
 
