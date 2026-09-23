@@ -1894,7 +1894,7 @@ git commit -m "feat(server): timeline read routes behind org membership"
 - Modify: `dashboard/src/types.ts`, `dashboard/src/queries.ts`, `dashboard/src/format.ts`, `dashboard/src/index.css`, `dashboard/src/components/ui.tsx`, `dashboard/src/components/OnceSecret.tsx`, `dashboard/src/App.tsx`, `dashboard/src/test/utils.tsx`, `dashboard/src/pages/projects.test.tsx`
 - Delete: `dashboard/src/pages/ProjectPage.tsx`
 
-- [ ] **Step 1: Add the response types**
+- [x] **Step 1: Add the response types**
 
 Append to `dashboard/src/types.ts`:
 
@@ -1968,7 +1968,7 @@ export interface TimelineDetail {
 }
 ```
 
-- [ ] **Step 2: Write the failing filter and format tests**
+- [x] **Step 2: Write the failing filter and format tests**
 
 Create `dashboard/src/timelineFilters.test.ts`:
 
@@ -2042,12 +2042,12 @@ describe("urlPath", () => {
 });
 ```
 
-- [ ] **Step 3: Run to verify they fail**
+- [x] **Step 3: Run to verify they fail**
 
 Run: `npm test -w dashboard -- src/timelineFilters.test.ts src/format.test.ts`
 Expected: FAIL. The modules and exports don't exist yet.
 
-- [ ] **Step 4: Implement filters and formatting**
+- [x] **Step 4: Implement filters and formatting**
 
 Create `dashboard/src/timelineFilters.ts`:
 
@@ -2170,12 +2170,12 @@ export function safeHref(url: string): string | undefined {
 
 Move the new `import type` line to the top of `format.ts`, above `formatDate`.
 
-- [ ] **Step 5: Run to verify they pass**
+- [x] **Step 5: Run to verify they pass**
 
 Run: `npm test -w dashboard -- src/timelineFilters.test.ts src/format.test.ts`
 Expected: PASS.
 
-- [ ] **Step 6: Add the queries**
+- [x] **Step 6: Add the queries**
 
 In `dashboard/src/queries.ts`, change the imports:
 
@@ -2261,7 +2261,7 @@ export function useTimeline(orgId: string, projectId: string, timelineId: string
 }
 ```
 
-- [ ] **Step 7: Add the series color tokens**
+- [x] **Step 7: Add the series color tokens**
 
 In `dashboard/src/index.css`, add to the `@theme` block, after `--color-danger`:
 
@@ -2281,7 +2281,7 @@ And to the dark `:root` block, after `--color-danger`:
       --color-series-manual: #199e70;
 ```
 
-- [ ] **Step 8: Add the small UI pieces**
+- [x] **Step 8: Add the small UI pieces**
 
 Append to `dashboard/src/components/ui.tsx`:
 
@@ -2351,7 +2351,7 @@ export function CopyButton({ value }: { value: string }) {
 
 In `dashboard/src/components/OnceSecret.tsx`, replace the inline copy `<Button …>{copied ? "Copied" : "Copy"}</Button>` with `<CopyButton value={value} />`. Remove the now-unused `copied` state and the `useState` import, and import `CopyButton` from `./ui` next to `Button`.
 
-- [ ] **Step 9: Make `mockApi` match paths without their query**
+- [x] **Step 9: Make `mockApi` match paths without their query**
 
 In `dashboard/src/test/utils.tsx`, inside `mockApi`, replace:
 
@@ -2369,7 +2369,7 @@ with:
 
 Update the doc comment above `mockApi` to say that it falls back to the path without its query string.
 
-- [ ] **Step 10: Write the failing project-tab tests**
+- [x] **Step 10: Write the failing project-tab tests**
 
 In `dashboard/src/pages/projects.test.tsx`:
 
@@ -2416,12 +2416,12 @@ In `dashboard/src/pages/projects.test.tsx`:
   });
 ```
 
-- [ ] **Step 11: Run to verify they fail**
+- [x] **Step 11: Run to verify they fail**
 
 Run: `npm test -w dashboard -- src/pages/projects.test.tsx`
 Expected: FAIL. `/keys` and the tabs don't exist yet.
 
-- [ ] **Step 12: Split the project page**
+- [x] **Step 12: Split the project page**
 
 Create `dashboard/src/pages/ProjectLayout.tsx`:
 
@@ -2605,12 +2605,12 @@ and replace `<Route path="projects/:projectId" element={<ProjectPage />} />` wit
             </Route>
 ```
 
-- [ ] **Step 13: Run the dashboard checks**
+- [x] **Step 13: Run the dashboard checks**
 
 Run: `npm test -w dashboard && npm run typecheck -w dashboard && npm run lint -w dashboard`
 Expected: PASS.
 
-- [ ] **Step 14: Commit**
+- [x] **Step 14: Commit**
 
 ```bash
 git add dashboard
