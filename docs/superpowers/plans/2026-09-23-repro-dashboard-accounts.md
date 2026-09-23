@@ -3386,7 +3386,7 @@ git commit -m "feat(server): add cookie sessions, CSRF guard, /v1-scoped CORS, /
   - `POST /api/auth/login` `{ email, password }` → `200 MeBody` and sets the session cookie.
   - `EMAIL_PATTERN`, exported from `routes/auth.ts`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Append to `server/src/routes/auth.test.ts`. Extend the imports:
 - Add `createTestOrg` to the `../../test/db` import.
@@ -3535,12 +3535,12 @@ describe("POST /api/auth/login", () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npm test -w server -- src/routes/auth.test.ts`
 Expected: FAIL. `/api/auth/signup` and `/api/auth/login` return 404.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Replace `server/src/routes/auth.ts` with:
 
@@ -3672,12 +3672,12 @@ export function registerAuthRoutes(app: FastifyInstance, ctx: ApiContext): void 
 }
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `npm test -w server -- src/routes/auth.test.ts`
 Expected: PASS. If the `/password/` validation case fails because of a different Ajv message, look at the actual message; it must mention `password`.
 
-- [ ] **Step 5: Full suite, typecheck, lint, commit**
+- [x] **Step 5: Full suite, typecheck, lint, commit**
 
 Run: `npm test -w server && npm run typecheck -w server && npm run lint -w server`
 
