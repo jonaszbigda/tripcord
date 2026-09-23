@@ -8032,7 +8032,7 @@ git add README.md server/README.md docs/superpowers/specs/2026-09-22-repro-api-k
 git commit -m "docs: document accounts, dashboard, new env vars and CLI commands"
 ```
 
-- [ ] **Step 5: Docker smoke test (with the user)**
+- [x] **Step 5: Docker smoke test (with the user)**
 
 This step needs a browser. Build and start:
 
