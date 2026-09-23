@@ -3,9 +3,13 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 const trackMock = vi.fn();
 const captureMock = vi.fn();
 const disposeMock = vi.fn();
+const setTagsMock = vi.fn();
+const clearTagsMock = vi.fn();
 const createTracerMock = vi.fn(() => ({
   track: trackMock,
   capture: captureMock,
+  setTags: setTagsMock,
+  clearTags: clearTagsMock,
   dispose: disposeMock,
 }));
 
@@ -43,7 +47,7 @@ describe("public entry point", () => {
     capture("payment-declined");
 
     expect(trackMock).toHaveBeenCalledWith("checkout.step", { step: "shipping" });
-    expect(captureMock).toHaveBeenCalledWith("payment-declined", undefined);
+    expect(captureMock).toHaveBeenCalledWith("payment-declined", undefined, undefined);
   });
 
   it("disposes the previous instance and warns when init() is called twice", async () => {
@@ -91,5 +95,30 @@ describe("public entry point", () => {
 
     expect(trackMock).toHaveBeenCalledWith("checkout.step", undefined);
     expect(warn).not.toHaveBeenCalled();
+  });
+
+  it("warns and no-ops if setTags()/clearTags() are called before init()", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { setTags, clearTags } = await import("./index");
+
+    setTags(["checkout"]);
+    clearTags();
+
+    expect(setTagsMock).not.toHaveBeenCalled();
+    expect(clearTagsMock).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledTimes(2);
+  });
+
+  it("delegates setTags()/clearTags() and capture options after init()", async () => {
+    const { init, setTags, clearTags, capture } = await import("./index");
+
+    init({ endpoint: "https://ingest.example.com/timeline", apiKey: "key-123" });
+    setTags(["checkout"]);
+    capture("payment-declined", { code: "x" }, { tags: ["payments"] });
+    clearTags();
+
+    expect(setTagsMock).toHaveBeenCalledWith(["checkout"]);
+    expect(captureMock).toHaveBeenCalledWith("payment-declined", { code: "x" }, { tags: ["payments"] });
+    expect(clearTagsMock).toHaveBeenCalledOnce();
   });
 });

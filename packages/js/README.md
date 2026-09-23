@@ -78,6 +78,30 @@ import { ErrorBoundary } from "@repro/js/react";
 </ErrorBoundary>;
 ```
 
+### Tags
+
+Tags say where in your app a timeline came from, so you can filter by area in the
+dashboard. Set the active area once, and every timeline captured after that
+carries it. That includes uncaught errors, which have no call site of their own:
+
+```ts
+import { setTags, clearTags, capture } from "@repro/js";
+
+setTags(["checkout"]);          // e.g. when the checkout route mounts
+capture("payment-declined", { code }, { tags: ["payments"] }); // adds to the scope
+clearTags();                    // leaving the area
+```
+
+`<ErrorBoundary tags={["video_player"]}>` tags what that boundary catches.
+
+Tags are trimmed and lowercased, and must match `^[a-z0-9][a-z0-9_.:-]{0,49}$`.
+A timeline carries up to 10 of them. Invalid tags are dropped with a console
+warning, never thrown.
+
+**Upgrade the ingest server before you ship a client that sets tags.** An older
+server rejects any payload with a `tags` field. A client that never sets tags
+doesn't send the field and works with any server.
+
 ## Development
 
 ```bash

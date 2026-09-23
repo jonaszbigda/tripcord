@@ -6,6 +6,8 @@ describe("browser createTracer (non-browser environment)", () => {
     const tracer = createTracer({ endpoint: "https://ingest.example.com/timeline", apiKey: "key-123" });
     expect(() => tracer.track("checkout.step")).not.toThrow();
     expect(() => tracer.capture("payment-declined")).not.toThrow();
+    expect(() => tracer.setTags(["checkout"])).not.toThrow();
+    expect(() => tracer.clearTags()).not.toThrow();
     expect(() => tracer.dispose()).not.toThrow();
   });
 });

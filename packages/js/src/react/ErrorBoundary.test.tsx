@@ -41,4 +41,17 @@ describe("ErrorBoundary", () => {
 
     consoleError.mockRestore();
   });
+
+  it("passes its tags prop to capture()", () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    render(
+      <ErrorBoundary tags={["checkout"]} fallback={<p>something broke</p>}>
+        <Boom />
+      </ErrorBoundary>
+    );
+
+    expect(captureMock.mock.calls[0][2]).toEqual({ tags: ["checkout"] });
+    consoleError.mockRestore();
+  });
 });

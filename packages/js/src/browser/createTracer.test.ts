@@ -85,4 +85,16 @@ describe("browser createTracer", () => {
     const persisted = JSON.parse(sessionStorage.getItem("__repro_buffer")!);
     expect(persisted).toEqual([expect.objectContaining({ type: "custom", name: "checkout.step" })]);
   });
+
+  it("sends scope tags with an auto-captured window error", () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const tracer = trackedCreateTracer({ endpoint: "https://ingest.example.com/timeline", apiKey: "key-123" });
+    tracer.setTags(["video_player"]);
+    window.dispatchEvent(new ErrorEvent("error", { message: "boom" }));
+
+    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body).tags).toEqual(["video_player"]);
+  });
 });

@@ -4,6 +4,8 @@ import { capture } from "../index";
 export interface ErrorBoundaryProps {
   children: ReactNode;
   fallback?: ReactNode;
+  /** Tags for errors caught by this boundary, on top of the scope tags. */
+  tags?: string[];
 }
 
 interface ErrorBoundaryState {
@@ -18,7 +20,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
-    capture(error.message, { componentStack: info.componentStack });
+    capture(error.message, { componentStack: info.componentStack }, { tags: this.props.tags });
   }
 
   render(): ReactNode {

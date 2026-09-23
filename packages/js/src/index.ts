@@ -1,9 +1,10 @@
 import { createTracer } from "./browser/createTracer";
 import type { CreateTracerConfig } from "./browser/createTracer";
+import type { CaptureOptions } from "./core/types";
 
 export { createTracer };
 export type { CreateTracerConfig } from "./browser/createTracer";
-export type { TimelineEvent, TimelinePayload, TimelineReason, TimelineMeta } from "./core/types";
+export type { TimelineEvent, TimelinePayload, TimelineReason, TimelineMeta, CaptureOptions } from "./core/types";
 export { redact } from "./core/redact";
 
 let defaultTracer: ReturnType<typeof createTracer> | undefined;
@@ -33,10 +34,27 @@ export function track(name: string, data?: Record<string, unknown>): void {
   defaultTracer.track(name, data);
 }
 
-export function capture(name?: string, data?: Record<string, unknown>): void {
+export function capture(name?: string, data?: Record<string, unknown>, options?: CaptureOptions): void {
   if (!defaultTracer) {
     console.warn("[repro] capture() called before init().");
     return;
   }
-  defaultTracer.capture(name, data);
+  defaultTracer.capture(name, data, options);
+}
+
+/** Replaces the tags every following timeline carries, until changed or cleared. */
+export function setTags(tags: string[]): void {
+  if (!defaultTracer) {
+    console.warn("[repro] setTags() called before init().");
+    return;
+  }
+  defaultTracer.setTags(tags);
+}
+
+export function clearTags(): void {
+  if (!defaultTracer) {
+    console.warn("[repro] clearTags() called before init().");
+    return;
+  }
+  defaultTracer.clearTags();
 }

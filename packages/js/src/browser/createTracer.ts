@@ -1,5 +1,5 @@
 import { createTracer as createCoreTracer } from "../core/tracer";
-import type { TimelineEvent } from "../core/types";
+import type { CaptureOptions, TimelineEvent } from "../core/types";
 import { getOrCreateSessionId } from "./sessionId";
 import { readBuffer, writeBuffer } from "./storage";
 import { createSend } from "./transport";
@@ -18,13 +18,15 @@ export interface CreateTracerConfig {
 
 export interface BrowserTracer {
   track(name: string, data?: Record<string, unknown>): void;
-  capture(name?: string, data?: Record<string, unknown>): void;
+  capture(name?: string, data?: Record<string, unknown>, options?: CaptureOptions): void;
+  setTags(tags: string[]): void;
+  clearTags(): void;
   dispose(): void;
 }
 
 export function createTracer(config: CreateTracerConfig): BrowserTracer {
   if (!isBrowserEnvironment()) {
-    return { track() {}, capture() {}, dispose() {} };
+    return { track() {}, capture() {}, setTags() {}, clearTags() {}, dispose() {} };
   }
 
   const sessionId = config.sessionId ?? getOrCreateSessionId();
@@ -50,6 +52,8 @@ export function createTracer(config: CreateTracerConfig): BrowserTracer {
   return {
     track: core.track,
     capture: core.capture,
+    setTags: core.setTags,
+    clearTags: core.clearTags,
     dispose() {
       disposers.forEach((dispose) => dispose());
     },

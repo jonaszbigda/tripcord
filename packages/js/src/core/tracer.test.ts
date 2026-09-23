@@ -93,4 +93,44 @@ describe("createTracer", () => {
     tracer.track("login", { password: "hunter2" });
     expect(warn).toHaveBeenCalledOnce();
   });
+
+  it("capture() sends scope tags ∪ capture tags", () => {
+    const { send, tracer } = setup();
+    tracer.setTags(["checkout"]);
+    tracer.capture("payment-declined", undefined, { tags: ["payments", "checkout"] });
+    expect(send.mock.calls[0][0].tags).toEqual(["checkout", "payments"]);
+  });
+
+  it("auto-captured errors and rejections carry the scope tags", () => {
+    const { send, tracer } = setup();
+    tracer.setTags(["video_player"]);
+    tracer.captureError("boom");
+    tracer.captureUnhandledRejection("nope");
+    expect(send.mock.calls.map((call) => call[0].tags)).toEqual([["video_player"], ["video_player"]]);
+  });
+
+  it("setTags() replaces the scope rather than adding to it", () => {
+    const { send, tracer } = setup();
+    tracer.setTags(["checkout"]);
+    tracer.setTags(["shopping_cart"]);
+    tracer.captureError("boom");
+    expect(send.mock.calls[0][0].tags).toEqual(["shopping_cart"]);
+  });
+
+  it("ignores capture tags that aren't an array, with a warning, instead of splitting a string", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { send, tracer } = setup();
+    tracer.setTags(["checkout"]);
+    tracer.capture("x", undefined, { tags: "payments" as unknown as string[] });
+    expect(send.mock.calls[0][0].tags).toEqual(["checkout"]);
+    expect(warn).toHaveBeenCalledOnce();
+  });
+
+  it("clearTags() empties the scope, and an untagged payload has no tags field", () => {
+    const { send, tracer } = setup();
+    tracer.setTags(["checkout"]);
+    tracer.clearTags();
+    tracer.capture("payment-declined");
+    expect(send.mock.calls[0][0]).not.toHaveProperty("tags");
+  });
 });

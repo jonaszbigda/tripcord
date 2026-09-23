@@ -1,6 +1,6 @@
 {
   "name": "@repro/js",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Opt-in, developer-instrumented breadcrumb timeline for frontend bug reproduction.",
   "license": "MIT",
   "repository": {

@@ -10,6 +10,8 @@ function fakeTracer(): Tracer {
     captureError: vi.fn(),
     captureUnhandledRejection: vi.fn(),
     traceElement: vi.fn(),
+    setTags: vi.fn(),
+    clearTags: vi.fn(),
   };
 }
 
