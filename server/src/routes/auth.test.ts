@@ -138,6 +138,7 @@ describe("POST /api/auth/signup", () => {
     [{ ...signupBody, password: "short" }, /password/],
     [{ ...signupBody, email: "not-an-email" }, /^Invalid email$/],
     [{ ...signupBody, name: "   " }, /^Name is required$/],
+    [{ ...signupBody, name: "Ana\u0007" }, /^Name must not contain control characters$/],
     [{ ...signupBody, extra: true }, /additional properties/],
   ])("rejects an invalid body %o with 400", async (body, message) => {
     const app = await buildTestApp(getTestDb(), { signup: "open" });

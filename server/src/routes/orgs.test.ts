@@ -47,6 +47,17 @@ describe("org routes", () => {
     expect(rename.statusCode).toBe(400);
   });
 
+  it("rejects an org name with control characters", async () => {
+    const { app, org, ownerCookie } = await fixture();
+
+    const create = await call(app, "POST", "/api/orgs", { cookie: ownerCookie, body: { name: "Beta\nGamma" } });
+    expect(create.statusCode).toBe(400);
+    expect(create.json()).toEqual({ error: "Org name must not contain control characters" });
+
+    const rename = await call(app, "PATCH", `/api/orgs/${org.id}`, { cookie: ownerCookie, body: { name: "Beta\tGamma" } });
+    expect(rename.statusCode).toBe(400);
+  });
+
   it("owners rename the org; members get 403", async () => {
     const { app, org, ownerCookie, memberCookie } = await fixture();
 

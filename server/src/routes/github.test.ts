@@ -86,6 +86,12 @@ describe("GitHub OAuth", () => {
     expect((await listUserOrgs(getTestDb(), user!.id)).map((o) => o.name)).toEqual(["Ana's org"]);
   });
 
+  it("strips control characters from the GitHub profile name", async () => {
+    const app = await githubApp({ ...ANA, name: "\x1b[31mAna\n" }, { signup: "open" });
+    await oauthRoundTrip(app);
+    expect((await findUserByGithubId(getTestDb(), "42"))?.name).toBe("[31mAna");
+  });
+
   it("logs in an already-linked user without creating anyone", async () => {
     const existing = await createTestUser(getTestDb(), { email: "other@example.com", githubId: "42" });
     const app = await githubApp(ANA);

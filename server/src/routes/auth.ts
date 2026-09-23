@@ -77,7 +77,7 @@ export function registerAuthRoutes(app: FastifyInstance, ctx: ApiContext): void 
       if (!EMAIL_PATTERN.test(email)) {
         throw httpError(400, "Invalid email");
       }
-      const name = requireName(request.body.name, "Name is required");
+      const name = requireName(request.body.name, "Name");
 
       const result = await signUp(db, {
         email,

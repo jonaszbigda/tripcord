@@ -106,6 +106,14 @@ describe("runCli", () => {
       expect(await listProjects(getTestDb())).toEqual([]);
     });
 
+    it("exits 2 without usage for a name with control characters", async () => {
+      const org = await createTestOrg(getTestDb());
+      const result = await run(["project", "create", "--org", org.id, "Acme\x1b[2J"]);
+      expect(result.code).toBe(2);
+      expect(result.stderr).toEqual(["Project name must not contain control characters"]);
+      expect(await listProjects(getTestDb())).toEqual([]);
+    });
+
     it("exits 2 with usage when --org is missing", async () => {
       const result = await run(["project", "create", "Acme"]);
       expect(result.code).toBe(2);
@@ -152,6 +160,15 @@ describe("runCli", () => {
       expect(result.stdout[1]).toContain(project.createdAt.toISOString());
       expect(result.stdout[1]).toMatch(/\s1$/);
       expect(result.stdout.join("\n")).not.toContain(key);
+    });
+
+    it("never prints control characters from names stored before they were rejected", async () => {
+      await createTestProject(getTestDb(), "Acme\x1b[2J\nwiped");
+
+      const result = await run(["project", "list"]);
+
+      expect(result.stdout).toHaveLength(2);
+      expect(result.stdout[1]).toContain("Acme[2Jwiped");
     });
   });
 

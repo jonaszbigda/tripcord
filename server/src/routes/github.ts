@@ -5,6 +5,7 @@ import { fetchGithubProfile, githubAuthorizeUrl, type GithubProfile } from "../a
 import { generateToken } from "../auth/tokens";
 import { findSessionUser } from "../db/sessions";
 import { findUserByEmail, findUserByGithubId, setGithubId } from "../db/users";
+import { stripControlChars } from "../names";
 import type { ApiContext } from "./context";
 
 const OAUTH_COOKIE = "repro_oauth";
@@ -101,7 +102,7 @@ export function registerGithubRoutes(app: FastifyInstance, ctx: ApiContext): voi
     }
     const result = await signUp(db, {
       email: profile.email,
-      name: (profile.name?.trim() || profile.login).slice(0, 100),
+      name: (stripControlChars(profile.name ?? "").trim() || profile.login).slice(0, 100),
       passwordHash: null,
       githubId: profile.id,
       inviteToken: invite,

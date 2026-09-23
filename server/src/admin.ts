@@ -2,6 +2,7 @@ import { parseArgs } from "node:util";
 import type { Database } from "./db/client";
 import { findOrg, listOrgs } from "./db/orgs";
 import { createApiKey, createProject, listApiKeys, listProjects, revokeApiKey } from "./db/projects";
+import { hasControlChars, stripControlChars } from "./names";
 import { isUuid } from "./uuid";
 import { hashPassword } from "./auth/password";
 import { generatePassword } from "./auth/tokens";
@@ -128,7 +129,10 @@ function parseId(value: string): string {
   return value;
 }
 
-function formatTable(headers: string[], rows: string[][]): string[] {
+// Names are validated on the way in, but rows written before that validation
+// existed may still hold control characters; never print them raw.
+function formatTable(headers: string[], rawRows: string[][]): string[] {
+  const rows = rawRows.map((row) => row.map(stripControlChars));
   const widths = headers.map((header, i) => Math.max(header.length, ...rows.map((row) => row[i].length)));
   const line = (cells: string[]) => cells.map((cell, i) => cell.padEnd(widths[i])).join("  ").trimEnd();
   return [line(headers), ...rows.map(line)];
@@ -149,6 +153,9 @@ async function projectCreate(db: Database, out: CliOutput, orgId: string, rawNam
   const name = rawName.trim();
   if (!name) {
     throw new CliError("Project name is required", 2);
+  }
+  if (hasControlChars(name)) {
+    throw new CliError("Project name must not contain control characters", 2);
   }
   if (!(await findOrg(db, orgId))) {
     throw new CliError(`Org not found: ${orgId}`, 1);

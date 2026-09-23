@@ -38,7 +38,7 @@ export function registerProjectRoutes(app: FastifyInstance, ctx: ApiContext): vo
     "/api/orgs/:orgId/projects",
     { preValidation: asMember, schema: { body: nameBodySchema } },
     async (request, reply) => {
-      const name = requireName(request.body.name, "Project name is required");
+      const name = requireName(request.body.name, "Project name");
       return reply.code(201).send(await createProject(db, request.params.orgId, name));
     }
   );

@@ -21,6 +21,8 @@ import { registerTimelineRoute } from "./routes/timeline";
 export interface AppOptions {
   rateLimitMax?: number;
   rateLimitWindow?: string;
+  /** Ingest requests with an unknown or revoked key allowed per IP per minute. Default 30. */
+  invalidKeyLimitMax?: number;
   bodyLimit?: number;
   logLevel?: string;
   /** External URL of the dashboard, e.g. https://app.reprojs.dev. Default http://localhost:3000. */
@@ -145,6 +147,7 @@ export async function buildApp(db: Database, options: AppOptions = {}): Promise<
       registerTimelineRoute(v1, db, {
         rateLimitMax: options.rateLimitMax ?? 100,
         rateLimitWindow: options.rateLimitWindow ?? "1 minute",
+        invalidKeyLimitMax: options.invalidKeyLimitMax ?? 30,
       });
     },
     { prefix: "/v1" }

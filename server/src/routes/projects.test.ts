@@ -47,6 +47,13 @@ describe("project routes", () => {
     expect(response.json()).toEqual({ error: "Project name is required" });
   });
 
+  it("rejects a project name with control characters", async () => {
+    const { app, org, cookie } = await fixture();
+    const response = await call(app, "POST", `/api/orgs/${org.id}/projects`, { cookie, body: { name: "web\x1b[2J" } });
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({ error: "Project name must not contain control characters" });
+  });
+
   it("lists only the org's projects", async () => {
     const { db, app, org, cookie } = await fixture();
     const { project } = await createTestProject(db, "mine", org.id);

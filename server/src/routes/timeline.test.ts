@@ -128,6 +128,49 @@ describe("POST /v1/timeline", () => {
   });
 });
 
+describe("POST /v1/timeline invalid-key limiting", () => {
+  beforeEach(async () => {
+    await resetDb(getTestDb());
+  });
+
+  function post(app: Awaited<ReturnType<typeof buildApp>>, key: string, remoteAddress = "203.0.113.1") {
+    return app.inject({
+      method: "POST",
+      url: "/v1/timeline",
+      headers: { "x-repro-key": key },
+      payload: validPayload,
+      remoteAddress,
+    });
+  }
+
+  it("returns 429 to an IP past the invalid-key limit, before looking the key up", async () => {
+    const db = getTestDb();
+    const { key } = await createTestProject(db);
+    const app = await buildApp(db, { rateLimitMax: 1000, invalidKeyLimitMax: 2 });
+
+    expect((await post(app, "no-such-key")).statusCode).toBe(401);
+    expect((await post(app, "no-such-key")).statusCode).toBe(401);
+    const blocked = await post(app, "no-such-key");
+    expect(blocked.statusCode).toBe(429);
+    expect(blocked.json()).toEqual({ error: expect.stringMatching(/^Too many invalid API key attempts, retry in \d+ seconds$/) });
+    expect(Number(blocked.headers["retry-after"])).toBeGreaterThan(0);
+
+    // Blocked before the lookup, so even a valid key from that IP is turned away.
+    expect((await post(app, key)).statusCode).toBe(429);
+    expect((await post(app, key, "203.0.113.2")).statusCode).toBe(201);
+  });
+
+  it("doesn't count requests with a valid key", async () => {
+    const db = getTestDb();
+    const { key } = await createTestProject(db);
+    const app = await buildApp(db, { rateLimitMax: 1000, invalidKeyLimitMax: 1 });
+
+    expect((await post(app, key)).statusCode).toBe(201);
+    expect((await post(app, key)).statusCode).toBe(201);
+    expect((await post(app, "no-such-key")).statusCode).toBe(401);
+  });
+});
+
 describe("POST /v1/timeline rate limiting", () => {
   beforeEach(async () => {
     await resetDb(getTestDb());

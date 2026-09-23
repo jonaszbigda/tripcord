@@ -144,7 +144,7 @@ After upgrading, for each existing project:
 | `GITHUB_CLIENT_ID`     | no       | —              | With `GITHUB_CLIENT_SECRET`, enables GitHub login.                        |
 | `GITHUB_CLIENT_SECRET` | no       | —              | See above. Setting only one of the two fails startup.                     |
 | `GITHUB_BASE_URL`      | no       | `https://github.com` | GitHub Enterprise Server URL.                                       |
-| `TRUST_PROXY`          | no       | `false`        | Set `true` behind a reverse proxy so login rate limits see client IPs.    |
+| `TRUST_PROXY`          | no       | `false`        | Set `true` behind a reverse proxy so login and invalid-key limits see client IPs. |
 | `DASHBOARD_DIR`        | no       | `../dashboard/dist` next to the server | Where the built dashboard is served from.         |
 
 ## API

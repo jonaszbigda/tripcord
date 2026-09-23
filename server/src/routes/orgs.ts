@@ -43,7 +43,7 @@ export function registerOrgRoutes(app: FastifyInstance, ctx: ApiContext): void {
     "/api/orgs",
     { preValidation: requireUser(db), schema: { body: nameBodySchema } },
     async (request, reply) => {
-      const name = requireName(request.body.name, "Org name is required");
+      const name = requireName(request.body.name, "Org name");
       const org = await createOrgWithOwner(db, currentUser(request).id, name);
       return reply.code(201).send({ id: org.id, name: org.name, role: "owner" });
     }
@@ -53,7 +53,7 @@ export function registerOrgRoutes(app: FastifyInstance, ctx: ApiContext): void {
     "/api/orgs/:orgId",
     { preValidation: asOwner, schema: { body: nameBodySchema } },
     async (request) => {
-      const org = await renameOrg(db, request.params.orgId, requireName(request.body.name, "Org name is required"));
+      const org = await renameOrg(db, request.params.orgId, requireName(request.body.name, "Org name"));
       if (!org) {
         throw httpError(404, "Not Found");
       }

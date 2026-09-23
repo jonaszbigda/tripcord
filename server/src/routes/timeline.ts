@@ -3,6 +3,7 @@ import type { TimelinePayload } from "@repro/js";
 import type { Database } from "../db/client";
 import type { Project } from "../db/schema";
 import { findProjectByApiKey } from "../db/projects";
+import { FailureLimiter } from "../failure-limiter";
 import { timelines } from "../db/schema";
 import { rateLimitErrorBody } from "../rate-limit";
 
@@ -62,9 +63,16 @@ const timelinePayloadSchema = {
 export interface TimelineRouteOptions {
   rateLimitMax: number;
   rateLimitWindow: string;
+  /** Requests with an unknown or revoked key allowed per IP per minute. */
+  invalidKeyLimitMax: number;
 }
 
 export function registerTimelineRoute(app: FastifyInstance, db: Database, options: TimelineRouteOptions): void {
+  // The per-project rate limit below needs a resolved project, so it can't see
+  // bad-key requests. This limits those per IP, and turns them away before the
+  // key lookup so a flood of them doesn't reach the database.
+  const invalidKeys = new FailureLimiter(options.invalidKeyLimitMax, 60_000);
+
   // Registered under the /v1 prefix in app.ts.
   app.post<{ Body: TimelinePayload }>(
     "/timeline",
@@ -75,8 +83,17 @@ export function registerTimelineRoute(app: FastifyInstance, db: Database, option
         if (typeof apiKey !== "string") {
           return reply.code(401).send({ error: "Missing X-Repro-Key header" });
         }
+        const retryInMs = invalidKeys.blockedFor(request.ip);
+        if (retryInMs > 0) {
+          const seconds = Math.ceil(retryInMs / 1000);
+          return reply
+            .code(429)
+            .header("retry-after", String(seconds))
+            .send({ error: `Too many invalid API key attempts, retry in ${seconds} seconds` });
+        }
         const project = await findProjectByApiKey(db, apiKey);
         if (!project) {
+          invalidKeys.recordFailure(request.ip);
           return reply.code(401).send({ error: "Invalid API key" });
         }
         request.project = project;
