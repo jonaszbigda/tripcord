@@ -1,7 +1,10 @@
 import Fastify, { type FastifyInstance, type FastifyError } from "fastify";
+import { existsSync } from "node:fs";
+import path from "node:path";
 import cookie from "@fastify/cookie";
 import cors from "@fastify/cors";
 import rateLimit from "@fastify/rate-limit";
+import fastifyStatic from "@fastify/static";
 import type { SignupMode } from "./accounts";
 import type { GithubConfig } from "./config";
 import type { Database } from "./db/client";
@@ -44,6 +47,11 @@ export interface AppOptions {
 // forward it as-is instead of reading `.message` off it.
 function isPreShapedErrorBody(err: unknown): err is { error: string; statusCode?: number } {
   return typeof err === "object" && err !== null && typeof (err as Record<string, unknown>).error === "string";
+}
+
+function isBackendPath(url: string): boolean {
+  const pathname = url.split("?")[0];
+  return /^\/(api|v1)(\/|$)/.test(pathname) || pathname === "/health";
 }
 
 export async function buildApp(db: Database, options: AppOptions = {}): Promise<FastifyInstance> {
@@ -99,7 +107,20 @@ export async function buildApp(db: Database, options: AppOptions = {}): Promise<
     reply.code(statusCode >= 500 ? statusCode : 500).send({ error: "Internal Server Error" });
   });
 
-  app.setNotFoundHandler((_request, reply) => {
+  const spaDir =
+    options.dashboardDir && existsSync(path.join(options.dashboardDir, "index.html"))
+      ? path.resolve(options.dashboardDir)
+      : undefined;
+  if (spaDir) {
+    await app.register(fastifyStatic, { root: spaDir, wildcard: false });
+  }
+
+  app.setNotFoundHandler((request, reply) => {
+    // Client-side routes (/orgs/..., /invite/...) have no file on disk; serve
+    // the SPA shell so a reload or a pasted link works.
+    if (spaDir && request.method === "GET" && !isBackendPath(request.url)) {
+      return reply.type("text/html").sendFile("index.html");
+    }
     reply.code(404).send({ error: "Not Found" });
   });
 

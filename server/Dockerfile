@@ -1,8 +1,21 @@
+# The dashboard is built on Debian: Tailwind v4's native binary is resolved for
+# the platform the lockfile was generated on (glibc), which alpine (musl) may lack.
+FROM node:22-bookworm-slim AS dashboard-build
+WORKDIR /app
+COPY package.json package-lock.json ./
+COPY packages/js/package.json packages/js/package.json
+COPY server/package.json server/package.json
+COPY dashboard/package.json dashboard/package.json
+RUN npm ci
+COPY dashboard dashboard
+RUN npm run build -w dashboard
+
 FROM node:22-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY packages/js/package.json packages/js/package.json
 COPY server/package.json server/package.json
+COPY dashboard/package.json dashboard/package.json
 RUN npm ci
 COPY packages/js packages/js
 COPY server server
@@ -19,5 +32,6 @@ COPY --from=build /app/packages/js/package.json packages/js/package.json
 COPY --from=build /app/server/dist server/dist
 COPY --from=build /app/server/drizzle server/drizzle
 COPY --from=build /app/server/package.json server/package.json
+COPY --from=dashboard-build /app/dashboard/dist dashboard/dist
 EXPOSE 3000
 CMD ["node", "server/dist/index.js"]

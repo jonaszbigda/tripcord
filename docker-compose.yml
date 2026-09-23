@@ -23,6 +23,7 @@ services:
       DATABASE_URL: postgres://repro:repro@postgres:5432/repro
       PORT: "3000"
       RETENTION_DAYS: "30"
+      PUBLIC_URL: http://localhost:3000
     ports:
       - "3000:3000"
     depends_on:

@@ -5232,7 +5232,7 @@ git commit -m "feat(server): add password change, GitHub OAuth login/connect and
   - Any other GET outside `/api`, `/v1` and `/health` returns `index.html`.
   - Everything else keeps the JSON 404.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `server/src/static.test.ts`:
 
@@ -5299,12 +5299,12 @@ describe("dashboard serving", () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npm test -w server -- src/static.test.ts`
 Expected: FAIL. `GET /` returns a JSON 404.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `server/src/app.ts`:
 - Add these imports:
@@ -5395,12 +5395,12 @@ In `docker-compose.yml`, add this line to the `server` service's `environment`:
       PUBLIC_URL: http://localhost:3000
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `npm test -w server`
 Expected: PASS, including the existing `GET /nope` → JSON 404 test in `app.test.ts`, which runs without a `dashboardDir`.
 
-- [ ] **Step 5: Typecheck, lint, commit**
+- [x] **Step 5: Typecheck, lint, commit**
 
 Run: `npm run typecheck -w server && npm run lint -w server`
 
