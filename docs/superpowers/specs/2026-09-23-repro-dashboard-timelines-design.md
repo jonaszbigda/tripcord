@@ -187,13 +187,16 @@ Extra params: `cursor` (opaque) and `limit` (1–100, default 50).
 ### `GET …/timelines/summary` — chart and top reasons
 
 Same filters as the list, plus `tz`, an IANA zone name such as `Europe/Warsaw`,
-default `UTC`, checked against `Intl.supportedValuesOf("timeZone")`.
+default `UTC`. A zone is valid if `new Intl.DateTimeFormat("en-US", { timeZone })`
+accepts it. Node's `Intl.supportedValuesOf` leaves out `UTC` and other aliases, so
+it isn't used.
 
 ```json
 {
+  "projectHasTimelines": true,
   "bucket": "hour",
   "buckets": [
-    { "start": "2026-09-23T10:00:00+02:00", "error": 4, "unhandledrejection": 1, "manual": 0 }
+    { "start": "2026-09-23T08:00:00.000Z", "error": 4, "unhandledrejection": 1, "manual": 0 }
   ],
   "topReasons": [
     { "key": "9b1d…", "type": "error", "name": "TypeError", "message": "…", "count": 17, "lastSeen": "…" }
@@ -202,12 +205,17 @@ default `UTC`, checked against `Intl.supportedValuesOf("timeZone")`.
 ```
 
 - Buckets are hourly for `24h` and daily for `7d` and `30d`, truncated in `tz`, so
-  "a day" is the viewer's day. Empty buckets are filled with zeros using
-  `generate_series`, so the chart never has gaps.
+  "a day" is the viewer's day. They run from the bucket that holds `now − range`
+  to the bucket that holds now, and empty ones are filled with zeros using
+  `generate_series`, so the chart never has gaps. `start` is the instant the bucket
+  begins, as a UTC ISO string. The dashboard formats it in the viewer's zone.
+- `projectHasTimelines` says whether the project has any timeline at all,
+  ignoring every filter. The dashboard uses it to choose the empty state.
 - `topReasons` returns the 10 largest groups of `(reason_type, reason->>'name',
   reason->>'message')`, with `message` truncated to 300 characters.
-- **The reason key** is `md5(jsonb_build_array(reason_type, reason->'name',
-  reason->'message')::text)`, computed in SQL both when grouping and when filtering
+- **The reason key** is `md5(jsonb_build_array(reason_type, reason->>'name',
+  reason->>'message')::text)`. It's built from the same text expressions the
+  query groups by, which Postgres needs in order to accept it in the select list. It's computed in SQL both when grouping and when filtering
   by `reason`. It's a fixed-length hash, so a URL with a long error message in it
   can't get too long. There's no index on it, and none is needed: the filter runs
   within one project and at most 30 days of data.
@@ -220,7 +228,8 @@ Params: `range` only.
 { "tags": [{ "tag": "checkout", "count": 41 }, { "tag": "video_player", "count": 3 }] }
 ```
 
-The distinct tags in the range (`unnest(tags)`), with counts, sorted by count. It
+The distinct tags in the range (`unnest(tags)`), with counts, sorted by count and
+capped at 100. It
 deliberately ignores the other filters, so choosing a tag never hides the rest.
 
 ### `GET …/timelines/:timelineId` — detail
@@ -267,7 +276,8 @@ The project page gets two tabs, Timelines and Keys. The 4a placeholder goes away
 - **List**: one row per timeline, showing time (relative, with the absolute time in
   a tooltip), reason type, name and message, URL path, tag chips and event count.
   A "Load more" button pages with the cursor. A row links to the detail page.
-- **Empty state**: when the project has no timelines at all, instead of empty charts
+- **Empty state**: when the project has no timelines at all
+  (`projectHasTimelines` is false), instead of empty charts
   the page shows the ingest endpoint and a copyable `init({ endpoint, apiKey })`
   snippet with a `setTags` line, plus a link to the Keys tab.
 
