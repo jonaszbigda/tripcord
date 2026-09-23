@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+/* Design tokens. Declared once here; Tailwind exposes each as a utility
+   (bg-surface, text-muted, border-border, ...) and as a CSS variable
+   (var(--color-accent)), which the 4b charts read their colors from. */
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+  --color-bg: #f6f6f7;
+  --color-surface: #ffffff;
+  --color-fg: #18181b;
+  --color-muted: #6b6b76;
+  --color-border: #e4e4e7;
+  --color-accent: #4f46e5;
+  --color-accent-fg: #ffffff;
+  --color-danger: #dc2626;
+}
+
+@layer base {
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-bg: #0c0c0e;
+      --color-surface: #16161a;
+      --color-fg: #f4f4f5;
+      --color-muted: #a1a1aa;
+      --color-border: #2a2a31;
+      --color-accent: #818cf8;
+      --color-accent-fg: #0c0c0e;
+      --color-danger: #f87171;
+    }
+  }
+
+  body {
+    @apply bg-bg font-sans text-fg antialiased;
+  }
+}

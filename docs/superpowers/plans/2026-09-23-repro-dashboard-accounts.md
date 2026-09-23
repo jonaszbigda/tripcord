@@ -5450,7 +5450,7 @@ git commit -m "feat(server): serve the dashboard SPA with a client-route fallbac
     - `renderApp(path): { client }`, which renders a `data-testid="location"` probe.
     - Fixtures `ME`, `ORG_ID`, `CONFIG_OPEN`, `CONFIG_CLOSED`.
 
-- [ ] **Step 1: Scaffold the workspace**
+- [x] **Step 1: Scaffold the workspace**
 
 In the root `package.json`, change `"workspaces"` to `["packages/*", "server", "dashboard"]`.
 
@@ -5584,7 +5584,7 @@ export default [
 Run from the repo root: `npm install`
 Expected: installs the dashboard dependencies and updates `package-lock.json`. Check that React wasn't duplicated: `npm ls react` should show a single `react@18.x` (deduped) for `@repro/dashboard` and `@repro/js`.
 
-- [ ] **Step 2: Add the styling base and entry point**
+- [x] **Step 2: Add the styling base and entry point**
 
 Create `dashboard/src/index.css`:
 
@@ -5649,7 +5649,7 @@ createRoot(document.getElementById("root")!).render(
 );
 ```
 
-- [ ] **Step 3: Add the API client, types, queries and helpers**
+- [x] **Step 3: Add the API client, types, queries and helpers**
 
 Create `dashboard/src/api.ts`:
 
@@ -5894,7 +5894,7 @@ export function formatDate(iso: string): string {
 }
 ```
 
-- [ ] **Step 4: Add the UI kit, guard and pages**
+- [x] **Step 4: Add the UI kit, guard and pages**
 
 Create `dashboard/src/components/ui.tsx`:
 
@@ -6294,7 +6294,7 @@ export function AppRoutes() {
 }
 ```
 
-- [ ] **Step 5: Add the test harness**
+- [x] **Step 5: Add the test harness**
 
 Create `dashboard/src/test/setup.ts`:
 
@@ -6400,7 +6400,7 @@ export const CONFIG_OPEN: AuthConfig = { signup: "open", bootstrapped: true, git
 export const CONFIG_CLOSED: AuthConfig = { signup: "invite-only", bootstrapped: true, github: false };
 ```
 
-- [ ] **Step 6: Write the failing tests**
+- [x] **Step 6: Write the failing tests**
 
 Create `dashboard/src/pages/auth.test.tsx`:
 
@@ -6560,19 +6560,19 @@ describe("logged-in routes", () => {
 });
 ```
 
-- [ ] **Step 7: Run the tests**
+- [x] **Step 7: Run the tests**
 
 Run: `npm test -w dashboard`
 Expected: PASS. The tests were written against the code above. A failure is a real bug in either the page or the test, so fix it before moving on. Common causes:
 - A label mismatch. Check that `getByLabelText` matches the `TextField` label exactly.
 - A missing `mockApi` handler. An unhandled request gets a 404, which appears as an error text.
 
-- [ ] **Step 8: Build, typecheck, lint**
+- [x] **Step 8: Build, typecheck, lint**
 
 Run: `npm run build -w dashboard && npm run lint -w dashboard`
 Expected: `dashboard/dist/index.html` plus hashed assets; both commands exit 0. Check that the build output includes Tailwind classes: `grep -l "bg-surface" dashboard/dist/assets/*.css` should print a file.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add package.json package-lock.json dashboard

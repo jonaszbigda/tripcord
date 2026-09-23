@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "workspaces": [
     "packages/*",
-    "server"
+    "server",
+    "dashboard"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
