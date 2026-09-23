@@ -4053,7 +4053,7 @@ git commit -m "feat(dashboard): timeline detail with events, details and same-se
 **Files:**
 - Modify: `server/README.md`, `docs/superpowers/specs/2026-09-22-repro-client-library-design.md`, `docs/superpowers/specs/2026-09-22-repro-ingest-api-design.md`
 
-- [ ] **Step 1: Update the docs**
+- [x] **Step 1: Update the docs**
 
 In `server/README.md`, in "## API", after the `/api/*` paragraph, add:
 
@@ -4081,7 +4081,7 @@ In `docs/superpowers/specs/2026-09-22-repro-ingest-api-design.md`, add at the en
 > optional `tags` array, stored in `timelines.tags` (`text[]`, GIN-indexed).
 ```
 
-- [ ] **Step 2: Verify the whole repo**
+- [x] **Step 2: Verify the whole repo**
 
 Run from the repo root:
 
@@ -4091,14 +4091,14 @@ npm run build && npm run typecheck && npm run lint && npm test
 
 Expected: every workspace builds, typechecks, lints and passes. Record the test counts per workspace in the task report.
 
-- [ ] **Step 3: Commit the docs**
+- [x] **Step 3: Commit the docs**
 
 ```bash
 git add server/README.md docs/superpowers/specs/2026-09-22-repro-client-library-design.md docs/superpowers/specs/2026-09-22-repro-ingest-api-design.md
 git commit -m "docs: document tags and the timeline read API"
 ```
 
-- [ ] **Step 4: Docker smoke test (with the user)**
+- [x] **Step 4: Docker smoke test (with the user)**
 
 This step needs a browser. Build and start:
 
@@ -4136,3 +4136,17 @@ Then ask the user to walk through these steps and report the result of each:
 8. Switch the OS to dark mode. The chart colors, the grid and the tooltip all stay readable.
 
 When the user confirms, the plan is done. Tear down with `docker compose down -v`.
+
+> Smoke test run on 2026-09-23 in Chrome via Claude in Chrome. The user did the bootstrap signup; everything else was driven by Claude. All eight steps passed:
+> 1. empty state
+> 2. real-client timelines: an auto-captured error tagged `checkout` with the "Pay button" breadcrumb, and a manual timeline tagged `checkout` + `payments` in the same session
+> 3. the curl timeline stored with `{}` tags
+> 4. stacked bars, Lines persisting across a reload, the tooltip and the table view
+> 5. the tag and top-reason filters, and clearing a chip
+> 6. the detail page with a `−0.8s` offset and a working sibling link
+> 7. `javascript:alert(1)` rendered as text, with no `javascript:` href on the page
+> 8. dark mode, plus no horizontal overflow at Chrome's 500px minimum width
+>
+> Fixed in `5152fc9`: the list showed a `javascript:` URL's "path" as `alert(1)`, and "Unhandled rejection" wrapped in the tooltip.
+>
+> Clicking by element ref did not dispatch the page's click listeners on the smoke page; clicking by coordinates worked. That's the automation tool, not the client.
