@@ -1,6 +1,6 @@
 # repro — dashboard: timeline viewer & tags design
 
-Status: draft
+Status: approved
 Date: 2026-09-23
 Scope: sub-project 4b — error tags end to end (`@repro/js` → ingest → storage), a
 read API for timelines, and the dashboard's timeline viewer: a filterable list, a
