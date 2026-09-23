@@ -6,4 +6,9 @@ describe("runMigrations", () => {
     // globalSetup has already applied every migration to this database.
     await expect(runMigrations(inject("databaseUrl"))).resolves.toBeUndefined();
   });
+
+  it("allows concurrent runs (serialized by an advisory lock)", async () => {
+    const url = inject("databaseUrl");
+    await expect(Promise.all([runMigrations(url), runMigrations(url)])).resolves.toEqual([undefined, undefined]);
+  });
 });

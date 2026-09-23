@@ -55,6 +55,22 @@ describe("runCli", () => {
     });
   });
 
+  describe("help", () => {
+    it.each([["--help"], ["-h"]])("prints usage to stdout and exits 0 for %s", async (flag) => {
+      const result = await run([flag]);
+      expect(result.code).toBe(0);
+      expect(result.stdout).toEqual([USAGE]);
+      expect(result.stderr).toEqual([]);
+    });
+
+    it("accepts a project name starting with '-' after --", async () => {
+      const result = await run(["project", "create", "--", "-beta"]);
+      expect(result.code).toBe(0);
+      const [project] = await listProjects(getTestDb());
+      expect(project.name).toBe("-beta");
+    });
+  });
+
   describe("project create", () => {
     it("creates the project and prints its id and a working key once", async () => {
       const result = await run(["project", "create", "Acme"]);

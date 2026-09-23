@@ -14,7 +14,9 @@ Commands:
   project list               List projects
   key create <projectId>     Create an additional API key for a project
   key list <projectId>       List a project's API keys
-  key revoke <keyId>         Revoke an API key`;
+  key revoke <keyId>         Revoke an API key
+
+Put -- before an argument that starts with "-", e.g. project create -- -beta`;
 
 const KEY_WARNING = "Store this API key now. It will not be shown again.";
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -33,7 +35,12 @@ class CliError extends Error {
 // reported via `out` and an exit code; anything else is thrown to the caller.
 export async function runCli(argv: string[], db: Database, out: CliOutput): Promise<number> {
   try {
-    const [group, action, ...rest] = parsePositionals(argv);
+    const { values, positionals } = parsePositionals(argv);
+    if (values.help) {
+      out.stdout(USAGE);
+      return 0;
+    }
+    const [group, action, ...rest] = positionals;
     if (!group) {
       throw new CliError("Missing command", 2, true);
     }
@@ -64,10 +71,16 @@ export async function runCli(argv: string[], db: Database, out: CliOutput): Prom
   }
 }
 
-function parsePositionals(argv: string[]): string[] {
+function parsePositionals(argv: string[]): { values: { help?: boolean }; positionals: string[] } {
   try {
-    // No options are defined, so strict mode rejects any flag (e.g. --json).
-    return parseArgs({ args: argv, allowPositionals: true, strict: true }).positionals;
+    // help is the only defined option, so strict mode still rejects any other
+    // flag (e.g. --json).
+    return parseArgs({
+      args: argv,
+      allowPositionals: true,
+      strict: true,
+      options: { help: { type: "boolean", short: "h" } },
+    });
   } catch (error) {
     throw new CliError(error instanceof Error ? error.message : String(error), 2, true);
   }

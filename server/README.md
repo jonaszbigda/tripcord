@@ -79,7 +79,21 @@ To rotate a key without dropping events: `key create`, deploy the new key to you
 app, then `key revoke` the old one.
 
 The CLI applies any pending database migrations before running a command, so it
-works on a fresh database before the server has started.
+works on a fresh database before the server has started. Run any command with
+`--help` (or `-h`) to print the usage.
+
+### Upgrading from a version before API key hashing
+
+Older versions stored one plaintext key per project in `projects.api_key`. The
+migration that introduces hashed keys **drops that column without carrying keys
+over**, so after upgrading every existing key is rejected with `401`. The browser
+client doesn't surface failed sends, so this is silent on the app side.
+
+After upgrading, for each existing project:
+
+1. `project list` to find it. Projects from before the upgrade show `0` active keys.
+2. `key create <projectId>` to mint a new key.
+3. Deploy the new key to the app's `init({ apiKey })` config.
 
 ## Environment variables
 

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { eq } from "drizzle-orm";
 import { createTestProject, getTestDb, resetDb } from "../../test/db";
 import { hashApiKey } from "../keys";
-import { apiKeys } from "./schema";
+import { apiKeys, projects } from "./schema";
 import {
   createApiKey,
   createProject,
@@ -135,6 +135,17 @@ describe("listProjects", () => {
     ]);
     expect(result[0].id).toBe(alpha.id);
     expect(result[0].createdAt).toBeInstanceOf(Date);
+  });
+
+  it("reports zero active keys for a project that never had a key (pre-upgrade project)", async () => {
+    const db = getTestDb();
+    const [legacy] = await db.insert(projects).values({ name: "legacy" }).returning();
+
+    const result = await listProjects(db);
+
+    expect(result).toEqual([
+      { id: legacy.id, name: "legacy", createdAt: legacy.createdAt, activeKeyCount: 0 },
+    ]);
   });
 });
 
