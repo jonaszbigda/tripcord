@@ -14,8 +14,10 @@
     "lint": "eslint src"
   },
   "dependencies": {
+    "@fastify/cookie": "^11.1.2",
     "@fastify/cors": "^10.1.0",
     "@fastify/rate-limit": "^10.0.0",
+    "@fastify/static": "^8.3.0",
     "@repro/js": "^0.1.0",
     "drizzle-orm": "^0.36.0",
     "fastify": "^5.0.0",

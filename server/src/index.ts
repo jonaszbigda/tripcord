@@ -1,6 +1,8 @@
+import path from "node:path";
 import { createDb } from "./db/client";
 import { runMigrations } from "./db/migrate";
 import { buildApp } from "./app";
+import { loadDashboardConfig } from "./config";
 import { scheduleCleanup } from "./retention";
 
 async function main(): Promise<void> {
@@ -8,6 +10,9 @@ async function main(): Promise<void> {
   if (!databaseUrl) {
     throw new Error("DATABASE_URL is required");
   }
+
+  // dist/index.js → server/dist → repo root → dashboard/dist (same layout in the Docker image).
+  const dashboard = loadDashboardConfig(process.env, path.join(__dirname, "..", "..", "dashboard", "dist"));
 
   await runMigrations(databaseUrl);
 
@@ -17,6 +22,11 @@ async function main(): Promise<void> {
     rateLimitWindow: process.env.RATE_LIMIT_WINDOW,
     bodyLimit: process.env.BODY_LIMIT_BYTES ? Number(process.env.BODY_LIMIT_BYTES) : undefined,
     logLevel: process.env.LOG_LEVEL,
+    publicUrl: dashboard.publicUrl,
+    signup: dashboard.signup,
+    github: dashboard.github,
+    trustProxy: dashboard.trustProxy,
+    dashboardDir: dashboard.dashboardDir,
   });
 
   const retentionDays = process.env.RETENTION_DAYS ? Number(process.env.RETENTION_DAYS) : 30;

@@ -2600,12 +2600,12 @@ git commit -m "feat(server): add invites service and transactional signup/accept
     - `buildTestApp(db, options?)`
     - `call(app, method, url, options?: { cookie?; body?; headers? })`, which adds `Origin: TEST_ORIGIN` on non-GET requests.
 
-- [ ] **Step 1: Add the Fastify plugins**
+- [x] **Step 1: Add the Fastify plugins**
 
 Run from the repo root: `npm install -w server @fastify/cookie@^11 @fastify/static@^8`
 Expected: `server/package.json` dependencies now list both packages. (`@fastify/static` is used in Task 11.)
 
-- [ ] **Step 2: Write the failing tests**
+- [x] **Step 2: Write the failing tests**
 
 Create `server/test/http.ts`:
 
@@ -2889,12 +2889,12 @@ describe("CSRF guard", () => {
 });
 ```
 
-- [ ] **Step 3: Run the tests to verify they fail**
+- [x] **Step 3: Run the tests to verify they fail**
 
 Run: `npm test -w server -- src/config.test.ts src/routes src/app.test.ts`
 Expected: FAIL. `./config` can't be resolved and the `/api/*` routes return 404.
 
-- [ ] **Step 4: Implement the shared pieces**
+- [x] **Step 4: Implement the shared pieces**
 
 Create `server/src/config.ts`:
 
@@ -3188,7 +3188,7 @@ export function registerAuthRoutes(app: FastifyInstance, ctx: ApiContext): void 
 }
 ```
 
-- [ ] **Step 5: Rewire `app.ts`**
+- [x] **Step 5: Rewire `app.ts`**
 
 Replace `server/src/app.ts` from the imports down to the end of `buildApp`. Keep the `isPreShapedErrorBody` helper and the error-handler body exactly as they are today; they're reproduced below unchanged.
 
@@ -3355,12 +3355,12 @@ In `server/src/index.ts`:
     dashboardDir: dashboard.dashboardDir,
 ```
 
-- [ ] **Step 6: Run the tests to verify they pass**
+- [x] **Step 6: Run the tests to verify they pass**
 
 Run: `npm test -w server`
 Expected: PASS, the whole suite. The existing `/v1/timeline` and CORS tests confirm that the prefix move didn't change ingest. Then run `npm run typecheck -w server && npm run lint -w server`.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add package-lock.json server/package.json server/src server/test

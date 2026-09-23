@@ -4,6 +4,7 @@ import type { Database } from "../db/client";
 import type { Project } from "../db/schema";
 import { findProjectByApiKey } from "../db/projects";
 import { timelines } from "../db/schema";
+import { rateLimitErrorBody } from "../rate-limit";
 
 declare module "fastify" {
   interface FastifyRequest {
@@ -64,8 +65,9 @@ export interface TimelineRouteOptions {
 }
 
 export function registerTimelineRoute(app: FastifyInstance, db: Database, options: TimelineRouteOptions): void {
+  // Registered under the /v1 prefix in app.ts.
   app.post<{ Body: TimelinePayload }>(
-    "/v1/timeline",
+    "/timeline",
     {
       schema: { body: timelinePayloadSchema },
       preValidation: async (request: FastifyRequest, reply) => {
@@ -85,17 +87,7 @@ export function registerTimelineRoute(app: FastifyInstance, db: Database, option
           timeWindow: options.rateLimitWindow,
           hook: "preHandler",
           keyGenerator: (request: FastifyRequest) => (request.project as Project).id,
-          errorResponseBuilder: (_request, context) => {
-            const body = { error: `Rate limit exceeded, retry in ${context.after}` };
-            // @fastify/rate-limit throws this object and Fastify reads `.statusCode`
-            // off it to set the reply status. Define it non-enumerable so it drives
-            // the status code without leaking into the JSON body.
-            Object.defineProperty(body, "statusCode", {
-              value: context.statusCode,
-              enumerable: false,
-            });
-            return body;
-          },
+          errorResponseBuilder: rateLimitErrorBody,
         },
       },
     },
