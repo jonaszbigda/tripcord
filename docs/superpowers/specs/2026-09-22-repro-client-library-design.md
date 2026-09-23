@@ -152,6 +152,12 @@ docs.
 > A sanitizer that throws or returns a non-string falls back to the default,
 > with a warning.
 
+> Superseded (2026-09-23): `reason.name` is also set for auto-captured errors and
+> rejections, to the thrown `Error`'s `name` (e.g. `"TypeError"`), and `reason.message`
+> is that error's own message. The browser's `ErrorEvent.message` ("Uncaught TypeError: …")
+> is only a fallback when there's no error object, and then the "Uncaught" and
+> "TypeError:" prefix is parsed out of it.
+
 ## Declarative capture: `data-trace`
 
 Elements can opt into capture declaratively instead of requiring a manual `track()` call in

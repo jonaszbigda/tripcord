@@ -22,7 +22,32 @@ describe("attachErrorHooks", () => {
 
     window.dispatchEvent(new ErrorEvent("error", { message: "boom" }));
 
-    expect(tracer.captureError).toHaveBeenCalledWith("boom");
+    expect(tracer.captureError).toHaveBeenCalledWith("boom", undefined);
+  });
+
+  it("reports the thrown error's own message and name, without the browser's \"Uncaught\" prefix", () => {
+    const tracer = fakeTracer();
+    attachErrorHooks(tracer);
+
+    window.dispatchEvent(
+      new ErrorEvent("error", {
+        message: "Uncaught TypeError: Cannot read properties of undefined",
+        error: new TypeError("Cannot read properties of undefined"),
+      })
+    );
+
+    expect(tracer.captureError).toHaveBeenCalledWith("Cannot read properties of undefined", "TypeError");
+  });
+
+  it("parses the prefix out of the message when there's no error object", () => {
+    const tracer = fakeTracer();
+    attachErrorHooks(tracer);
+
+    window.dispatchEvent(new ErrorEvent("error", { message: "Uncaught RangeError: too deep" }));
+    window.dispatchEvent(new ErrorEvent("error", { message: "Script error." }));
+
+    expect(tracer.captureError).toHaveBeenNthCalledWith(1, "too deep", "RangeError");
+    expect(tracer.captureError).toHaveBeenNthCalledWith(2, "Script error.", undefined);
   });
 
   it("calls captureUnhandledRejection on an unhandledrejection event", () => {
@@ -32,7 +57,17 @@ describe("attachErrorHooks", () => {
     const event = Object.assign(new Event("unhandledrejection"), { reason: "network down" });
     window.dispatchEvent(event);
 
-    expect(tracer.captureUnhandledRejection).toHaveBeenCalledWith("network down");
+    expect(tracer.captureUnhandledRejection).toHaveBeenCalledWith("network down", undefined);
+  });
+
+  it("reports a rejected Error's message and name rather than \"Error: …\"", () => {
+    const tracer = fakeTracer();
+    attachErrorHooks(tracer);
+
+    const event = Object.assign(new Event("unhandledrejection"), { reason: new Error("network down") });
+    window.dispatchEvent(event);
+
+    expect(tracer.captureUnhandledRejection).toHaveBeenCalledWith("network down", "Error");
   });
 
   it("stops calling the tracer after dispose()", () => {

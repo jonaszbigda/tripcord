@@ -48,6 +48,16 @@ describe("createTracer", () => {
     });
   });
 
+  it("captureError() includes the error's name when given one", () => {
+    const { send, tracer } = setup();
+    tracer.captureError("Cannot read properties of undefined", "TypeError");
+    expect(send.mock.calls[0][0].reason).toEqual({
+      type: "error",
+      message: "Cannot read properties of undefined",
+      name: "TypeError",
+    });
+  });
+
   it("captureUnhandledRejection() flushes with an unhandledrejection reason", () => {
     const { send, tracer } = setup();
     tracer.captureUnhandledRejection("network request failed");

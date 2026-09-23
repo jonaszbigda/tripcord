@@ -16,8 +16,9 @@ export interface TracerConfig {
 export interface Tracer {
   track(name: string, data?: Record<string, unknown>): void;
   capture(name?: string, data?: Record<string, unknown>, options?: CaptureOptions): void;
-  captureError(message: string): void;
-  captureUnhandledRejection(message: string): void;
+  /** `name` is the error's constructor name, e.g. "TypeError", when known. */
+  captureError(message: string, name?: string): void;
+  captureUnhandledRejection(message: string, name?: string): void;
   traceElement(label: string): void;
   setTags(tags: string[]): void;
   clearTags(): void;
@@ -51,11 +52,11 @@ export function createTracer(config: TracerConfig): Tracer {
       warnOnRiskyKeys(data);
       flush({ type: "manual", name, data }, options?.tags);
     },
-    captureError(message) {
-      flush({ type: "error", message });
+    captureError(message, name) {
+      flush({ type: "error", message, ...(name ? { name } : {}) });
     },
-    captureUnhandledRejection(message) {
-      flush({ type: "unhandledrejection", message });
+    captureUnhandledRejection(message, name) {
+      flush({ type: "unhandledrejection", message, ...(name ? { name } : {}) });
     },
     traceElement(label) {
       pushEvent({ timestamp: Date.now(), type: "trace", name: label });

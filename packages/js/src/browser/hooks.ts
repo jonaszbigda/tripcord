@@ -1,11 +1,36 @@
 import type { Tracer } from "../core/tracer";
 
+interface ErrorDescription {
+  message: string;
+  name?: string;
+}
+
+// "Uncaught TypeError: x" (the browser's ErrorEvent.message) or "TypeError: x".
+const PREFIXED = /^(?:Uncaught\s+)?(?:([A-Za-z_$][\w$]*Error):\s*)?([\s\S]*)$/;
+
+function fromText(text: string): ErrorDescription {
+  const [, name, message] = PREFIXED.exec(text) ?? [];
+  return { message: message ?? text, name };
+}
+
+// The thrown value itself, when it's an Error, has the bare message and its
+// name. Only without one (a cross-origin "Script error.", a thrown string)
+// does the prefix get parsed out of the text.
+function describe(value: unknown, fallbackText: string): ErrorDescription {
+  if (value instanceof Error) {
+    return { message: value.message, name: value.name };
+  }
+  return fromText(fallbackText);
+}
+
 export function attachErrorHooks(tracer: Tracer): () => void {
   function onError(event: ErrorEvent): void {
-    tracer.captureError(event.message);
+    const { message, name } = describe(event.error, event.message);
+    tracer.captureError(message, name);
   }
   function onRejection(event: PromiseRejectionEvent): void {
-    tracer.captureUnhandledRejection(String(event.reason));
+    const { message, name } = describe(event.reason, String(event.reason));
+    tracer.captureUnhandledRejection(message, name);
   }
   window.addEventListener("error", onError);
   window.addEventListener("unhandledrejection", onRejection);
