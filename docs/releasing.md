@@ -32,6 +32,16 @@ Done by the maintainer, with their npm and GitHub accounts.
 4. After the first server release (`server-v0.1.0`), open the package on GitHub
    (Profile → Packages → tripcord → Package settings) and change its visibility to
    public. Until then `docker pull` needs a login.
+5. The landing site (`site/`) deploys to GitHub Pages from
+   `.github/workflows/site.yml`. In the repository's Settings → Pages, set
+   **Source** to GitHub Actions and **Custom domain** to `tripcord.dev`, then turn on
+   **Enforce HTTPS** once the certificate is issued. At the DNS provider, point the
+   apex at GitHub Pages: `A` records `185.199.108.153`, `185.199.109.153`,
+   `185.199.110.153` and `185.199.111.153` (and the `AAAA` records from GitHub's
+   Pages docs).
+
+The site has no release tags: it deploys whenever `site/**` (or the shared
+`dashboard/src/theme.css`) changes on `main`.
 
 ## Each release
 

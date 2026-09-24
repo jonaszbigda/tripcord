@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Beta commitments | Tripcord</title>
+    <meta
+      name="description"
+      content="What the Tripcord hosted beta promises: a free tier, backups, export, deletion and notice."
+    />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/src/main.css" />
+  </head>
+  <body>
+    <header class="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-6 gap-y-4 px-4 py-6">
+      <a href="/" class="inline-flex items-center gap-2 text-lg font-semibold tracking-tight">
+        <svg viewBox="0 0 28 16" aria-hidden="true" class="h-[0.8em] w-auto">
+          <defs>
+            <linearGradient id="wordmark-cord" x1="0" x2="1">
+              <stop offset="0" stop-color="var(--color-accent)" />
+              <stop offset="1" stop-color="var(--color-amber)" />
+            </linearGradient>
+          </defs>
+          <path d="M1 12 C7 12 8 4 14 4 S20 12 22 12" fill="none" stroke="url(#wordmark-cord)" stroke-width="2.5" stroke-linecap="round" />
+          <circle cx="24.5" cy="12" r="3" fill="var(--color-ok)" />
+        </svg>
+        Tripcord
+      </a>
+      <nav class="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted">
+        <a class="text-fg" href="/beta/" aria-current="page">Beta commitments</a>
+        <a class="hover:text-fg" href="https://github.com/jonaszbigda/tripcord/blob/main/docs/self-hosting.md">Self-host</a>
+        <a class="hover:text-fg" href="https://github.com/jonaszbigda/tripcord">GitHub</a>
+        <a
+          class="rounded-lg bg-cord px-3.5 py-2 font-semibold text-accent-fg hover:brightness-110"
+          href="mailto:hello@tripcord.dev?subject=Tripcord%20beta%20access"
+          >Request access</a
+        >
+      </nav>
+    </header>
+
+    <main class="prose-page mx-auto max-w-5xl px-4 pt-8 pb-24 lg:pt-16">
+      <h1 class="text-4xl leading-tight font-semibold tracking-[-0.03em] sm:text-5xl">What the beta promises</h1>
+      <p class="text-lg">
+        Tripcord's hosted beta is free and invite-only, and it runs on one server in France. These are the promises we
+        keep while it's a beta, and after.
+      </p>
+
+      <h2 id="app">Your app comes first</h2>
+      <p>The client never throws, never retries, and never blocks your page. If Tripcord is down, your users don't notice.</p>
+
+      <h2 id="backups">Your data is backed up</h2>
+      <p>
+        Every night, encrypted, to storage separate from the server, kept for 14 days. Restores are tested. Timelines
+        are kept for 30 days.
+      </p>
+
+      <h2 id="deploys">Deploys never remove data</h2>
+      <p>Database migrations only move forward. Anything that would drop data gets announced first.</p>
+
+      <h2 id="free">There will always be a free tier</h2>
+      <p>
+        Tripcord is free during the beta. If paid plans come, you get 30 days' notice and a generous free tier. Paid
+        plans add capacity. They never lock you out of data you already have, and export is available on every plan.
+      </p>
+
+      <h2 id="leave">You can leave at any time</h2>
+      <p>
+        Export a project's timelines as NDJSON, and delete projects, organizations or your account from the dashboard.
+        Deleted data is gone from the database immediately, and from backups within 14 days. Tripcord is open source,
+        and the hosted version runs the same image
+        <a href="https://github.com/jonaszbigda/tripcord/blob/main/docs/self-hosting.md">you can self-host</a>.
+      </p>
+
+      <h2 id="api">The API stays stable</h2>
+      <p>
+        <code class="font-mono text-sm text-fg">/v1/timeline</code> and <code class="font-mono text-sm text-fg">@tripcord/js</code>
+        0.x stay backward compatible. A breaking change would get a new endpoint version, and the old one keeps working
+        for at least 6 months.
+      </p>
+
+      <h2 id="shutdown">If the service ever shuts down</h2>
+      <p>You get 60 days' notice, an export, and the self-host path.</p>
+
+      <h2 id="beta">What "beta" means</h2>
+      <p>
+        It runs on one server, and there's no uptime guarantee. Incidents are posted on the
+        <a href="https://status.tripcord.dev">status page</a>.
+      </p>
+
+      <p class="mt-12">
+        Questions: <a href="mailto:hello@tripcord.dev">hello@tripcord.dev</a>. What we store and where is on the
+        <a href="/privacy/">privacy page</a>.
+      </p>
+    </main>
+
+    <footer class="border-t border-border">
+      <div class="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-10 text-sm text-muted sm:flex-row sm:items-start sm:justify-between">
+        <nav class="flex flex-wrap gap-x-5 gap-y-2">
+          <a class="hover:text-fg" href="https://github.com/jonaszbigda/tripcord">GitHub</a>
+          <a class="hover:text-fg" href="https://www.npmjs.com/package/@tripcord/js">npm</a>
+          <a class="hover:text-fg" href="https://status.tripcord.dev">Status</a>
+          <a class="hover:text-fg" href="https://github.com/jonaszbigda/tripcord/blob/main/docs/self-hosting.md">Self-hosting guide</a>
+          <a class="hover:text-fg" href="/beta/">Beta commitments</a>
+          <a class="hover:text-fg" href="/privacy/">Privacy</a>
+          <a class="hover:text-fg" href="mailto:hello@tripcord.dev">hello@tripcord.dev</a>
+        </nav>
+        <p>MIT licensed. Hosted in the EU.</p>
+      </div>
+    </footer>
+  </body>
+</html>

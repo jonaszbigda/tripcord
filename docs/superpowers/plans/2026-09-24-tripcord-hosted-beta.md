@@ -3027,7 +3027,7 @@ git commit -m "feat(dashboard): export and delete projects, orgs and accounts"
 
 Before starting, get the Backblaze region from the author (see Prerequisites).
 
-- [ ] **Step 1: Share the theme**
+- [x] **Step 1: Share the theme**
 
 Move everything in `dashboard/src/index.css` after the three `@import` lines (the `@theme` block, `@layer base`, and the three `@utility` blocks, with their comments) into a new `dashboard/src/theme.css`. Add a header comment:
 
@@ -3048,7 +3048,7 @@ Move everything in `dashboard/src/index.css` after the three `@import` lines (th
 Run: `npm run build -w dashboard && npm test -w dashboard`
 Expected: PASS. Open `npm run dev -w dashboard` once to confirm nothing changed visually.
 
-- [ ] **Step 2: Create the workspace**
+- [x] **Step 2: Create the workspace**
 
 Add `"site"` to the root `package.json` `workspaces`.
 
@@ -3140,7 +3140,7 @@ In `server/Dockerfile`, add `COPY site/package.json site/package.json` after the
 
 Run: `npm install`. It updates `package-lock.json`.
 
-- [ ] **Step 3: Write the failing test**
+- [x] **Step 3: Write the failing test**
 
 Create `site/src/pages.test.ts`:
 
@@ -3204,7 +3204,7 @@ describe("site pages", () => {
 Run: `npm test -w site`
 Expected: FAIL. The pages don't exist yet.
 
-- [ ] **Step 4: Write the pages**
+- [x] **Step 4: Write the pages**
 
 Every page shares the same `<head>` (charset, viewport, the page's `<title>` and `<meta name="description">`, `<link rel="icon" href="/favicon.svg">`, `<link rel="stylesheet" href="/src/main.css">`), header, footer and `<script type="module" src="/src/copy.ts">`. They're repeated in each file, and there's no templating for three pages. Use the dashboard's classes: `panel`, `bg-cord`, `text-cord`, `text-muted`, `border-border`, `font-mono`. The layout is `max-w-5xl mx-auto px-4`, and it must work at 360px wide with no horizontal scroll.
 
@@ -3263,7 +3263,7 @@ End with "Questions: hello@tripcord.dev" and a link to `/privacy/`.
 - **What we never do.** Sell data, use it for advertising, or track visitors. This site has no analytics, no cookies and no third-party scripts.
 - **Contact.** hello@tripcord.dev, including for a data processing agreement.
 
-- [ ] **Step 5: Run the tests and the build**
+- [x] **Step 5: Run the tests and the build**
 
 Run: `npm test -w site && npm run build -w site && npm run lint -w site && ls site/dist site/dist/beta site/dist/privacy site/dist/assets`
 Expected: tests PASS. `dist/` has `index.html`, `beta/index.html`, `privacy/index.html`, `CNAME`, `favicon.svg`, and a hashed `dashboard-*.png` under `assets/`.
@@ -3272,7 +3272,7 @@ If Vite doesn't bundle `../docs/dashboard.png` (it lives outside the site's root
 
 Run: `npm run dev -w site`, and check all three pages at 360px and 1280px wide.
 
-- [ ] **Step 6: Deploy workflow**
+- [x] **Step 6: Deploy workflow**
 
 Create `.github/workflows/site.yml`:
 
@@ -3336,12 +3336,12 @@ In `docs/releasing.md`, add a "Landing site" section under One-time setup:
 
 Also note that the site deploys on its own whenever `site/**` changes on `main`.
 
-- [ ] **Step 7: Whole-repo check and image build**
+- [x] **Step 7: Whole-repo check and image build**
 
 Run: `npm run build && npm run typecheck && npm run lint && npm test`, then `docker build -f server/Dockerfile -t tripcord-site-check . && docker image rm tripcord-site-check`
 Expected: PASS, and the image builds with the new workspace.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add package.json package-lock.json dashboard/src site server/Dockerfile .github/workflows/site.yml docs/releasing.md

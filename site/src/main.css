@@ -1,0 +1,119 @@
+@import "tailwindcss";
+@import "@fontsource-variable/schibsted-grotesk";
+@import "@fontsource-variable/jetbrains-mono";
+@import "../../dashboard/src/theme.css";
+
+/* The hero's timeline: a cord that runs through each step a user took and
+   trips at the last one. It draws once on load; with reduced motion it's
+   simply there. */
+@layer components {
+  .trace ol {
+    position: relative;
+    display: grid;
+    gap: 1.5rem;
+    padding-left: 2rem;
+  }
+
+  .trace ol::before {
+    content: "";
+    position: absolute;
+    left: 0.5rem;
+    top: 0.625rem;
+    bottom: 0.625rem;
+    width: 2px;
+    border-radius: 1px;
+    background: linear-gradient(var(--color-accent), var(--color-amber));
+    transform-origin: top;
+  }
+
+  .trace li {
+    position: relative;
+  }
+
+  /* The knot on the cord for each step. */
+  .trace li::before {
+    content: "";
+    position: absolute;
+    left: -2rem;
+    top: 0.3rem;
+    width: 1.0625rem;
+    height: 1.0625rem;
+    border-radius: 9999px;
+    border: 2px solid var(--color-amber);
+    background: var(--color-surface);
+  }
+
+  .trace li.trip::before {
+    border-color: var(--color-danger);
+    background: var(--color-danger);
+    box-shadow: 0 0 0 5px rgb(255 92 92 / 0.18);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .trace ol::before {
+      animation: trace-cord 1.5s cubic-bezier(0.3, 0.7, 0.2, 1) both;
+    }
+
+    .trace li {
+      animation: trace-knot 0.3s ease-out both;
+    }
+
+    .trace li:nth-child(1) {
+      animation-delay: 0.1s;
+    }
+    .trace li:nth-child(2) {
+      animation-delay: 0.5s;
+    }
+    .trace li:nth-child(3) {
+      animation-delay: 0.9s;
+    }
+    .trace li:nth-child(4) {
+      animation-delay: 1.4s;
+    }
+  }
+
+  @keyframes trace-cord {
+    from {
+      transform: scaleY(0);
+    }
+  }
+
+  @keyframes trace-knot {
+    from {
+      opacity: 0;
+    }
+  }
+
+  /* Long-form pages (beta, privacy): readable measure and rhythm. */
+  .prose-page h2 {
+    margin-top: 2.5rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--color-fg);
+  }
+
+  .prose-page p,
+  .prose-page li {
+    margin-top: 0.75rem;
+    max-width: 65ch;
+    line-height: 1.7;
+    color: var(--color-muted);
+  }
+
+  .prose-page ul {
+    list-style: disc;
+    padding-left: 1.25rem;
+  }
+
+  .prose-page a {
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .prose-page strong {
+    color: var(--color-fg);
+    font-weight: 600;
+  }
+}

@@ -8,6 +8,7 @@ COPY package.json package-lock.json ./
 COPY packages/js/package.json packages/js/package.json
 COPY server/package.json server/package.json
 COPY dashboard/package.json dashboard/package.json
+COPY site/package.json site/package.json
 RUN npm ci
 COPY dashboard dashboard
 RUN npm run build -w dashboard
@@ -23,6 +24,7 @@ COPY package.json package-lock.json ./
 COPY packages/js/package.json packages/js/package.json
 COPY server/package.json server/package.json
 COPY dashboard/package.json dashboard/package.json
+COPY site/package.json site/package.json
 RUN npm ci
 COPY packages/js packages/js
 COPY server server

@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Privacy | Tripcord</title>
+    <meta name="description" content="What the Tripcord hosted beta stores, where, for how long, and who processes it." />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/src/main.css" />
+  </head>
+  <body>
+    <header class="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-6 gap-y-4 px-4 py-6">
+      <a href="/" class="inline-flex items-center gap-2 text-lg font-semibold tracking-tight">
+        <svg viewBox="0 0 28 16" aria-hidden="true" class="h-[0.8em] w-auto">
+          <defs>
+            <linearGradient id="wordmark-cord" x1="0" x2="1">
+              <stop offset="0" stop-color="var(--color-accent)" />
+              <stop offset="1" stop-color="var(--color-amber)" />
+            </linearGradient>
+          </defs>
+          <path d="M1 12 C7 12 8 4 14 4 S20 12 22 12" fill="none" stroke="url(#wordmark-cord)" stroke-width="2.5" stroke-linecap="round" />
+          <circle cx="24.5" cy="12" r="3" fill="var(--color-ok)" />
+        </svg>
+        Tripcord
+      </a>
+      <nav class="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted">
+        <a class="hover:text-fg" href="/beta/">Beta commitments</a>
+        <a class="hover:text-fg" href="https://github.com/jonaszbigda/tripcord/blob/main/docs/self-hosting.md">Self-host</a>
+        <a class="hover:text-fg" href="https://github.com/jonaszbigda/tripcord">GitHub</a>
+        <a
+          class="rounded-lg bg-cord px-3.5 py-2 font-semibold text-accent-fg hover:brightness-110"
+          href="mailto:hello@tripcord.dev?subject=Tripcord%20beta%20access"
+          >Request access</a
+        >
+      </nav>
+    </header>
+
+    <main class="prose-page mx-auto max-w-5xl px-4 pt-8 pb-24 lg:pt-16">
+      <h1 class="text-4xl leading-tight font-semibold tracking-[-0.03em] sm:text-5xl">Privacy</h1>
+      <p class="text-lg">
+        This covers the hosted beta at app.tripcord.dev. If you self-host Tripcord, your data stays on your server and
+        none of this applies.
+      </p>
+
+      <h2 id="stored">What's stored</h2>
+      <ul>
+        <li>
+          <strong>Your account:</strong> your email, your name, a hash of your password, and your GitHub user id if you
+          connect GitHub.
+        </li>
+        <li>
+          <strong>Timelines:</strong> whatever your app records, plus the page URL (origin and path by default) and the
+          browser's user agent.
+        </li>
+        <li>
+          <strong>No IP addresses:</strong> none are stored, with timelines or in the server's logs. The server uses
+          them briefly, in memory, to rate-limit requests.
+        </li>
+      </ul>
+
+      <h2 id="where">Where</h2>
+      <p>
+        On a server at OVH, in France. Encrypted backups are stored with Backblaze (B2), in their EU data center in
+        Amsterdam. Nothing leaves the EU.
+      </p>
+
+      <h2 id="processors">Who processes it</h2>
+      <ul>
+        <li><strong>OVH</strong> runs the server and sends our email.</li>
+        <li><strong>Backblaze</strong> stores the encrypted backups.</li>
+        <li><strong>GitHub</strong> hosts this website, and handles GitHub login if you use it.</li>
+      </ul>
+
+      <h2 id="retention">How long</h2>
+      <p>
+        Timelines are kept for 30 days. Accounts are kept until you delete them. Backups are kept for 14 days. When you
+        delete something, it's gone from the database immediately, and from backups within 14 days.
+      </p>
+
+      <h2 id="never">What we never do</h2>
+      <p>
+        We don't sell data, use it for advertising, or track visitors. This site has no analytics, no cookies and no
+        third-party scripts.
+      </p>
+
+      <h2 id="contact">Contact</h2>
+      <p>
+        Write to <a href="mailto:hello@tripcord.dev">hello@tripcord.dev</a>, including if you need a data processing
+        agreement.
+      </p>
+    </main>
+
+    <footer class="border-t border-border">
+      <div class="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-10 text-sm text-muted sm:flex-row sm:items-start sm:justify-between">
+        <nav class="flex flex-wrap gap-x-5 gap-y-2">
+          <a class="hover:text-fg" href="https://github.com/jonaszbigda/tripcord">GitHub</a>
+          <a class="hover:text-fg" href="https://www.npmjs.com/package/@tripcord/js">npm</a>
+          <a class="hover:text-fg" href="https://status.tripcord.dev">Status</a>
+          <a class="hover:text-fg" href="https://github.com/jonaszbigda/tripcord/blob/main/docs/self-hosting.md">Self-hosting guide</a>
+          <a class="hover:text-fg" href="/beta/">Beta commitments</a>
+          <a class="hover:text-fg" href="/privacy/" aria-current="page">Privacy</a>
+          <a class="hover:text-fg" href="mailto:hello@tripcord.dev">hello@tripcord.dev</a>
+        </nav>
+        <p>MIT licensed. Hosted in the EU.</p>
+      </div>
+    </footer>
+  </body>
+</html>

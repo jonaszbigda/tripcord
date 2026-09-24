@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tripcord: no noise, pure signal</title>
+    <meta
+      name="description"
+      content="Tripcord records the moments you choose in your web app, and sends the timeline that led up to an error or any moment you capture."
+    />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/src/main.css" />
+  </head>
+  <body>
+    <header class="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-6 gap-y-4 px-4 py-6">
+      <a href="/" class="inline-flex items-center gap-2 text-lg font-semibold tracking-tight">
+        <svg viewBox="0 0 28 16" aria-hidden="true" class="h-[0.8em] w-auto">
+          <defs>
+            <linearGradient id="wordmark-cord" x1="0" x2="1">
+              <stop offset="0" stop-color="var(--color-accent)" />
+              <stop offset="1" stop-color="var(--color-amber)" />
+            </linearGradient>
+          </defs>
+          <path d="M1 12 C7 12 8 4 14 4 S20 12 22 12" fill="none" stroke="url(#wordmark-cord)" stroke-width="2.5" stroke-linecap="round" />
+          <circle cx="24.5" cy="12" r="3" fill="var(--color-ok)" />
+        </svg>
+        Tripcord
+      </a>
+      <nav class="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted">
+        <a class="hover:text-fg" href="/beta/">Beta commitments</a>
+        <a class="hover:text-fg" href="https://github.com/jonaszbigda/tripcord/blob/main/docs/self-hosting.md">Self-host</a>
+        <a class="hover:text-fg" href="https://github.com/jonaszbigda/tripcord">GitHub</a>
+        <a
+          class="rounded-lg bg-cord px-3.5 py-2 font-semibold text-accent-fg hover:brightness-110"
+          href="mailto:hello@tripcord.dev?subject=Tripcord%20beta%20access"
+          >Request access</a
+        >
+      </nav>
+    </header>
+
+    <main>
+      <section class="mx-auto grid max-w-5xl gap-12 px-4 pt-8 pb-24 [&>*]:min-w-0 lg:grid-cols-[1.15fr_1fr] lg:items-center lg:pt-16">
+        <div>
+          <h1 class="text-5xl leading-[1.02] font-semibold tracking-[-0.035em] sm:text-6xl lg:text-7xl">No noise, pure signal.</h1>
+          <p class="mt-6 max-w-xl text-lg leading-relaxed text-muted">
+            You choose what goes on the timeline. When something breaks, or a moment you care about happens, Tripcord
+            sends the steps that led there.
+          </p>
+          <p class="mt-4 max-w-xl text-lg leading-relaxed text-fg">Why did this break? How did people get here? One timeline answers both.</p>
+          <div class="mt-8 flex flex-wrap gap-3">
+            <a
+              class="rounded-lg bg-cord px-4 py-2.5 font-semibold text-accent-fg shadow-[0_8px_24px_-8px_rgb(255_106_26/0.6)] hover:brightness-110"
+              href="mailto:hello@tripcord.dev?subject=Tripcord%20beta%20access"
+              >Request access</a
+            >
+            <a
+              class="rounded-lg border border-border bg-raised px-4 py-2.5 font-medium hover:border-muted/50"
+              href="https://github.com/jonaszbigda/tripcord/blob/main/docs/self-hosting.md"
+              >Self-host it</a
+            >
+          </div>
+        </div>
+
+        <figure class="trace panel rounded-2xl p-6 sm:p-8">
+          <ol>
+            <li>
+              <div class="flex items-baseline justify-between gap-4">
+                <code class="font-mono text-sm break-words text-fg">track("cart.viewed", &#123; items: 3 &#125;)</code>
+                <span class="font-mono text-xs text-muted">0.0s</span>
+              </div>
+              <p class="mt-1 text-sm text-muted">Your code marks a step</p>
+            </li>
+            <li>
+              <div class="flex items-baseline justify-between gap-4">
+                <code class="font-mono text-sm break-words text-fg">"Checkout button"</code>
+                <span class="font-mono text-xs text-muted">4.2s</span>
+              </div>
+              <p class="mt-1 text-sm text-muted">A click on a button marked <code class="font-mono">data-trace="Checkout button"</code></p>
+            </li>
+            <li>
+              <div class="flex items-baseline justify-between gap-4">
+                <code class="font-mono text-sm break-words text-fg">track("checkout.step", &#123; step: "shipping" &#125;)</code>
+                <span class="font-mono text-xs text-muted">9.8s</span>
+              </div>
+              <p class="mt-1 text-sm text-muted">Another step you chose to record</p>
+            </li>
+            <li class="trip">
+              <div class="flex items-baseline justify-between gap-4">
+                <code class="font-mono text-sm break-words text-danger">TypeError: Cannot read properties of undefined (reading 'zip')</code>
+                <span class="font-mono text-xs text-muted">11.3s</span>
+              </div>
+              <p class="mt-1 text-sm text-muted">The error trips the cord, and Tripcord sends these four steps</p>
+            </li>
+          </ol>
+          <figcaption class="mt-8 border-t border-border pt-4 text-sm leading-relaxed text-muted">
+            A checkout that broke, as Tripcord records it: only what your app chose to track, then the error.
+          </figcaption>
+        </figure>
+      </section>
+
+      <section id="how" class="mx-auto max-w-5xl px-4 pb-24">
+        <h2 class="text-3xl font-semibold tracking-tight">How it works</h2>
+        <div class="mt-8 grid gap-10 lg:grid-cols-[1fr_1.2fr] [&>*]:min-w-0">
+          <ol class="space-y-6">
+            <li class="flex gap-4">
+              <span class="mt-0.5 font-mono text-sm text-accent">1</span>
+              <div>
+                <p class="font-medium">Install the client</p>
+                <p class="mt-1 text-muted"><code class="font-mono text-sm text-fg">npm i @tripcord/js</code></p>
+              </div>
+            </li>
+            <li class="flex gap-4">
+              <span class="mt-0.5 font-mono text-sm text-accent">2</span>
+              <div>
+                <p class="font-medium">Point it at your project</p>
+                <p class="mt-1 text-muted">Call <code class="font-mono text-sm text-fg">init()</code> with the endpoint and the project's API key.</p>
+              </div>
+            </li>
+            <li class="flex gap-4">
+              <span class="mt-0.5 font-mono text-sm text-accent">3</span>
+              <div>
+                <p class="font-medium">Mark the moments that matter</p>
+                <p class="mt-1 text-muted">
+                  <code class="font-mono text-sm text-fg">track()</code> adds a step to the timeline.
+                  <code class="font-mono text-sm text-fg">capture()</code> sends the timeline on purpose, for a signup
+                  or a checkout. Errors and unhandled rejections are captured on their own.
+                </p>
+              </div>
+            </li>
+          </ol>
+          <div class="panel relative rounded-2xl p-5">
+            <button
+              type="button"
+              data-copy="#snippet"
+              class="absolute top-3 right-3 rounded-md border border-border bg-raised px-2.5 py-1 text-xs text-muted hover:text-fg"
+            >
+              Copy
+            </button>
+            <pre id="snippet" class="overflow-x-auto pt-6 font-mono text-sm leading-relaxed text-fg"><code>import { init, track, capture } from "@tripcord/js";
+
+init({
+  endpoint: "https://app.tripcord.dev/v1/timeline",
+  apiKey: "tpk_…",
+});
+
+track("checkout.step", { step: "shipping" });
+capture("checkout.completed");</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <section class="mx-auto max-w-5xl px-4 pb-24">
+        <h2 class="text-3xl font-semibold tracking-tight">See what led there</h2>
+        <p class="mt-4 max-w-2xl text-lg leading-relaxed text-muted">
+          Captures over time, the reasons that come up most, filters by tag, and every timeline step by step.
+        </p>
+        <figure class="panel mt-8 overflow-hidden rounded-2xl p-2">
+          <img
+            src="../docs/dashboard.png"
+            width="2560"
+            height="2362"
+            loading="lazy"
+            class="h-auto w-full rounded-xl"
+            alt="The Tripcord dashboard: captures over time, the top reasons, and a list of timelines"
+          />
+        </figure>
+      </section>
+
+      <section id="safe" class="mx-auto max-w-5xl px-4 pb-24">
+        <h2 class="text-3xl font-semibold tracking-tight">Safe to run in production</h2>
+        <dl class="mt-8 grid gap-x-12 gap-y-8 sm:grid-cols-2">
+          <div>
+            <dt class="font-medium">Your app comes first</dt>
+            <dd class="mt-2 leading-relaxed text-muted">
+              The client never throws and never retries. If Tripcord is down, your users don't notice.
+            </dd>
+          </div>
+          <div>
+            <dt class="font-medium">URLs are trimmed</dt>
+            <dd class="mt-2 leading-relaxed text-muted">
+              By default, page URLs keep only the origin and path. Query strings and fragments, where tokens hide, are
+              dropped.
+            </dd>
+          </div>
+          <div>
+            <dt class="font-medium">You choose what's recorded</dt>
+            <dd class="mt-2 leading-relaxed text-muted">Apart from errors, nothing goes on the timeline unless your code puts it there.</dd>
+          </div>
+          <div>
+            <dt class="font-medium">Kept for 30 days</dt>
+            <dd class="mt-2 leading-relaxed text-muted">Timelines older than that are deleted automatically.</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="mx-auto max-w-5xl px-4 pb-24">
+        <h2 class="text-3xl font-semibold tracking-tight">Open source, and easy to leave</h2>
+        <p class="mt-4 max-w-2xl text-lg leading-relaxed text-muted">
+          Tripcord is MIT licensed. Run the same image on your own server, or use the hosted beta. Either way, you can
+          export any project as NDJSON or delete it whenever you like.
+        </p>
+        <div class="mt-6 flex flex-wrap gap-x-6 gap-y-2">
+          <a class="text-accent underline underline-offset-4" href="https://github.com/jonaszbigda/tripcord/blob/main/docs/self-hosting.md"
+            >Read the self-hosting guide</a
+          >
+          <a class="text-accent underline underline-offset-4" href="/beta/">What the beta promises</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="border-t border-border">
+      <div class="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-10 text-sm text-muted sm:flex-row sm:items-start sm:justify-between">
+        <nav class="flex flex-wrap gap-x-5 gap-y-2">
+          <a class="hover:text-fg" href="https://github.com/jonaszbigda/tripcord">GitHub</a>
+          <a class="hover:text-fg" href="https://www.npmjs.com/package/@tripcord/js">npm</a>
+          <a class="hover:text-fg" href="https://status.tripcord.dev">Status</a>
+          <a class="hover:text-fg" href="https://github.com/jonaszbigda/tripcord/blob/main/docs/self-hosting.md">Self-hosting guide</a>
+          <a class="hover:text-fg" href="/beta/">Beta commitments</a>
+          <a class="hover:text-fg" href="/privacy/">Privacy</a>
+          <a class="hover:text-fg" href="mailto:hello@tripcord.dev">hello@tripcord.dev</a>
+        </nav>
+        <p>MIT licensed. Hosted in the EU.</p>
+      </div>
+    </footer>
+
+    <script type="module" src="/src/copy.ts"></script>
+  </body>
+</html>
