@@ -1861,7 +1861,7 @@ git commit -m "feat(server): export a project's timelines as NDJSON"
   - `redactTokens(url: string): string`.
   - `AppOptions.logStream?: { write(line: string): void }`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `server/src/redact.test.ts`:
 
@@ -1901,12 +1901,12 @@ describe("request logs", () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npm test -w server -- src/redact.test.ts src/app.test.ts`
 Expected: FAIL.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Create `server/src/redact.ts`:
 
@@ -1942,12 +1942,12 @@ and replace the `logger` option in `Fastify({ … })`:
     },
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `npm test -w server && npm run typecheck -w server`
 Expected: PASS. If Fastify's logger typing rejects the serializer's parameter type, type it as `FastifyRequest` from `fastify`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/src

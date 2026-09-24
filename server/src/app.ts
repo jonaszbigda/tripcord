@@ -9,6 +9,7 @@ import type { SignupMode } from "./accounts";
 import type { GithubConfig } from "./config";
 import type { Database } from "./db/client";
 import type { Mailer } from "./email";
+import { redactTokens } from "./redact";
 import { csrfGuard } from "./auth/http";
 import type { ApiContext } from "./routes/context";
 import { registerAuthRoutes } from "./routes/auth";
@@ -29,6 +30,8 @@ export interface AppOptions {
   invalidKeyLimitMax?: number;
   bodyLimit?: number;
   logLevel?: string;
+  /** Where logs go. Default stdout; tests pass a stream to read them. */
+  logStream?: { write(line: string): void };
   /** External URL of the dashboard, e.g. https://app.tripcord.dev. Default http://localhost:3000. */
   publicUrl?: string;
   /** Default "invite-only". */
@@ -64,7 +67,15 @@ function isBackendPath(url: string): boolean {
 
 export async function buildApp(db: Database, options: AppOptions = {}): Promise<FastifyInstance> {
   const app = Fastify({
-    logger: { level: options.logLevel ?? "info" },
+    logger: {
+      level: options.logLevel ?? "info",
+      ...(options.logStream ? { stream: options.logStream } : {}),
+      // Replaces the default, which logs the client's IP and port. The privacy
+      // page promises no IPs in logs; rate limiters use them in memory only.
+      serializers: {
+        req: (request: { method: string; url: string }) => ({ method: request.method, url: redactTokens(request.url) }),
+      },
+    },
     bodyLimit: options.bodyLimit ?? 256 * 1024,
     trustProxy: options.trustProxy ?? false,
     // Fastify's ajv default silently deletes properties that fail

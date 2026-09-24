@@ -115,3 +115,18 @@ describe("CSRF guard", () => {
     expect(response.statusCode).toBe(204);
   });
 });
+
+describe("request logs", () => {
+  it("carry neither client IPs nor tokens", async () => {
+    const lines: string[] = [];
+    const app = await buildApp(getTestDb(), { logLevel: "info", logStream: { write: (line) => lines.push(line) } });
+
+    await app.inject({ method: "GET", url: "/api/invites/tpi_supersecret" });
+
+    const logged = lines.join("");
+    expect(logged).toContain("tpi_[redacted]");
+    expect(logged).not.toContain("supersecret");
+    expect(logged).not.toContain("remoteAddress");
+    expect(logged).not.toContain("127.0.0.1");
+  });
+});
