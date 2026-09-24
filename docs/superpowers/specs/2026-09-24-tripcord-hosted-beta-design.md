@@ -44,7 +44,7 @@ so.
 | Domains | `tripcord.dev` is the landing site. `app.tripcord.dev` is the hosted instance (dashboard and ingest). `status.tripcord.dev` is the status page. |
 | Who can sign up | Invite-only. New users come through **signup invites**, which the operator creates with the admin CLI. The landing page has a "Request access" mailto link. |
 | Email | Optional SMTP (`SMTP_URL`, `EMAIL_FROM`), through `nodemailer`. It's used for password reset and, optionally, for sending signup invites. Without SMTP, both features are hidden and the admin CLI remains the fallback. |
-| Email verification | Not in this sub-project. Every hosted user comes through an invite the operator sent, so addresses are known. It's required before `SIGNUP=open` on a public instance. |
+| Email verification | Not in this sub-project; see [the email verification design](2026-09-24-tripcord-email-verification-design.md). |
 | Deletion | Hard deletes in a transaction, done explicitly in code in dependency order. Soft deletes are kept only for API keys, as today. |
 | Export | NDJSON, one timeline per line, per project, streamed. |
 | Landing site | A new `site/` workspace in this monorepo: static HTML built with Vite and Tailwind, using the dashboard's design tokens and no framework. It's hosted on GitHub Pages, so it and the status page stay up when the server doesn't. |
@@ -376,7 +376,6 @@ to a built page.
 ## Explicitly out of scope
 
 - Billing, plans, quotas and usage limits per org.
-- Email verification, and running `SIGNUP=open` in public.
 - A request-access form or waitlist. For now it's a mailto link.
 - A formal DPA, terms of service beyond the commitments page, and cookie banners
   (there are no cookies to consent to).

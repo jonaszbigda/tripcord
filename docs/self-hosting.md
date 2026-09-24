@@ -92,6 +92,12 @@ With SMTP set up, users can reset a forgotten password from the login page, and
 `invite create --email` sends signup invites. Without it, both are hidden, and
 `user reset-password` in the admin CLI is the fallback.
 
+With `SIGNUP=open`, SMTP also turns on email verification: people who sign up with a
+password must open a link sent to their address before they can use Tripcord.
+Accounts nobody verifies are deleted after 7 days. GitHub sign-ups are already
+verified by GitHub. Open signup without SMTP still works, without verification or
+password reset, and the server logs a warning at startup.
+
 Set both variables in `.env`, then run `docker compose up -d`:
 
 ```bash
