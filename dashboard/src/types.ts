@@ -6,6 +6,7 @@ export interface AuthConfig {
   signup: "open" | "invite-only";
   bootstrapped: boolean;
   github: boolean;
+  passwordReset: boolean;
 }
 
 export interface UserOrg {
@@ -58,11 +59,13 @@ export interface Invite {
   role: Role;
   createdAt: string;
   expiresAt: string;
-  createdByName: string;
+  /** null once the creator has deleted their account. */
+  createdByName: string | null;
 }
 
 export interface InvitePreview {
-  orgName: string;
+  /** null for a signup invite, which creates a new account with its own org. */
+  orgName: string | null;
   role: Role;
 }
 

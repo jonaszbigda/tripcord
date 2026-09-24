@@ -32,6 +32,7 @@ export function LoginPage() {
   return (
     <AuthCard title="Log in">
       {errorCode && <Alert>{LOGIN_ERRORS[errorCode] ?? "Something went wrong. Please try again."}</Alert>}
+      {params.get("reset") && <p className="text-sm text-ok">Password changed. Log in with your new password.</p>}
       <form
         className="space-y-4"
         onSubmit={(event) => {
@@ -48,6 +49,11 @@ export function LoginPage() {
           onChange={setPassword}
           required
         />
+        {config.data?.passwordReset && (
+          <Link className="block text-sm text-accent hover:underline" to="/reset-password">
+            Forgot password?
+          </Link>
+        )}
         <ErrorText error={login.error} />
         <Button type="submit" className="w-full" disabled={login.isPending}>
           Log in

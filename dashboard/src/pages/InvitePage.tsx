@@ -20,10 +20,16 @@ export function InvitePage() {
   const accept = useMutation({
     mutationFn: () => api<{ orgId: string }>("POST", `/api/invites/${token}/accept`),
     onSuccess: ({ orgId }) => {
-      const joined = { id: orgId, name: invite.data!.orgName, role: invite.data!.role };
+      const joined = { id: orgId, name: invite.data?.orgName ?? "", role: invite.data!.role };
       queryClient.setQueryData<Me>(queryKeys.me, (old) => old && { ...old, orgs: [...old.orgs, joined] });
       navigate(`/orgs/${orgId}/projects`);
     },
+  });
+
+  const logout = useMutation({
+    mutationFn: () => api("POST", "/api/auth/logout"),
+    // Refetches /api/me, which now fails, so the page shows the logged-out choices.
+    onSuccess: () => queryClient.resetQueries({ queryKey: queryKeys.me }),
   });
 
   if (invite.error) {
@@ -38,6 +44,29 @@ export function InvitePage() {
   }
   if (!invite.data || me.isPending) {
     return <FullPageMessage>Loading…</FullPageMessage>;
+  }
+
+  if (invite.data.orgName === null) {
+    return (
+      <AuthCard title="You're invited to Tripcord">
+        <p className="text-sm text-muted">This invite creates a new Tripcord account with its own organization.</p>
+        {me.data ? (
+          <>
+            <p className="text-sm text-muted">
+              You're signed in as {me.data.user.email}. This invite is for creating a new account. Log out to use it.
+            </p>
+            <ErrorText error={logout.error} />
+            <Button className="w-full" variant="secondary" onClick={() => logout.mutate()} disabled={logout.isPending}>
+              Log out
+            </Button>
+          </>
+        ) : (
+          <Link className="text-sm text-accent hover:underline" to={`/signup?invite=${token}`}>
+            Create your account
+          </Link>
+        )}
+      </AuthCard>
+    );
   }
 
   return (

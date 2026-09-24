@@ -1,7 +1,9 @@
 export class ApiError extends Error {
   constructor(
     readonly status: number,
-    message: string
+    message: string,
+    /** The parsed response body, for errors that carry more than a message. */
+    readonly body: unknown = undefined
   ) {
     super(message);
   }
@@ -24,7 +26,7 @@ export async function api<T>(method: Method, path: string, body?: unknown): Prom
   }
   const data = (await response.json().catch(() => ({}))) as { error?: string };
   if (!response.ok) {
-    throw new ApiError(response.status, data.error ?? `Request failed (${response.status})`);
+    throw new ApiError(response.status, data.error ?? `Request failed (${response.status})`, data);
   }
   return data as T;
 }

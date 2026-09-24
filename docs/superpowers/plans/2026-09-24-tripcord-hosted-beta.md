@@ -2297,7 +2297,7 @@ git commit -m "feat(server): admin CLI for signup invites and deletions"
   - `Invite.createdByName: string | null`.
   - Routes `/reset-password` and `/reset-password/:token`.
 
-- [ ] **Step 1: Types, fixtures and `ApiError`**
+- [x] **Step 1: Types, fixtures and `ApiError`**
 
 In `dashboard/src/api.ts`:
 
@@ -2324,7 +2324,7 @@ In `dashboard/src/pages/MembersPage.tsx`, line 141: `Created by {invite.createdB
 
 In `dashboard/src/pages/InvitePage.tsx`'s accept `onSuccess`, use `name: invite.data?.orgName ?? ""`. That branch only runs for org invites.
 
-- [ ] **Step 2: Write the failing tests**
+- [x] **Step 2: Write the failing tests**
 
 Create `dashboard/src/pages/reset.test.tsx`:
 
@@ -2441,12 +2441,12 @@ describe("signup invite page", () => {
 });
 ```
 
-- [ ] **Step 3: Run the tests to verify they fail**
+- [x] **Step 3: Run the tests to verify they fail**
 
 Run: `npm test -w dashboard -- src/pages/reset.test.tsx src/pages/invite.test.tsx`
 Expected: FAIL.
 
-- [ ] **Step 4: Implement**
+- [x] **Step 4: Implement**
 
 Create `dashboard/src/pages/ForgotPasswordPage.tsx`:
 
@@ -2624,12 +2624,12 @@ and, after the loading check, before the org-invite card:
   }
 ```
 
-- [ ] **Step 5: Run the tests to verify they pass**
+- [x] **Step 5: Run the tests to verify they pass**
 
 Run: `npm test -w dashboard && npm run typecheck -w dashboard && npm run lint -w dashboard`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add dashboard

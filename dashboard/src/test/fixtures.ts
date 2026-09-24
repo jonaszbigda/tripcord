@@ -7,5 +7,5 @@ export const ME: Me = {
   orgs: [{ id: ORG_ID, name: "Acme", role: "owner" }],
 };
 
-export const CONFIG_OPEN: AuthConfig = { signup: "open", bootstrapped: true, github: true };
-export const CONFIG_CLOSED: AuthConfig = { signup: "invite-only", bootstrapped: true, github: false };
+export const CONFIG_OPEN: AuthConfig = { signup: "open", bootstrapped: true, github: true, passwordReset: true };
+export const CONFIG_CLOSED: AuthConfig = { signup: "invite-only", bootstrapped: true, github: false, passwordReset: false };

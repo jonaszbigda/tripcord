@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ME } from "../test/fixtures";
-import { mockApi, renderApp } from "../test/utils";
+import { mockApi, renderApp, type MockHandler } from "../test/utils";
 
 const PREVIEW = { "GET /api/invites/tpi_tok": { body: { orgName: "Beta", role: "member" } } };
 
@@ -55,5 +55,32 @@ describe("invite page", () => {
 
     await user.click(await screen.findByRole("button", { name: "Accept invite" }));
     expect(await screen.findByText("Already a member")).toBeInTheDocument();
+  });
+});
+
+const SIGNUP_PREVIEW = { "GET /api/invites/tpi_new": { body: { orgName: null, role: "owner" } } };
+
+describe("signup invite page", () => {
+  it("offers a logged-out visitor a new account", async () => {
+    mockApi({ ...SIGNUP_PREVIEW, "GET /api/me": { status: 401, body: { error: "Not logged in" } } });
+    renderApp("/invite/tpi_new");
+
+    expect(await screen.findByRole("heading", { name: "You're invited to Tripcord" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Create your account" })).toHaveAttribute("href", "/signup?invite=tpi_new");
+    expect(screen.queryByRole("button", { name: "Accept invite" })).not.toBeInTheDocument();
+  });
+
+  it("asks a logged-in user to log out first", async () => {
+    const handlers = { ...SIGNUP_PREVIEW, "GET /api/me": { body: ME } as MockHandler, "POST /api/auth/logout": { status: 204 } };
+    const calls = mockApi(handlers);
+    const user = userEvent.setup();
+    renderApp("/invite/tpi_new");
+
+    expect(await screen.findByText(/This invite is for creating a new account/)).toBeInTheDocument();
+    handlers["GET /api/me"] = { status: 401, body: { error: "Not logged in" } };
+    await user.click(screen.getByRole("button", { name: "Log out" }));
+
+    expect(await screen.findByRole("link", { name: "Create your account" })).toBeInTheDocument();
+    expect(calls.some((c) => c.path === "/api/auth/logout")).toBe(true);
   });
 });

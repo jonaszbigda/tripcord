@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router";
 import { AppShell } from "./components/AppShell";
+import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 import { RequireAuth } from "./components/RequireAuth";
 import { HomePage } from "./pages/HomePage";
 import { InvitePage } from "./pages/InvitePage";
@@ -13,6 +14,7 @@ import { ProjectKeysPage } from "./pages/ProjectKeysPage";
 import { ProjectLayout } from "./pages/ProjectLayout";
 import { TimelinesPage } from "./pages/TimelinesPage";
 import { ProjectsPage } from "./pages/ProjectsPage";
+import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 import { SignupPage } from "./pages/SignupPage";
 import { TimelinePage } from "./pages/TimelinePage";
 import { UserSettingsPage } from "./pages/UserSettingsPage";
@@ -21,6 +23,8 @@ export function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/reset-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/invite/:token" element={<InvitePage />} />
       <Route element={<RequireAuth />}>

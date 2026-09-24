@@ -138,7 +138,7 @@ export function MembersPage() {
               {invites.data.map((invite) => (
                 <li key={invite.id} className="flex items-center justify-between py-2">
                   <span>
-                    {invite.role} · Created by {invite.createdByName} · Expires {formatDate(invite.expiresAt)}
+                    {invite.role} · Created by {invite.createdByName ?? "a deleted user"} · Expires {formatDate(invite.expiresAt)}
                   </span>
                   <ConfirmButton label="Revoke" confirmLabel="Confirm revoke" onConfirm={() => revokeInvite.mutate(invite.id)} />
                 </li>
