@@ -2,9 +2,9 @@ import { describe, it, expect } from "vitest";
 import { generateApiKey, hashApiKey } from "./keys";
 
 describe("generateApiKey", () => {
-  it("produces an rpk_-prefixed key of 43 base64url characters (47 total)", () => {
+  it("produces an tpk_-prefixed key of 43 base64url characters (47 total)", () => {
     const { key } = generateApiKey();
-    expect(key).toMatch(/^rpk_[A-Za-z0-9_-]{43}$/);
+    expect(key).toMatch(/^tpk_[A-Za-z0-9_-]{43}$/);
     expect(key).toHaveLength(47);
   });
 
@@ -34,7 +34,7 @@ describe("hashApiKey", () => {
   });
 
   it("is deterministic and differs for different inputs", () => {
-    expect(hashApiKey("rpk_same")).toBe(hashApiKey("rpk_same"));
-    expect(hashApiKey("rpk_one")).not.toBe(hashApiKey("rpk_two"));
+    expect(hashApiKey("tpk_same")).toBe(hashApiKey("tpk_same"));
+    expect(hashApiKey("tpk_one")).not.toBe(hashApiKey("tpk_two"));
   });
 });

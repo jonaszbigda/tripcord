@@ -10,7 +10,7 @@ describe("generateToken", () => {
   });
 
   it("prepends the prefix", () => {
-    expect(generateToken("rpi_").token).toMatch(/^rpi_[A-Za-z0-9_-]{43}$/);
+    expect(generateToken("tpi_").token).toMatch(/^tpi_[A-Za-z0-9_-]{43}$/);
   });
 
   it("never repeats", () => {

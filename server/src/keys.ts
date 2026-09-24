@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 
-const KEY_PREFIX = "rpk_";
+const KEY_PREFIX = "tpk_";
 const KEY_RANDOM_BYTES = 32;
 const DISPLAY_PREFIX_LENGTH = 12;
 

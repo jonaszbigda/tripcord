@@ -36,7 +36,7 @@ describe("project routes", () => {
     expect(response.statusCode).toBe(201);
     const { project, key } = response.json();
     expect(project).toMatchObject({ orgId: org.id, name: "web" });
-    expect(key).toMatch(/^rpk_/);
+    expect(key).toMatch(/^tpk_/);
     expect((await ingest(app, key)).statusCode).toBe(201);
   });
 
@@ -73,7 +73,7 @@ describe("project routes", () => {
 
     const minted = await call(app, "POST", base, { cookie });
     expect(minted.statusCode).toBe(201);
-    expect(minted.json().key).toMatch(/^rpk_/);
+    expect(minted.json().key).toMatch(/^tpk_/);
 
     const listed = await call(app, "GET", base, { cookie });
     expect(listed.json().keys).toHaveLength(2);

@@ -15,7 +15,7 @@ export interface InviteSummary {
 
 export interface CreatedInvite {
   invite: InviteSummary;
-  /** Plaintext rpi_ token — shown once, never stored. */
+  /** Plaintext tpi_ token — shown once, never stored. */
   token: string;
 }
 
@@ -51,7 +51,7 @@ export async function createInvite(
   ex: Executor,
   input: { orgId: string; role: Role; createdBy: string }
 ): Promise<CreatedInvite> {
-  const { token, hash } = generateToken("rpi_");
+  const { token, hash } = generateToken("tpi_");
   const [row] = await ex
     .insert(invites)
     .values({ ...input, tokenHash: hash, expiresAt: new Date(Date.now() + INVITE_TTL_MS) })

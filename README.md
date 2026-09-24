@@ -89,7 +89,7 @@ import { init, track, capture, setTags } from "@tripcord/js";
 
 init({
   endpoint: "https://tripcord.example.com/v1/timeline",
-  apiKey: "rpk_…",
+  apiKey: "tpk_…",
 });
 
 setTags(["onboarding"]);                       // which area of the app this is

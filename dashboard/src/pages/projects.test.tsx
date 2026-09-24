@@ -6,7 +6,7 @@ import { mockApi, renderApp, type MockHandler } from "../test/utils";
 import type { ApiKey, Project } from "../types";
 
 const PROJECT: Project = { id: "proj-1", orgId: ORG_ID, name: "web", createdAt: "2026-09-01T00:00:00.000Z", activeKeyCount: 1 };
-const KEY: ApiKey = { id: "key-1", projectId: "proj-1", prefix: "rpk_AbCdEfGh", createdAt: "2026-09-01T00:00:00.000Z", revokedAt: null };
+const KEY: ApiKey = { id: "key-1", projectId: "proj-1", prefix: "tpk_AbCdEfGh", createdAt: "2026-09-01T00:00:00.000Z", revokedAt: null };
 
 function handlers(extra: Record<string, MockHandler> = {}): Record<string, MockHandler> {
   return {
@@ -36,7 +36,7 @@ describe("projects page", () => {
       handlers({
         [`POST /api/orgs/${ORG_ID}/projects`]: {
           status: 201,
-          body: { project: { id: "proj-2", orgId: ORG_ID, name: "api", createdAt: PROJECT.createdAt }, key: "rpk_created" },
+          body: { project: { id: "proj-2", orgId: ORG_ID, name: "api", createdAt: PROJECT.createdAt }, key: "tpk_created" },
         },
       })
     );
@@ -46,12 +46,12 @@ describe("projects page", () => {
     await user.type(await screen.findByLabelText("New project name"), "api");
     await user.click(screen.getByRole("button", { name: "Create project" }));
 
-    expect(await screen.findByText("rpk_created")).toBeInTheDocument();
+    expect(await screen.findByText("tpk_created")).toBeInTheDocument();
     expect(screen.getByText(/won't be shown again/)).toBeInTheDocument();
     expect(calls.find((c) => c.method === "POST")?.body).toEqual({ name: "api" });
 
     await user.click(screen.getByRole("button", { name: "Done" }));
-    expect(screen.queryByText("rpk_created")).not.toBeInTheDocument();
+    expect(screen.queryByText("tpk_created")).not.toBeInTheDocument();
   });
 
   it("says so when the user isn't a member of the org", async () => {
@@ -68,7 +68,7 @@ describe("project page", () => {
 
     expect(await screen.findByRole("heading", { name: "web" })).toBeInTheDocument();
     expect(screen.getByText(/\/v1\/timeline$/)).toBeInTheDocument();
-    expect(await screen.findByText("rpk_AbCdEfGh…")).toBeInTheDocument();
+    expect(await screen.findByText("tpk_AbCdEfGh…")).toBeInTheDocument();
   });
 
   it("shows a new key once; it's gone after navigating away and back", async () => {
@@ -76,7 +76,7 @@ describe("project page", () => {
       handlers({
         [`POST /api/orgs/${ORG_ID}/projects/proj-1/keys`]: {
           status: 201,
-          body: { apiKey: { ...KEY, id: "key-2", prefix: "rpk_Second12" }, key: "rpk_second_full_key" },
+          body: { apiKey: { ...KEY, id: "key-2", prefix: "tpk_Second12" }, key: "tpk_second_full_key" },
         },
       })
     );
@@ -84,13 +84,13 @@ describe("project page", () => {
     renderApp(`/orgs/${ORG_ID}/projects/proj-1/keys`);
 
     await user.click(await screen.findByRole("button", { name: "Create key" }));
-    expect(await screen.findByText("rpk_second_full_key")).toBeInTheDocument();
+    expect(await screen.findByText("tpk_second_full_key")).toBeInTheDocument();
 
     await user.click(screen.getByRole("link", { name: "Projects" }));
     await user.click(await screen.findByRole("link", { name: "web" }));
     await user.click(await screen.findByRole("link", { name: "Keys" }));
-    await screen.findByText("rpk_AbCdEfGh…");
-    expect(screen.queryByText("rpk_second_full_key")).not.toBeInTheDocument();
+    await screen.findByText("tpk_AbCdEfGh…");
+    expect(screen.queryByText("tpk_second_full_key")).not.toBeInTheDocument();
   });
 
   it("revokes a key only after confirmation", async () => {
@@ -121,7 +121,7 @@ describe("project page", () => {
 
     await user.click(screen.getByRole("link", { name: "Keys" }));
     await waitFor(() => expect(location()).toHaveTextContent(`/orgs/${ORG_ID}/projects/proj-1/keys`));
-    expect(await screen.findByText("rpk_AbCdEfGh…")).toBeInTheDocument();
+    expect(await screen.findByText("tpk_AbCdEfGh…")).toBeInTheDocument();
   });
 
   it("says so for a project that isn't in the org", async () => {

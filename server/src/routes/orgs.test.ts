@@ -155,7 +155,7 @@ describe("org routes", () => {
     const created = await call(app, "POST", `/api/orgs/${org.id}/invites`, { cookie: ownerCookie, body: { role: "member" } });
     expect(created.statusCode).toBe(201);
     const { invite, link } = created.json();
-    expect(link).toMatch(new RegExp(`^${TEST_ORIGIN}/invite/rpi_[A-Za-z0-9_-]{43}$`));
+    expect(link).toMatch(new RegExp(`^${TEST_ORIGIN}/invite/tpi_[A-Za-z0-9_-]{43}$`));
     expect(invite).toEqual({
       id: expect.any(String),
       role: "member",

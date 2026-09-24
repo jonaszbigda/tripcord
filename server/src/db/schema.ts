@@ -66,7 +66,7 @@ export const invites = pgTable(
     orgId: uuid("org_id")
       .notNull()
       .references(() => orgs.id),
-    // SHA-256 of the rpi_ token. The token is shown once, at creation.
+    // SHA-256 of the tpi_ token. The token is shown once, at creation.
     tokenHash: text("token_hash").notNull().unique(),
     role: text("role").$type<Role>().notNull(),
     createdBy: uuid("created_by")

@@ -73,6 +73,9 @@ this spec. Directory names (`packages/js`, `server`, `dashboard`) stay as they a
 - Client `sessionStorage` keys: `__tripcord_buffer` and `__tripcord_session_id`.
 - Dashboard `localStorage`: `tripcord.chartMode`.
 - The GitHub API `User-Agent` becomes `tripcord`.
+- Token prefixes: API keys become `tpk_…` (were `rpk_…`) and invite tokens
+  `tpi_…` (were `rpi_…`). Keys and invites are looked up by hash, never by
+  prefix, so tokens already issued keep working. (Added 2026-09-24.)
 
 **What people see.**
 - Client console warnings use the `[tripcord]` prefix, and server logs use

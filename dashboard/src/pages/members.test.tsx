@@ -34,7 +34,7 @@ describe("members page", () => {
         [`PATCH /api/orgs/${ORG_ID}/members/user-2`]: { body: { userId: "user-2", role: "owner" } },
         [`POST /api/orgs/${ORG_ID}/invites`]: {
           status: 201,
-          body: { invite: { ...INVITE, id: "inv-2" }, link: "http://localhost:3000/invite/rpi_link" },
+          body: { invite: { ...INVITE, id: "inv-2" }, link: "http://localhost:3000/invite/tpi_link" },
         },
         [`DELETE /api/orgs/${ORG_ID}/invites/inv-1`]: { status: 204 },
       })
@@ -48,7 +48,7 @@ describe("members page", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "Create invite link" }));
-    expect(await screen.findByText("http://localhost:3000/invite/rpi_link")).toBeInTheDocument();
+    expect(await screen.findByText("http://localhost:3000/invite/tpi_link")).toBeInTheDocument();
 
     expect(screen.getByText(/Created by Ana/)).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Revoke" }));

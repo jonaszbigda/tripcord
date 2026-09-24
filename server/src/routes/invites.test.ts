@@ -26,7 +26,7 @@ describe("invite routes", () => {
 
   it("returns 404 for an unknown invite", async () => {
     const { app } = await fixture();
-    const response = await call(app, "GET", "/api/invites/rpi_nope");
+    const response = await call(app, "GET", "/api/invites/tpi_nope");
     expect(response.statusCode).toBe(404);
     expect(response.json()).toEqual({ error: "Invite not found or expired" });
   });

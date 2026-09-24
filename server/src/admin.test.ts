@@ -7,7 +7,7 @@ import { createSession, findSessionUser } from "./db/sessions";
 import { findUserById } from "./db/users";
 
 const MISSING_ID = "00000000-0000-0000-0000-000000000000";
-const KEY_PATTERN = /^rpk_[A-Za-z0-9_-]{43}$/;
+const KEY_PATTERN = /^tpk_[A-Za-z0-9_-]{43}$/;
 
 async function run(argv: string[]) {
   const stdout: string[] = [];

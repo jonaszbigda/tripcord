@@ -86,7 +86,7 @@ With `docker compose`:
 ```bash
 docker compose exec server node server/dist/cli.js project create --org <orgId> "your-project-name"
 # Created project "your-project-name" (<project-id>)
-# rpk_...
+# tpk_...
 # Store this API key now. It will not be shown again.
 ```
 
@@ -97,7 +97,7 @@ DATABASE_URL=postgres://tripcord:tripcord@localhost:5432/tripcord \
   npm run admin -w server -- project create --org <orgId> "your-project-name"
 ```
 
-Use the printed `rpk_...` key as the `apiKey` passed to `init()` in `@tripcord/js`; it's
+Use the printed `tpk_...` key as the `apiKey` passed to `init()` in `@tripcord/js`; it's
 sent as the `X-Tripcord-Key` header.
 
 All commands:

@@ -12,7 +12,7 @@ describe("schema wiring", () => {
 
     const org = await createTestOrg(db);
     const [inserted] = await db.insert(projects).values({ name: "test project", orgId: org.id }).returning();
-    await db.insert(apiKeys).values({ projectId: inserted.id, keyHash: "hash-123", prefix: "rpk_prefix12" });
+    await db.insert(apiKeys).values({ projectId: inserted.id, keyHash: "hash-123", prefix: "tpk_prefix12" });
 
     const found = await db.query.projects.findFirst({
       where: (p, { eq }) => eq(p.id, inserted.id),

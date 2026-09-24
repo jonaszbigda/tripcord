@@ -129,7 +129,7 @@ describe("POST /api/auth/signup", () => {
 
   it("returns 404 for an unusable invite token", async () => {
     const app = await buildTestApp(getTestDb(), { signup: "open" });
-    const response = await call(app, "POST", "/api/auth/signup", { body: { ...signupBody, inviteToken: "rpi_nope" } });
+    const response = await call(app, "POST", "/api/auth/signup", { body: { ...signupBody, inviteToken: "tpi_nope" } });
     expect(response.statusCode).toBe(404);
     expect(response.json()).toEqual({ error: "Invite not found or expired" });
   });

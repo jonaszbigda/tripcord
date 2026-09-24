@@ -79,7 +79,7 @@ describe("signUp", () => {
 
   it("an unusable invite token fails even when signup is open", async () => {
     await createTestUser(getTestDb());
-    expect(await signUp(getTestDb(), input({ inviteToken: "rpi_nope" }))).toEqual({
+    expect(await signUp(getTestDb(), input({ inviteToken: "tpi_nope" }))).toEqual({
       ok: false,
       reason: "invite_invalid",
     });

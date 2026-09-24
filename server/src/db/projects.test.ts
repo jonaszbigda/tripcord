@@ -19,14 +19,14 @@ describe("createProject", () => {
     await resetDb(getTestDb());
   });
 
-  it("creates the project in the org and returns a plaintext rpk_ key", async () => {
+  it("creates the project in the org and returns a plaintext tpk_ key", async () => {
     const db = getTestDb();
     const org = await createTestOrg(db);
     const { project, key } = await createProject(db, org.id, "widgets-inc");
 
     expect(project.name).toBe("widgets-inc");
     expect(project.orgId).toBe(org.id);
-    expect(key).toMatch(/^rpk_[A-Za-z0-9_-]{43}$/);
+    expect(key).toMatch(/^tpk_[A-Za-z0-9_-]{43}$/);
   });
 
   it("stores only the hash and display prefix, never the plaintext key", async () => {
@@ -69,7 +69,7 @@ describe("findProjectByApiKey", () => {
   it("returns undefined for an unknown key", async () => {
     const db = getTestDb();
     await createTestProject(db);
-    expect(await findProjectByApiKey(db, "rpk_no-such-key")).toBeUndefined();
+    expect(await findProjectByApiKey(db, "tpk_no-such-key")).toBeUndefined();
   });
 
   it("returns undefined for a revoked key", async () => {

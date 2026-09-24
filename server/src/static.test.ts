@@ -22,7 +22,7 @@ describe("dashboard serving", () => {
   it("serves index.html at / and for client-side routes", async () => {
     const app = await buildTestApp(getTestDb(), { dashboardDir: dir });
 
-    for (const url of ["/", "/orgs/123/projects", "/invite/rpi_abc?x=1", "/login"]) {
+    for (const url of ["/", "/orgs/123/projects", "/invite/tpi_abc?x=1", "/login"]) {
       const response = await call(app, "GET", url);
       expect({ url, status: response.statusCode }).toEqual({ url, status: 200 });
       expect(response.headers["content-type"]).toMatch(/^text\/html/);

@@ -66,14 +66,14 @@ describe("login", () => {
       "POST /api/auth/login": { body: ME },
     });
     const user = userEvent.setup();
-    renderApp("/login?next=%2Finvite%2Frpi_abc");
+    renderApp("/login?next=%2Finvite%2Ftpi_abc");
 
-    expect(await screen.findByRole("link", { name: "Sign up" })).toHaveAttribute("href", "/signup?invite=rpi_abc");
+    expect(await screen.findByRole("link", { name: "Sign up" })).toHaveAttribute("href", "/signup?invite=tpi_abc");
 
     await user.type(screen.getByLabelText("Email"), "ana@example.com");
     await user.type(screen.getByLabelText("Password"), "long-password");
     await user.click(screen.getByRole("button", { name: "Log in" }));
-    await waitFor(() => expect(location()).toHaveTextContent("/invite/rpi_abc"));
+    await waitFor(() => expect(location()).toHaveTextContent("/invite/tpi_abc"));
   });
 
   it("ignores an off-site next parameter", async () => {
@@ -102,7 +102,7 @@ describe("signup", () => {
       "POST /api/auth/signup": { status: 201, body: ME },
     });
     const user = userEvent.setup();
-    renderApp("/signup?invite=rpi_abc");
+    renderApp("/signup?invite=tpi_abc");
 
     await user.type(await screen.findByLabelText("Name"), "Ana");
     await user.type(screen.getByLabelText("Email"), "ana@example.com");
@@ -114,7 +114,7 @@ describe("signup", () => {
       name: "Ana",
       email: "ana@example.com",
       password: "long-password",
-      inviteToken: "rpi_abc",
+      inviteToken: "tpi_abc",
     });
   });
 

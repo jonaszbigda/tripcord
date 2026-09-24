@@ -138,7 +138,7 @@ import { init } from "@tripcord/js";
 
 init({
   endpoint: "https://tripcord.example.com/v1/timeline", // PUBLIC_URL + /v1/timeline
-  apiKey: "rpk_…",
+  apiKey: "tpk_…",
 });
 ```
 
