@@ -1,6 +1,8 @@
 # The dashboard is built on Debian: Tailwind v4's native binary is resolved for
 # the platform the lockfile was generated on (glibc), which alpine (musl) may lack.
-FROM node:22-bookworm-slim AS dashboard-build
+# Its output is static files, so it builds once on the build machine's platform,
+# whatever the target. That also avoids resolving Tailwind's binary under QEMU.
+FROM --platform=$BUILDPLATFORM node:22-bookworm-slim AS dashboard-build
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY packages/js/package.json packages/js/package.json
