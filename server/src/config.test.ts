@@ -15,7 +15,7 @@ describe("loadDashboardConfig", () => {
   it("reads every variable", () => {
     const config = loadDashboardConfig(
       {
-        PUBLIC_URL: "https://app.reprojs.dev/",
+        PUBLIC_URL: "https://app.tripcord.dev/",
         SIGNUP: "open",
         GITHUB_CLIENT_ID: "id",
         GITHUB_CLIENT_SECRET: "secret",
@@ -26,7 +26,7 @@ describe("loadDashboardConfig", () => {
       "/default/dist"
     );
     expect(config).toEqual({
-      publicUrl: "https://app.reprojs.dev",
+      publicUrl: "https://app.tripcord.dev",
       signup: "open",
       github: { clientId: "id", clientSecret: "secret", baseUrl: "https://ghe.example.com" },
       trustProxy: true,
@@ -43,7 +43,7 @@ describe("loadDashboardConfig", () => {
     [{ SIGNUP: "closed" }, 'SIGNUP must be "open" or "invite-only"'],
     [{ GITHUB_CLIENT_ID: "id" }, "GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET must be set together"],
     [{ GITHUB_CLIENT_SECRET: "s" }, "GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET must be set together"],
-    [{ PUBLIC_URL: "app.reprojs.dev" }, "PUBLIC_URL must be an absolute http(s) URL"],
+    [{ PUBLIC_URL: "app.tripcord.dev" }, "PUBLIC_URL must be an absolute http(s) URL"],
     [{ PUBLIC_URL: "ftp://x.dev" }, "PUBLIC_URL must be an absolute http(s) URL"],
   ])("rejects %o", (env, message) => {
     expect(() => loadDashboardConfig(env, "/d")).toThrow(message);

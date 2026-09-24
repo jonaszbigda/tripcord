@@ -14,7 +14,7 @@ describe("getOrCreateSessionId", () => {
   it("generates and persists a session id on first call", () => {
     const id = getOrCreateSessionId();
     expect(id).toMatch(/^[0-9a-f-]{36}$/);
-    expect(sessionStorage.getItem("__repro_session_id")).toBe(id);
+    expect(sessionStorage.getItem("__tripcord_session_id")).toBe(id);
   });
 
   it("returns the same id on subsequent calls", () => {
@@ -32,6 +32,6 @@ describe("getOrCreateSessionId", () => {
     }).not.toThrow();
 
     expect(id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
-    expect(sessionStorage.getItem("__repro_session_id")).toBe(id);
+    expect(sessionStorage.getItem("__tripcord_session_id")).toBe(id);
   });
 });

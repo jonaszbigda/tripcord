@@ -1,5 +1,5 @@
 import type { FastifyInstance, FastifyRequest } from "fastify";
-import type { TimelinePayload } from "@repro/js";
+import type { TimelinePayload } from "@tripcord/js";
 import type { Database } from "../db/client";
 import type { Project } from "../db/schema";
 import { findProjectByApiKey } from "../db/projects";
@@ -81,9 +81,9 @@ export function registerTimelineRoute(app: FastifyInstance, db: Database, option
     {
       schema: { body: timelinePayloadSchema },
       preValidation: async (request: FastifyRequest, reply) => {
-        const apiKey = request.headers["x-repro-key"];
+        const apiKey = request.headers["x-tripcord-key"];
         if (typeof apiKey !== "string") {
-          return reply.code(401).send({ error: "Missing X-Repro-Key header" });
+          return reply.code(401).send({ error: "Missing X-Tripcord-Key header" });
         }
         const retryInMs = invalidKeys.blockedFor(request.ip);
         if (retryInMs > 0) {

@@ -2,15 +2,15 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: repro
-      POSTGRES_PASSWORD: repro
-      POSTGRES_DB: repro
+      POSTGRES_USER: tripcord
+      POSTGRES_PASSWORD: tripcord
+      POSTGRES_DB: tripcord
     ports:
       - "5432:5432"
     volumes:
-      - repro-postgres-data:/var/lib/postgresql/data
+      - tripcord-postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U repro"]
+      test: ["CMD-SHELL", "pg_isready -U tripcord"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -20,7 +20,7 @@ services:
       context: .
       dockerfile: server/Dockerfile
     environment:
-      DATABASE_URL: postgres://repro:repro@postgres:5432/repro
+      DATABASE_URL: postgres://tripcord:tripcord@postgres:5432/tripcord
       PORT: "3000"
       RETENTION_DAYS: "30"
       PUBLIC_URL: http://localhost:3000
@@ -31,4 +31,4 @@ services:
         condition: service_healthy
 
 volumes:
-  repro-postgres-data:
+  tripcord-postgres-data:

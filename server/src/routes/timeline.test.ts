@@ -17,11 +17,11 @@ describe("POST /v1/timeline", () => {
     await resetDb(getTestDb());
   });
 
-  it("returns 401 when the X-Repro-Key header is missing", async () => {
+  it("returns 401 when the X-Tripcord-Key header is missing", async () => {
     const app = await buildApp(getTestDb(), { rateLimitMax: 1000, rateLimitWindow: "1 minute" });
     const response = await app.inject({ method: "POST", url: "/v1/timeline", payload: validPayload });
     expect(response.statusCode).toBe(401);
-    expect(response.json()).toEqual({ error: "Missing X-Repro-Key header" });
+    expect(response.json()).toEqual({ error: "Missing X-Tripcord-Key header" });
   });
 
   it("returns 401 when the api key doesn't match any project", async () => {
@@ -29,7 +29,7 @@ describe("POST /v1/timeline", () => {
     const response = await app.inject({
       method: "POST",
       url: "/v1/timeline",
-      headers: { "x-repro-key": "no-such-key" },
+      headers: { "x-tripcord-key": "no-such-key" },
       payload: validPayload,
     });
     expect(response.statusCode).toBe(401);
@@ -44,7 +44,7 @@ describe("POST /v1/timeline", () => {
     const response = await app.inject({
       method: "POST",
       url: "/v1/timeline",
-      headers: { "x-repro-key": key },
+      headers: { "x-tripcord-key": key },
       payload: { sessionId: "session-1" }, // missing reason/events/meta
     });
 
@@ -62,7 +62,7 @@ describe("POST /v1/timeline", () => {
     const response = await app.inject({
       method: "POST",
       url: "/v1/timeline",
-      headers: { "x-repro-key": key },
+      headers: { "x-tripcord-key": key },
       payload: { ...validPayload, futureField: "should be rejected, not stripped" },
     });
 
@@ -77,7 +77,7 @@ describe("POST /v1/timeline", () => {
     const response = await app.inject({
       method: "POST",
       url: "/v1/timeline",
-      headers: { "x-repro-key": "no-such-key" },
+      headers: { "x-tripcord-key": "no-such-key" },
       payload: { totally: "wrong shape" },
     });
     expect(response.statusCode).toBe(401);
@@ -91,7 +91,7 @@ describe("POST /v1/timeline", () => {
     const response = await app.inject({
       method: "POST",
       url: "/v1/timeline",
-      headers: { "x-repro-key": key },
+      headers: { "x-tripcord-key": key },
       payload: validPayload,
     });
 
@@ -117,7 +117,7 @@ describe("POST /v1/timeline", () => {
     const response = await app.inject({
       method: "POST",
       url: "/v1/timeline",
-      headers: { "x-repro-key": key },
+      headers: { "x-tripcord-key": key },
       payload: validPayload,
     });
 
@@ -133,7 +133,7 @@ describe("POST /v1/timeline", () => {
     const app = await buildApp(db, { rateLimitMax: 1000, logLevel: "silent" });
 
     for (const payload of [{ ...validPayload, tags: ["checkout", "payments"] }, validPayload]) {
-      const response = await app.inject({ method: "POST", url: "/v1/timeline", headers: { "x-repro-key": key }, payload });
+      const response = await app.inject({ method: "POST", url: "/v1/timeline", headers: { "x-tripcord-key": key }, payload });
       expect(response.statusCode).toBe(201);
     }
 
@@ -155,7 +155,7 @@ describe("POST /v1/timeline", () => {
     const response = await app.inject({
       method: "POST",
       url: "/v1/timeline",
-      headers: { "x-repro-key": key },
+      headers: { "x-tripcord-key": key },
       payload: { ...validPayload, tags },
     });
 
@@ -173,7 +173,7 @@ describe("POST /v1/timeline invalid-key limiting", () => {
     return app.inject({
       method: "POST",
       url: "/v1/timeline",
-      headers: { "x-repro-key": key },
+      headers: { "x-tripcord-key": key },
       payload: validPayload,
       remoteAddress,
     });
@@ -220,19 +220,19 @@ describe("POST /v1/timeline rate limiting", () => {
     const first = await app.inject({
       method: "POST",
       url: "/v1/timeline",
-      headers: { "x-repro-key": key },
+      headers: { "x-tripcord-key": key },
       payload: validPayload,
     });
     const second = await app.inject({
       method: "POST",
       url: "/v1/timeline",
-      headers: { "x-repro-key": key },
+      headers: { "x-tripcord-key": key },
       payload: validPayload,
     });
     const third = await app.inject({
       method: "POST",
       url: "/v1/timeline",
-      headers: { "x-repro-key": key },
+      headers: { "x-tripcord-key": key },
       payload: validPayload,
     });
 

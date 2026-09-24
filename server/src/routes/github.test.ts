@@ -46,8 +46,8 @@ async function oauthRoundTrip(app: FastifyInstance, query = "intent=login", cook
   const start = await call(app, "GET", `/api/auth/github?${query}`, { cookie });
   expect(start.statusCode).toBe(302);
   const state = new URL(start.headers.location as string).searchParams.get("state");
-  const oauth = start.cookies.find((c) => c.name === "repro_oauth");
-  const cookies = [`repro_oauth=${oauth!.value}`, cookie].filter(Boolean).join("; ");
+  const oauth = start.cookies.find((c) => c.name === "tripcord_oauth");
+  const cookies = [`tripcord_oauth=${oauth!.value}`, cookie].filter(Boolean).join("; ");
   return call(app, "GET", `/api/auth/github/callback?code=abc&state=${state}`, { cookie: cookies });
 }
 
@@ -68,7 +68,7 @@ describe("GitHub OAuth", () => {
     const location = new URL(response.headers.location as string);
     expect(location.origin).toBe("https://github.com");
     expect(location.searchParams.get("redirect_uri")).toBe(`${TEST_ORIGIN}/api/auth/github/callback`);
-    const oauth = response.cookies.find((c) => c.name === "repro_oauth");
+    const oauth = response.cookies.find((c) => c.name === "tripcord_oauth");
     expect(oauth).toMatchObject({ httpOnly: true, path: "/api/auth/github" });
     expect(oauth!.value.startsWith(location.searchParams.get("state")!)).toBe(true);
   });
@@ -80,7 +80,7 @@ describe("GitHub OAuth", () => {
 
     expect(response.statusCode).toBe(302);
     expect(response.headers.location).toBe("/");
-    expect(response.cookies.find((c) => c.name === "repro_session")?.value).toBeTruthy();
+    expect(response.cookies.find((c) => c.name === "tripcord_session")?.value).toBeTruthy();
     const user = await findUserByGithubId(getTestDb(), "42");
     expect(user).toMatchObject({ email: "ana@example.com", name: "Ana", passwordHash: null });
     expect((await listUserOrgs(getTestDb(), user!.id)).map((o) => o.name)).toEqual(["Ana's org"]);
@@ -99,7 +99,7 @@ describe("GitHub OAuth", () => {
     const response = await oauthRoundTrip(app);
 
     expect(response.headers.location).toBe("/");
-    expect(response.cookies.find((c) => c.name === "repro_session")).toBeDefined();
+    expect(response.cookies.find((c) => c.name === "tripcord_session")).toBeDefined();
     expect(await findUserByEmail(getTestDb(), "ana@example.com")).toBeUndefined();
     expect((await findUserById(getTestDb(), existing.id))?.githubId).toBe("42");
   });
@@ -125,7 +125,7 @@ describe("GitHub OAuth", () => {
   it("rejects a callback whose state doesn't match the cookie", async () => {
     const app = await githubApp(ANA);
     const response = await call(app, "GET", "/api/auth/github/callback?code=abc&state=forged", {
-      cookie: "repro_oauth=real.login.",
+      cookie: "tripcord_oauth=real.login.",
     });
     expect(response.headers.location).toBe("/login?error=github_state");
   });

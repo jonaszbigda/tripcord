@@ -3,7 +3,7 @@ import { Card, CopyButton } from "../ui";
 
 export function EmptyState({ orgId, projectId }: { orgId: string; projectId: string }) {
   const snippet = [
-    `import { init, setTags } from "@repro/js";`,
+    `import { init, setTags } from "@tripcord/js";`,
     "",
     "init({",
     `  endpoint: "${window.location.origin}/v1/timeline",`,
@@ -18,7 +18,7 @@ export function EmptyState({ orgId, projectId }: { orgId: string; projectId: str
       <div className="space-y-1">
         <h2 className="font-medium">No timelines yet</h2>
         <p className="text-sm text-muted">
-          Add <code className="font-mono">@repro/js</code> to your app and initialize it with a key from the{" "}
+          Add <code className="font-mono">@tripcord/js</code> to your app and initialize it with a key from the{" "}
           <Link to={`/orgs/${orgId}/projects/${projectId}/keys`} className="text-accent hover:underline">
             Keys tab
           </Link>

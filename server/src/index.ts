@@ -37,6 +37,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((error) => {
-  console.error("[repro-server] failed to start:", error);
+  console.error("[tripcord-server] failed to start:", error);
   process.exit(1);
 });

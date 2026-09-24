@@ -18,9 +18,9 @@ export function pageUrl(href: string, sanitize?: (url: URL) => string): string {
     if (typeof result === "string") {
       return result;
     }
-    console.warn("[repro] sanitizeUrl must return a string; sending the URL without its query and fragment.");
+    console.warn("[tripcord] sanitizeUrl must return a string; sending the URL without its query and fragment.");
   } catch (error) {
-    console.warn("[repro] sanitizeUrl threw; sending the URL without its query and fragment.", error);
+    console.warn("[tripcord] sanitizeUrl threw; sending the URL without its query and fragment.", error);
   }
   return stripQueryAndHash(url);
 }

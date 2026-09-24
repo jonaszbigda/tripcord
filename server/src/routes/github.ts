@@ -8,7 +8,7 @@ import { findUserByEmail, findUserByGithubId, setGithubId } from "../db/users";
 import { stripControlChars } from "../names";
 import type { ApiContext } from "./context";
 
-const OAUTH_COOKIE = "repro_oauth";
+const OAUTH_COOKIE = "tripcord_oauth";
 // Scoped so the cookie only travels to the start and callback routes.
 const OAUTH_COOKIE_PATH = "/api/auth/github";
 

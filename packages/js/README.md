@@ -1,10 +1,10 @@
-# repro
+# Tripcord
 
 **Opt-in, developer-instrumented breadcrumb timeline for frontend bug reproduction.**
 
 Most error-tracking tools give you a stack trace and not much else. Session-replay tools
 give you everything — a full recording of the page — which is heavy, hard to keep
-private, and mostly noise. `repro` takes a third approach: you explicitly mark the
+private, and mostly noise. Tripcord takes a third approach: you explicitly mark the
 moments in your own code that matter (`track("checkout.step", { step: "shipping" })`, or
 declaratively via `data-trace="Sign up submit"` on an element). Nothing is captured
 unless you say so. When something goes wrong — an uncaught error, or a manual
@@ -20,7 +20,7 @@ This project is early and the idea itself is still being validated. Here's what
 actually exists right now versus what's planned:
 
 **Built, tested, working:**
-- `@repro/js` — the browser client library. Framework-agnostic core, a browser adapter
+- `@tripcord/js` — the browser client library. Framework-agnostic core, a browser adapter
   (DOM error hooks, `data-trace` click capture, `sessionStorage`-backed persistence,
   `fetch`-based delivery), and a thin React `ErrorBoundary` adapter.
 - Full test suite (50 tests), TypeScript types, dual ESM/CJS build.
@@ -47,7 +47,7 @@ The full design rationale — why breadcrumbs instead of session replay, why
 ## Quick start
 
 ```ts
-import { init, track, capture } from "@repro/js";
+import { init, track, capture } from "@tripcord/js";
 
 init({
   endpoint: "https://your-ingest-server.example.com/timeline", // you have to run this yourself for now
@@ -71,7 +71,7 @@ Or mark elements declaratively instead of writing a handler:
 React error boundary, if you want captures wired into your component tree too:
 
 ```tsx
-import { ErrorBoundary } from "@repro/js/react";
+import { ErrorBoundary } from "@tripcord/js/react";
 
 <ErrorBoundary fallback={<p>Something broke.</p>}>
   <App />
@@ -85,7 +85,7 @@ dashboard. Set the active area once, and every timeline captured after that
 carries it. That includes uncaught errors, which have no call site of their own:
 
 ```ts
-import { setTags, clearTags, capture } from "@repro/js";
+import { setTags, clearTags, capture } from "@tripcord/js";
 
 setTags(["checkout"]);          // e.g. when the checkout route mounts
 capture("payment-declined", { code }, { tags: ["payments"] }); // adds to the scope

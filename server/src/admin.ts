@@ -14,7 +14,7 @@ export interface CliOutput {
   stderr(line: string): void;
 }
 
-export const USAGE = `Usage: repro-admin <command>
+export const USAGE = `Usage: tripcord-admin <command>
 
 Commands:
   org list                                List orgs

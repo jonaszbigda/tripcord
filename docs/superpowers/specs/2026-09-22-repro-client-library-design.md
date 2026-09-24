@@ -6,6 +6,9 @@ Scope: the browser client library (`@repro/js`) only. Backend/ingest API, dashbo
 self-host packaging, hosted SaaS, and a future SSR/Node adapter are each their own
 sub-project with their own future spec.
 
+> Superseded (2026-09-24): the product was renamed from repro to Tripcord, and the
+> package from `@repro/js` to `@tripcord/js`. See the release spec.
+
 ## Problem & concept
 
 Existing tools (Sentry, LogRocket, Highlight.io, etc.) capture bugs either as bare stack

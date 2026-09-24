@@ -8,8 +8,8 @@ import { buildTestApp, call } from "../test/http";
 let dir: string;
 
 beforeAll(() => {
-  dir = mkdtempSync(path.join(os.tmpdir(), "repro-dashboard-"));
-  writeFileSync(path.join(dir, "index.html"), "<!doctype html><title>repro-spa</title>");
+  dir = mkdtempSync(path.join(os.tmpdir(), "tripcord-dashboard-"));
+  writeFileSync(path.join(dir, "index.html"), "<!doctype html><title>tripcord-spa</title>");
   mkdirSync(path.join(dir, "assets"));
   writeFileSync(path.join(dir, "assets", "app.js"), "console.log('app')");
 });
@@ -26,7 +26,7 @@ describe("dashboard serving", () => {
       const response = await call(app, "GET", url);
       expect({ url, status: response.statusCode }).toEqual({ url, status: 200 });
       expect(response.headers["content-type"]).toMatch(/^text\/html/);
-      expect(response.body).toContain("repro-spa");
+      expect(response.body).toContain("tripcord-spa");
     }
   });
 

@@ -5,7 +5,7 @@ export function warnOnRiskyKeys(data: Record<string, unknown> | undefined): void
   for (const key of Object.keys(data)) {
     if (RISKY_KEYS.includes(key)) {
       console.warn(
-        `[repro] event data includes a field called "${key}" — double-check this isn't sensitive before sending it.`
+        `[tripcord] event data includes a field called "${key}" — double-check this isn't sensitive before sending it.`
       );
     }
   }

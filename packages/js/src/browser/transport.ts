@@ -7,11 +7,11 @@ export function createSend(endpoint: string, apiKey: string): (payload: Timeline
       keepalive: true,
       headers: {
         "Content-Type": "application/json",
-        "X-Repro-Key": apiKey,
+        "X-Tripcord-Key": apiKey,
       },
       body: JSON.stringify(payload),
     }).catch((error: unknown) => {
-      console.warn("[repro] failed to send timeline:", error);
+      console.warn("[tripcord] failed to send timeline:", error);
     });
   };
 }

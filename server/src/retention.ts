@@ -16,7 +16,7 @@ export function scheduleCleanup(
 ): ReturnType<typeof setInterval> {
   const run = () => {
     Promise.all([cleanupOldTimelines(db, retentionDays), deleteExpiredSessions(db)]).catch((error: unknown) => {
-      console.error("[repro-server] cleanup job failed:", error);
+      console.error("[tripcord-server] cleanup job failed:", error);
     });
   };
 

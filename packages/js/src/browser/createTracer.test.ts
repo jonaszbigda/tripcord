@@ -24,7 +24,7 @@ describe("browser createTracer", () => {
 
   it("generates and persists a session id on creation", () => {
     trackedCreateTracer({ endpoint: "https://ingest.example.com/timeline", apiKey: "key-123" });
-    expect(sessionStorage.getItem("__repro_session_id")).toMatch(/^[0-9a-f-]{36}$/);
+    expect(sessionStorage.getItem("__tripcord_session_id")).toMatch(/^[0-9a-f-]{36}$/);
   });
 
   it("track() then capture() sends a payload via fetch", () => {
@@ -105,7 +105,7 @@ describe("browser createTracer", () => {
     const tracer = trackedCreateTracer({ endpoint: "https://ingest.example.com/timeline", apiKey: "key-123" });
     tracer.track("checkout.step", { step: "shipping" });
 
-    const persisted = JSON.parse(sessionStorage.getItem("__repro_buffer")!);
+    const persisted = JSON.parse(sessionStorage.getItem("__tripcord_buffer")!);
     expect(persisted).toEqual([expect.objectContaining({ type: "custom", name: "checkout.step" })]);
   });
 

@@ -10,7 +10,7 @@ const MIGRATIONS = path.join(__dirname, "..", "..", "drizzle");
 
 // A copy of the migrations folder whose journal stops before migration `idx`.
 function migrationsBefore(idx: number): string {
-  const dir = mkdtempSync(path.join(os.tmpdir(), "repro-migrations-"));
+  const dir = mkdtempSync(path.join(os.tmpdir(), "tripcord-migrations-"));
   cpSync(MIGRATIONS, dir, { recursive: true });
   const journalPath = path.join(dir, "meta", "_journal.json");
   const journal = JSON.parse(readFileSync(journalPath, "utf8")) as { entries: { idx: number }[] };

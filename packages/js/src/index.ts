@@ -11,7 +11,7 @@ let defaultTracer: ReturnType<typeof createTracer> | undefined;
 
 export function init(config: CreateTracerConfig): { dispose: () => void } {
   if (defaultTracer) {
-    console.warn("[repro] init() called again — replacing the existing instance.");
+    console.warn("[tripcord] init() called again — replacing the existing instance.");
     defaultTracer.dispose();
   }
   const instance = createTracer(config);
@@ -28,7 +28,7 @@ export function init(config: CreateTracerConfig): { dispose: () => void } {
 
 export function track(name: string, data?: Record<string, unknown>): void {
   if (!defaultTracer) {
-    console.warn("[repro] track() called before init().");
+    console.warn("[tripcord] track() called before init().");
     return;
   }
   defaultTracer.track(name, data);
@@ -36,7 +36,7 @@ export function track(name: string, data?: Record<string, unknown>): void {
 
 export function capture(name?: string, data?: Record<string, unknown>, options?: CaptureOptions): void {
   if (!defaultTracer) {
-    console.warn("[repro] capture() called before init().");
+    console.warn("[tripcord] capture() called before init().");
     return;
   }
   defaultTracer.capture(name, data, options);
@@ -45,7 +45,7 @@ export function capture(name?: string, data?: Record<string, unknown>, options?:
 /** Replaces the tags every following timeline carries, until changed or cleared. */
 export function setTags(tags: string[]): void {
   if (!defaultTracer) {
-    console.warn("[repro] setTags() called before init().");
+    console.warn("[tripcord] setTags() called before init().");
     return;
   }
   defaultTracer.setTags(tags);
@@ -53,7 +53,7 @@ export function setTags(tags: string[]): void {
 
 export function clearTags(): void {
   if (!defaultTracer) {
-    console.warn("[repro] clearTags() called before init().");
+    console.warn("[tripcord] clearTags() called before init().");
     return;
   }
   defaultTracer.clearTags();

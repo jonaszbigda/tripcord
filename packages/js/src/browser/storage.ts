@@ -1,7 +1,7 @@
 import type { TimelineEvent } from "../core/types";
 
-const BUFFER_KEY = "__repro_buffer";
-const SESSION_ID_KEY = "__repro_session_id";
+const BUFFER_KEY = "__tripcord_buffer";
+const SESSION_ID_KEY = "__tripcord_session_id";
 
 export function readBuffer(): TimelineEvent[] | undefined {
   try {

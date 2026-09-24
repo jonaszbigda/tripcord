@@ -8,7 +8,7 @@ import type { SeriesDef } from "./series";
 import { StackedBars } from "./StackedBars";
 
 type Mode = "bars" | "lines";
-const MODE_KEY = "repro.chartMode";
+const MODE_KEY = "tripcord.chartMode";
 const FALLBACK_WIDTH = 640;
 
 // The chart type is a per-viewer convenience: storage may be blocked, and the

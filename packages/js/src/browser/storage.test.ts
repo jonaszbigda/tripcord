@@ -40,7 +40,7 @@ describe("browser storage", () => {
   });
 
   it("returns undefined without throwing when the stored buffer JSON is not an array", () => {
-    sessionStorage.setItem("__repro_buffer", "{}");
+    sessionStorage.setItem("__tripcord_buffer", "{}");
     expect(() => readBuffer()).not.toThrow();
     expect(readBuffer()).toBeUndefined();
   });

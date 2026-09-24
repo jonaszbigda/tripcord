@@ -11,14 +11,14 @@ export const MAX_TAGS = 10;
  */
 export function normalizeTags(tags: unknown): string[] {
   if (!Array.isArray(tags)) {
-    console.warn("[repro] tags must be an array of strings.");
+    console.warn("[tripcord] tags must be an array of strings.");
     return [];
   }
   const result: string[] = [];
   for (const raw of tags) {
     const tag = typeof raw === "string" ? raw.trim().toLowerCase() : "";
     if (!TAG_PATTERN.test(tag)) {
-      console.warn(`[repro] dropping invalid tag ${JSON.stringify(raw)}: tags must match ${TAG_PATTERN}.`);
+      console.warn(`[tripcord] dropping invalid tag ${JSON.stringify(raw)}: tags must match ${TAG_PATTERN}.`);
       continue;
     }
     if (!result.includes(tag)) {
@@ -26,7 +26,7 @@ export function normalizeTags(tags: unknown): string[] {
     }
   }
   if (result.length > MAX_TAGS) {
-    console.warn(`[repro] a timeline carries at most ${MAX_TAGS} tags; keeping the first ${MAX_TAGS}.`);
+    console.warn(`[tripcord] a timeline carries at most ${MAX_TAGS} tags; keeping the first ${MAX_TAGS}.`);
     return result.slice(0, MAX_TAGS);
   }
   return result;

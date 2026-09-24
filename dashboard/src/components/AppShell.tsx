@@ -53,7 +53,7 @@ export function AppShell() {
       <header className="border-b border-border bg-surface">
         <div className="mx-auto flex max-w-5xl items-center gap-4 px-4 py-3">
           <Link to="/" className="font-semibold tracking-tight">
-            repro
+            Tripcord
           </Link>
           <OrgSwitcher orgs={me.orgs} currentOrgId={currentOrgId} />
           <div className="ml-auto flex items-center gap-3 text-sm">

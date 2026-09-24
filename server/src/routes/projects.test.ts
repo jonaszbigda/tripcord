@@ -20,7 +20,7 @@ async function fixture() {
 }
 
 function ingest(app: Awaited<ReturnType<typeof buildTestApp>>, key: string) {
-  return app.inject({ method: "POST", url: "/v1/timeline", headers: { "x-repro-key": key }, payload: timeline });
+  return app.inject({ method: "POST", url: "/v1/timeline", headers: { "x-tripcord-key": key }, payload: timeline });
 }
 
 describe("project routes", () => {

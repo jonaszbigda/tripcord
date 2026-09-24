@@ -1,5 +1,5 @@
 {
-  "name": "@repro/dashboard",
+  "name": "@tripcord/dashboard",
   "private": true,
   "version": "0.0.1",
   "type": "module",

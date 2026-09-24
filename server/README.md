@@ -1,6 +1,6 @@
-# @repro/server
+# @tripcord/server
 
-The ingest API for `repro`. It receives the timelines that `@repro/js` (the browser
+The ingest API for Tripcord. It receives the timelines that `@tripcord/js` (the browser
 client) sends when something goes wrong, validates them, and stores them in Postgres
 behind a per-project API key. It also serves the dashboard (`dashboard/` in this
 repo), where people sign up, create projects and manage API keys.
@@ -37,7 +37,7 @@ a Postgres you're already running):
 ```bash
 npm install
 npm run build -w server
-DATABASE_URL=postgres://repro:repro@localhost:5432/repro npm run start -w server
+DATABASE_URL=postgres://tripcord:tripcord@localhost:5432/tripcord npm run start -w server
 ```
 
 ## First run: create the first account
@@ -89,12 +89,12 @@ docker compose exec server node server/dist/cli.js project create --org <orgId> 
 Or locally, against a Postgres you're already running:
 
 ```bash
-DATABASE_URL=postgres://repro:repro@localhost:5432/repro \
+DATABASE_URL=postgres://tripcord:tripcord@localhost:5432/tripcord \
   npm run admin -w server -- project create --org <orgId> "your-project-name"
 ```
 
-Use the printed `rpk_...` key as the `apiKey` passed to `init()` in `@repro/js`; it's
-sent as the `X-Repro-Key` header.
+Use the printed `rpk_...` key as the `apiKey` passed to `init()` in `@tripcord/js`; it's
+sent as the `X-Tripcord-Key` header.
 
 All commands:
 
@@ -149,8 +149,8 @@ After upgrading, for each existing project:
 
 ## API
 
-`POST /v1/timeline` — accepts a timeline payload (see `@repro/js`'s `TimelinePayload`
-type), authenticated via the `X-Repro-Key` header. Returns `201 { id }` on success.
+`POST /v1/timeline` — accepts a timeline payload (see `@tripcord/js`'s `TimelinePayload`
+type), authenticated via the `X-Tripcord-Key` header. Returns `201 { id }` on success.
 It accepts an optional `tags` array (at most 10 tags, each matching
 `^[a-z0-9][a-z0-9_.:-]{0,49}$`).
 
@@ -177,7 +177,7 @@ npm run typecheck -w server
 npm run lint -w server
 ```
 
-`npm run build`/`typecheck` first rebuild `@repro/js` (via `prebuild`/`pretypecheck`
+`npm run build`/`typecheck` first rebuild `@tripcord/js` (via `prebuild`/`pretypecheck`
 hooks), since this package's types depend on its built `dist/`.
 
 ## License

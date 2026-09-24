@@ -51,7 +51,7 @@ export async function fetchGithubProfile(
   const headers = {
     Accept: "application/vnd.github+json",
     Authorization: `Bearer ${tokenBody.access_token}`,
-    "User-Agent": "repro",
+    "User-Agent": "tripcord",
   };
   const api = githubApiBase(config.baseUrl);
   const [userResponse, emailsResponse] = await Promise.all([

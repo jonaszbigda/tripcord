@@ -5,7 +5,7 @@ import { getMembership } from "../db/orgs";
 import { createSession, findSessionUser } from "../db/sessions";
 import { isUuid } from "../uuid";
 
-export const SESSION_COOKIE = "repro_session";
+export const SESSION_COOKIE = "tripcord_session";
 
 declare module "fastify" {
   interface FastifyRequest {

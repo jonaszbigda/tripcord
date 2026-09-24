@@ -38,7 +38,7 @@ export function ProjectKeysPage() {
       <Card className="space-y-2">
         <h2 className="font-medium">Ingest endpoint</h2>
         <p className="text-sm text-muted">
-          Point <code className="font-mono">@repro/js</code> at this URL and pass one of the keys below as{" "}
+          Point <code className="font-mono">@tripcord/js</code> at this URL and pass one of the keys below as{" "}
           <code className="font-mono">apiKey</code>.
         </p>
         <code className="block rounded-md bg-bg px-2 py-1.5 font-mono text-sm">{`${window.location.origin}/v1/timeline`}</code>

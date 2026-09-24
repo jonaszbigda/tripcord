@@ -85,7 +85,7 @@ export async function createTestUser(db: Database, options: TestUserOptions = {}
 export async function sessionCookie(db: Database, userId: string): Promise<string> {
   const { token } = await createSession(db, userId);
   // Must match SESSION_COOKIE in src/auth/http.ts.
-  return `repro_session=${token}`;
+  return `tripcord_session=${token}`;
 }
 
 export interface TestTimelineOptions {

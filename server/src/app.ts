@@ -26,7 +26,7 @@ export interface AppOptions {
   invalidKeyLimitMax?: number;
   bodyLimit?: number;
   logLevel?: string;
-  /** External URL of the dashboard, e.g. https://app.reprojs.dev. Default http://localhost:3000. */
+  /** External URL of the dashboard, e.g. https://app.tripcord.dev. Default http://localhost:3000. */
   publicUrl?: string;
   /** Default "invite-only". */
   signup?: SignupMode;
@@ -135,7 +135,7 @@ export async function buildApp(db: Database, options: AppOptions = {}): Promise<
   });
 
   // Ingest is called cross-origin from customers' sites and authenticates with
-  // X-Repro-Key alone, so it gets an open CORS policy. That policy lives in
+  // X-Tripcord-Key alone, so it gets an open CORS policy. That policy lives in
   // this /v1-prefixed plugin so it never applies to the cookie-authenticated
   // /api routes, which must not be readable cross-origin.
   await app.register(
@@ -143,7 +143,7 @@ export async function buildApp(db: Database, options: AppOptions = {}): Promise<
       await v1.register(cors, {
         origin: true,
         methods: ["GET", "POST", "OPTIONS"],
-        allowedHeaders: ["Content-Type", "X-Repro-Key"],
+        allowedHeaders: ["Content-Type", "X-Tripcord-Key"],
       });
       registerTimelineRoute(v1, db, {
         rateLimitMax: options.rateLimitMax ?? 100,

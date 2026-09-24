@@ -1,16 +1,16 @@
-# repro
+# Tripcord
 
-Monorepo for `repro` — an opt-in, developer-instrumented breadcrumb timeline for
+Monorepo for Tripcord — an opt-in, developer-instrumented breadcrumb timeline for
 frontend bug reproduction.
 
 ## Packages
 
-- [`packages/js`](packages/js) — `@repro/js`, the browser client library. Built,
+- [`packages/js`](packages/js) — `@tripcord/js`, the browser client library. Built,
   tested, not yet published to npm.
-- [`server`](server) — `@repro/server`, the ingest API that receives what the client
+- [`server`](server) — `@tripcord/server`, the ingest API that receives what the client
   sends. Built, tested, self-hostable via `docker compose up` — see
   [`server/README.md`](server/README.md) for how to run it and provision an API key.
-- [`dashboard`](dashboard) — `@repro/dashboard`, the web dashboard (React SPA) where
+- [`dashboard`](dashboard) — `@tripcord/dashboard`, the web dashboard (React SPA) where
   users sign up, manage orgs and members, and create projects and API keys. Built into
   and served by the server.
 

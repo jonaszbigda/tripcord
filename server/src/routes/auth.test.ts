@@ -45,7 +45,7 @@ describe("POST /api/auth/logout", () => {
     const response = await call(app, "POST", "/api/auth/logout", { cookie });
 
     expect(response.statusCode).toBe(204);
-    const cleared = response.cookies.find((c) => c.name === "repro_session");
+    const cleared = response.cookies.find((c) => c.name === "tripcord_session");
     expect(cleared?.value).toBe("");
     expect((await call(app, "GET", "/api/me", { cookie })).statusCode).toBe(401);
   });
@@ -73,10 +73,10 @@ describe("POST /api/auth/signup", () => {
       user: { email: "ana@example.com", name: "Ana", hasPassword: true, githubConnected: false },
       orgs: [{ name: "Ana's org", role: "owner" }],
     });
-    const cookie = response.cookies.find((c) => c.name === "repro_session");
+    const cookie = response.cookies.find((c) => c.name === "tripcord_session");
     expect(cookie).toMatchObject({ httpOnly: true, sameSite: "Lax", path: "/" });
     expect(cookie?.secure).toBeFalsy();
-    const me = await call(app, "GET", "/api/me", { cookie: `repro_session=${cookie!.value}` });
+    const me = await call(app, "GET", "/api/me", { cookie: `tripcord_session=${cookie!.value}` });
     expect(me.statusCode).toBe(200);
   });
 
@@ -89,7 +89,7 @@ describe("POST /api/auth/signup", () => {
     });
 
     expect(response.statusCode).toBe(201);
-    expect(response.cookies.find((c) => c.name === "repro_session")?.secure).toBe(true);
+    expect(response.cookies.find((c) => c.name === "tripcord_session")?.secure).toBe(true);
   });
 
   it("normalizes the email and rejects a second signup in another case", async () => {
@@ -164,7 +164,7 @@ describe("POST /api/auth/login", () => {
 
     expect(response.statusCode).toBe(200);
     expect(response.json().user.email).toBe("ana@example.com");
-    expect(response.cookies.find((c) => c.name === "repro_session")?.value).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    expect(response.cookies.find((c) => c.name === "tripcord_session")?.value).toMatch(/^[A-Za-z0-9_-]{43}$/);
   });
 
   it("gives the same 401 for a wrong password, an unknown email, and a GitHub-only account", async () => {

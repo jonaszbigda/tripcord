@@ -13,7 +13,7 @@ describe("GET /health", () => {
 });
 
 describe("CORS", () => {
-  it("responds to an OPTIONS preflight for /v1/timeline with 2xx/204 and allows the X-Repro-Key header", async () => {
+  it("responds to an OPTIONS preflight for /v1/timeline with 2xx/204 and allows the X-Tripcord-Key header", async () => {
     const app = await buildApp(getTestDb());
     const response = await app.inject({
       method: "OPTIONS",
@@ -21,7 +21,7 @@ describe("CORS", () => {
       headers: {
         origin: "https://example.com",
         "access-control-request-method": "POST",
-        "access-control-request-headers": "content-type,x-repro-key",
+        "access-control-request-headers": "content-type,x-tripcord-key",
       },
     });
 
@@ -30,9 +30,9 @@ describe("CORS", () => {
 
     // HTTP headers are case-insensitive and Fastify normalizes to lowercase,
     // so check case-insensitively rather than assuming the exact casing the
-    // browser client sends ("X-Repro-Key").
+    // browser client sends ("X-Tripcord-Key").
     const allowHeaders = String(response.headers["access-control-allow-headers"] ?? "").toLowerCase();
-    expect(allowHeaders).toContain("x-repro-key");
+    expect(allowHeaders).toContain("x-tripcord-key");
   });
 });
 
@@ -66,7 +66,7 @@ describe("CORS scope", () => {
     const response = await app.inject({
       method: "POST",
       url: "/v1/timeline",
-      headers: { origin: "https://customer.example", "x-repro-key": key },
+      headers: { origin: "https://customer.example", "x-tripcord-key": key },
       payload: {
         sessionId: "s",
         reason: { type: "manual" },

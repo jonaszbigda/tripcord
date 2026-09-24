@@ -22,7 +22,7 @@ describe("GET /api/me", () => {
 
   it("returns 401 for an unknown token", async () => {
     const app = await buildTestApp(getTestDb());
-    const response = await call(app, "GET", "/api/me", { cookie: "repro_session=bogus" });
+    const response = await call(app, "GET", "/api/me", { cookie: "tripcord_session=bogus" });
     expect(response.statusCode).toBe(401);
   });
 
@@ -32,7 +32,7 @@ describe("GET /api/me", () => {
     await db.insert(sessions).values({ tokenHash: hashToken("old"), userId: user.id, expiresAt: new Date(Date.now() - 1) });
     const app = await buildTestApp(db);
 
-    const response = await call(app, "GET", "/api/me", { cookie: "repro_session=old" });
+    const response = await call(app, "GET", "/api/me", { cookie: "tripcord_session=old" });
 
     expect(response.statusCode).toBe(401);
   });
@@ -67,7 +67,7 @@ describe("POST /api/me/password", () => {
     const app = await buildTestApp(db);
 
     const response = await call(app, "POST", "/api/me/password", {
-      cookie: `repro_session=${current.token}`,
+      cookie: `tripcord_session=${current.token}`,
       body: { currentPassword: "old-password", newPassword: "new-password" },
     });
 

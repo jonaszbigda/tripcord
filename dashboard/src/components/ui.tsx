@@ -81,7 +81,7 @@ export function FullPageMessage({ children }: { children: ReactNode }) {
 export function AuthCard({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-4">
-      <p className="mb-6 text-lg font-semibold tracking-tight">repro</p>
+      <p className="mb-6 text-lg font-semibold tracking-tight">Tripcord</p>
       <Card className="w-full max-w-sm space-y-4">
         <h1 className="text-lg font-semibold">{title}</h1>
         {children}

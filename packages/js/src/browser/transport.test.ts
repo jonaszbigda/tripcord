@@ -27,7 +27,7 @@ describe("createSend", () => {
       keepalive: true,
       headers: {
         "Content-Type": "application/json",
-        "X-Repro-Key": "key-123",
+        "X-Tripcord-Key": "key-123",
       },
       body: JSON.stringify(payload),
     });

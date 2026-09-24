@@ -50,7 +50,7 @@ export async function verifyPasswordOrDummy(password: string, stored: string | n
   if (stored !== null) {
     return verifyPassword(password, stored);
   }
-  dummyHash ??= hashPassword("repro-dummy-password");
+  dummyHash ??= hashPassword("tripcord-dummy-password");
   await verifyPassword(password, await dummyHash);
   return false;
 }

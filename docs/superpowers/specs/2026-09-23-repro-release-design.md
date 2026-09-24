@@ -126,8 +126,8 @@ It triggers on tags matching `js-v*`.
 
 **First release, by hand.** npm can only set up a trusted publisher for a package
 that already exists. So `0.2.0` is published once from a logged-in machine
-(`npm publish -w @tripcord/js`), without provenance, since that can only be generated in
-CI. Then the trusted publisher is configured on npmjs.com for this repository and
+(`npm publish -w @tripcord/js --provenance=false`), without provenance, since that
+can only be generated in CI. The flag overrides `publishConfig`. Then the trusted publisher is configured on npmjs.com for this repository and
 `release-js.yml`. From `0.2.1` on, releases go through the workflow. The
 `tripcord` org already reserves the `@tripcord/` scope, so there's no race to claim
 the name.
@@ -204,7 +204,7 @@ It covers:
 **One-time setup**, which needs the maintainer's accounts:
 1. Rename the GitHub repository to `jonaszbigda/tripcord`. The trusted publisher
    and the GHCR package are tied to the repository name, so this comes first.
-2. Publish `@tripcord/js@0.2.0` by hand (`--access public`).
+2. Publish `@tripcord/js@0.2.0` by hand, with `--provenance=false`.
 3. Configure the npm trusted publisher.
 4. After the first server release, make the GHCR package public.
 
