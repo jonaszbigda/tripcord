@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { createTestUser, getTestDb, resetDb, sessionCookie } from "../../test/db";
 import { buildTestApp, call } from "../../test/http";
-import { createInvite } from "../db/invites";
+import { createInvite, createSignupInvite } from "../db/invites";
 import { createOrgWithOwner, getMembership } from "../db/orgs";
 
 async function fixture() {
@@ -55,5 +55,31 @@ describe("invite routes", () => {
     const response = await call(app, "POST", `/api/invites/${token}/accept`, { cookie: await sessionCookie(db, owner.id) });
     expect(response.statusCode).toBe(409);
     expect(response.json()).toEqual({ error: "Already a member" });
+  });
+
+  it("previews a signup invite with no org", async () => {
+    const { app, db } = await fixture();
+    const { token } = await createSignupInvite(db);
+    const response = await call(app, "GET", `/api/invites/${token}`);
+    expect(response.json()).toEqual({ orgName: null, role: "owner" });
+  });
+
+  it("refuses to let a logged-in user accept a signup invite", async () => {
+    const { app, db, owner } = await fixture();
+    const { token } = await createSignupInvite(db);
+    const response = await call(app, "POST", `/api/invites/${token}/accept`, { cookie: await sessionCookie(db, owner.id) });
+    expect(response.statusCode).toBe(409);
+    expect(response.json()).toEqual({ error: "This invite is for creating a new account" });
+    expect((await call(app, "GET", `/api/invites/${token}`)).statusCode).toBe(200);
+  });
+
+  it("signs up a new user on an invite-only instance with a signup invite", async () => {
+    const { app, db } = await fixture();
+    const { token } = await createSignupInvite(db);
+    const response = await call(app, "POST", "/api/auth/signup", {
+      body: { email: "neo@example.com", name: "Neo", password: "correct horse", inviteToken: token },
+    });
+    expect(response.statusCode).toBe(201);
+    expect(response.json().orgs).toEqual([{ id: expect.any(String), name: "Neo's org", role: "owner" }]);
   });
 });

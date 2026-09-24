@@ -69,8 +69,11 @@ export async function signUp(db: Database, input: SignUpInput): Promise<SignUpRe
         if (!(await consumeInvite(tx, invite.id, created.id))) {
           throw new SignUpAborted("invite_invalid");
         }
-        await addMember(tx, invite.orgId, created.id, invite.role);
-        return created;
+        if (invite.orgId !== null) {
+          await addMember(tx, invite.orgId, created.id, invite.role);
+          return created;
+        }
+        // A signup invite: the new user gets their own org, as in open signup.
       }
 
       const orphaned = bootstrap ? await listMemberlessOrgIds(tx) : [];
@@ -92,7 +95,9 @@ export async function signUp(db: Database, input: SignUpInput): Promise<SignUpRe
   }
 }
 
-export type AcceptInviteResult = { ok: true; orgId: string } | { ok: false; reason: "not_found" | "already_member" };
+export type AcceptInviteResult =
+  | { ok: true; orgId: string }
+  | { ok: false; reason: "not_found" | "already_member" | "signup_only" };
 
 export async function acceptInvite(db: Database, token: string, userId: string): Promise<AcceptInviteResult> {
   return db.transaction(async (tx) => {
@@ -100,14 +105,19 @@ export async function acceptInvite(db: Database, token: string, userId: string):
     if (!invite) {
       return { ok: false, reason: "not_found" };
     }
+    // Signup invites create accounts; they never add an existing user anywhere.
+    if (invite.orgId === null) {
+      return { ok: false, reason: "signup_only" };
+    }
+    const orgId = invite.orgId;
     // Checked before consuming, so an accidental click by a member doesn't burn the link.
-    if (await getMembership(tx, invite.orgId, userId)) {
+    if (await getMembership(tx, orgId, userId)) {
       return { ok: false, reason: "already_member" };
     }
     if (!(await consumeInvite(tx, invite.id, userId))) {
       return { ok: false, reason: "not_found" };
     }
-    await addMember(tx, invite.orgId, userId, invite.role);
-    return { ok: true, orgId: invite.orgId };
+    await addMember(tx, orgId, userId, invite.role);
+    return { ok: true, orgId };
   });
 }

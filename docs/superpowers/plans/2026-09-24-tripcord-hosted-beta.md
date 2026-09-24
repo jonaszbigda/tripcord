@@ -130,7 +130,7 @@ Before Task 11: ask the author which **Backblaze region** the B2 account is in (
   - `revokeSignupInvite(ex, inviteId): Promise<boolean>`.
   - `AcceptInviteResult` gains `reason: "signup_only"`.
 
-- [ ] **Step 1: Update the schema**
+- [x] **Step 1: Update the schema**
 
 In `server/src/db/schema.ts`, change the two `invites` columns:
 
@@ -174,7 +174,7 @@ and with the other types:
 export type PasswordReset = typeof passwordResets.$inferSelect;
 ```
 
-- [ ] **Step 2: Generate the migration**
+- [x] **Step 2: Generate the migration**
 
 Run: `cd server && npx drizzle-kit generate --name hosted_beta`
 Expected: `drizzle/0004_hosted_beta.sql`, plus a new snapshot and journal entry, containing:
@@ -185,7 +185,7 @@ Expected: `drizzle/0004_hosted_beta.sql`, plus a new snapshot and journal entry,
 
 Read the SQL. It must not drop or rewrite anything else.
 
-- [ ] **Step 3: Reset the new table in tests**
+- [x] **Step 3: Reset the new table in tests**
 
 In `server/test/db.ts`, import `passwordResets`, and in `resetDb` delete it before `sessions`:
 
@@ -195,7 +195,7 @@ In `server/test/db.ts`, import `passwordResets`, and in `resetDb` delete it befo
   await db.delete(sessions);
 ```
 
-- [ ] **Step 4: Write the failing tests**
+- [x] **Step 4: Write the failing tests**
 
 Append to `server/src/db/migrations.test.ts`:
 
@@ -325,12 +325,12 @@ In `server/src/routes/invites.test.ts`, add `createSignupInvite` to the import f
   });
 ```
 
-- [ ] **Step 5: Run the tests to verify they fail**
+- [x] **Step 5: Run the tests to verify they fail**
 
 Run: `npm test -w server -- src/db/migrations.test.ts src/accounts.test.ts src/routes/invites.test.ts`
 Expected: FAIL. `createSignupInvite` and the others aren't exported. `npm run typecheck -w server` also reports `invite.orgId` as possibly null in `accounts.ts`.
 
-- [ ] **Step 6: Implement**
+- [x] **Step 6: Implement**
 
 In `server/src/db/invites.ts`:
 
@@ -461,12 +461,12 @@ const ACCEPT_ERRORS = {
 
 The preview already returns `{ orgName: invite.orgName, role: invite.role }`, and it's now `null` for signup invites. Update its comment: `// Public, so the invite page can show "Join <org>" (or, for a signup invite, "You're invited") before the visitor logs in.`
 
-- [ ] **Step 7: Run the tests to verify they pass**
+- [x] **Step 7: Run the tests to verify they pass**
 
 Run: `npm test -w server && npm run typecheck -w server`
 Expected: PASS, including the existing invite, signup and isolation tests.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add server

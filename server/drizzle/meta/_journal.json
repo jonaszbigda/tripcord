@@ -29,6 +29,13 @@
       "when": 1790188097988,
       "tag": "0003_amazing_robin_chapel",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790246789032,
+      "tag": "0004_hosted_beta",
+      "breakpoints": true
     }
   ]
 }

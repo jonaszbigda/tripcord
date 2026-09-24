@@ -102,3 +102,38 @@ describe("tags migration (0003)", () => {
     });
   });
 });
+
+describe("hosted beta migration (0004)", () => {
+  it("keeps existing invites and makes org_id and created_by nullable", async () => {
+    await withFreshDatabase(async (pool) => {
+      const db = drizzle(pool);
+      const before = migrationsBefore(4);
+      try {
+        await migrate(db, { migrationsFolder: before });
+      } finally {
+        rmSync(before, { recursive: true, force: true });
+      }
+      const user = await pool.query<{ id: string }>(`INSERT INTO users (email, name) VALUES ('a@example.com', 'A') RETURNING id`);
+      const org = await pool.query<{ id: string }>(`INSERT INTO orgs (name) VALUES ('Acme') RETURNING id`);
+      await pool.query(
+        `INSERT INTO invites (org_id, token_hash, role, created_by, expires_at) VALUES ($1, 'h', 'member', $2, now())`,
+        [org.rows[0].id, user.rows[0].id]
+      );
+
+      await migrate(db, { migrationsFolder: MIGRATIONS });
+
+      const invites = await pool.query<{ org_id: string }>(`SELECT org_id FROM invites`);
+      expect(invites.rows).toEqual([{ org_id: org.rows[0].id }]);
+      const columns = await pool.query<{ column_name: string; is_nullable: string }>(
+        `SELECT column_name, is_nullable FROM information_schema.columns
+         WHERE table_name = 'invites' AND column_name IN ('org_id', 'created_by') ORDER BY column_name`
+      );
+      expect(columns.rows).toEqual([
+        { column_name: "created_by", is_nullable: "YES" },
+        { column_name: "org_id", is_nullable: "YES" },
+      ]);
+      const resets = await pool.query(`SELECT 1 FROM password_resets`);
+      expect(resets.rows).toHaveLength(0);
+    });
+  });
+});

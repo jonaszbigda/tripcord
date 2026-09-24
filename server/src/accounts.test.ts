@@ -2,7 +2,14 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { eq } from "drizzle-orm";
 import { createTestOrg, createTestUser, getTestDb, resetDb } from "../test/db";
 import { invites } from "./db/schema";
-import { createInvite, findUsableInvite } from "./db/invites";
+import {
+  createInvite,
+  createSignupInvite,
+  findUsableInvite,
+  listPendingInvites,
+  listPendingSignupInvites,
+  revokeSignupInvite,
+} from "./db/invites";
 import { addMember, getMembership, listUserOrgs } from "./db/orgs";
 import { acceptInvite, signUp, type SignUpInput } from "./accounts";
 
@@ -104,6 +111,20 @@ describe("signUp", () => {
     });
   });
 
+  it("a signup invite opens an invite-only instance to a new user with their own org", async () => {
+    await createTestUser(getTestDb()); // not the first user
+    const { token } = await createSignupInvite(getTestDb());
+
+    const result = await signUp(getTestDb(), input({ mode: "invite-only", inviteToken: token }));
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(await listUserOrgs(getTestDb(), result.user.id)).toEqual([
+      { id: expect.any(String), name: "Ana's org", role: "owner" },
+    ]);
+    expect(await findUsableInvite(getTestDb(), token)).toBeUndefined();
+  });
+
   it("two concurrent first signups on an invite-only instance bootstrap exactly once", async () => {
     const results = await Promise.all([
       signUp(getTestDb(), input({ mode: "invite-only", email: "a@example.com" })),
@@ -126,6 +147,14 @@ describe("acceptInvite", () => {
 
     expect(await acceptInvite(getTestDb(), token, user.id)).toEqual({ ok: true, orgId: org.id });
     expect((await getMembership(getTestDb(), org.id, user.id))?.role).toBe("owner");
+  });
+
+  it("refuses a signup invite for an existing user and leaves it usable", async () => {
+    const user = await createTestUser(getTestDb());
+    const { token } = await createSignupInvite(getTestDb());
+
+    expect(await acceptInvite(getTestDb(), token, user.id)).toEqual({ ok: false, reason: "signup_only" });
+    expect(await findUsableInvite(getTestDb(), token)).toBeDefined();
   });
 
   it("refuses an existing member and leaves the invite usable", async () => {
@@ -167,5 +196,28 @@ describe("acceptInvite", () => {
     ]);
 
     expect(results.filter((r) => r.ok)).toHaveLength(1);
+  });
+});
+
+describe("signup invites", () => {
+  beforeEach(async () => {
+    await resetDb(getTestDb());
+  });
+
+  it("are listed and revoked apart from org invites", async () => {
+    const { org } = await inviteTo();
+    const { id } = await createSignupInvite(getTestDb());
+
+    expect((await listPendingSignupInvites(getTestDb())).map((i) => i.id)).toEqual([id]);
+    expect((await listPendingInvites(getTestDb(), org.id)).map((i) => i.id)).not.toContain(id);
+
+    expect(await revokeSignupInvite(getTestDb(), id)).toBe(true);
+    expect(await revokeSignupInvite(getTestDb(), id)).toBe(false);
+    expect(await listPendingSignupInvites(getTestDb())).toEqual([]);
+  });
+
+  it("revokeSignupInvite ignores org invites", async () => {
+    const { invite } = await inviteTo();
+    expect(await revokeSignupInvite(getTestDb(), invite.id)).toBe(false);
   });
 });

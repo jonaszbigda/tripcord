@@ -63,15 +63,14 @@ export const invites = pgTable(
   "invites",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    orgId: uuid("org_id")
-      .notNull()
-      .references(() => orgs.id),
+    // NULL for a signup invite, which creates a new account with its own org
+    // (see signUp in accounts.ts). Only the admin CLI creates those.
+    orgId: uuid("org_id").references(() => orgs.id),
     // SHA-256 of the tpi_ token. The token is shown once, at creation.
     tokenHash: text("token_hash").notNull().unique(),
     role: text("role").$type<Role>().notNull(),
-    createdBy: uuid("created_by")
-      .notNull()
-      .references(() => users.id),
+    // NULL for invites made by the admin CLI, and once the creator deletes their account.
+    createdBy: uuid("created_by").references(() => users.id),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     expiresAt: timestamp("expires_at").notNull(),
     acceptedAt: timestamp("accepted_at"),
@@ -80,6 +79,25 @@ export const invites = pgTable(
   },
   (table) => ({
     orgIdx: index("invites_org_idx").on(table.orgId),
+  })
+);
+
+export const passwordResets = pgTable(
+  "password_resets",
+  {
+    // SHA-256 of the tpr_ token. The token itself only ever travels in the email.
+    tokenHash: text("token_hash").primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id),
+    // Set from the server's clock (not defaultNow) so the 2-minute cooldown
+    // compares like with like.
+    createdAt: timestamp("created_at").notNull(),
+    expiresAt: timestamp("expires_at").notNull(),
+    usedAt: timestamp("used_at"),
+  },
+  (table) => ({
+    userIdx: index("password_resets_user_idx").on(table.userId),
   })
 );
 
@@ -147,6 +165,7 @@ export type Session = typeof sessions.$inferSelect;
 export type Org = typeof orgs.$inferSelect;
 export type Membership = typeof memberships.$inferSelect;
 export type Invite = typeof invites.$inferSelect;
+export type PasswordReset = typeof passwordResets.$inferSelect;
 export type Project = typeof projects.$inferSelect;
 export type ApiKey = typeof apiKeys.$inferSelect;
 export type Timeline = typeof timelines.$inferSelect;

@@ -6,6 +6,7 @@ import {
   invites,
   memberships,
   orgs,
+  passwordResets,
   projects,
   sessions,
   timelines,
@@ -34,6 +35,7 @@ export async function resetDb(db: Database): Promise<void> {
   await db.delete(apiKeys);
   await db.delete(projects);
   await db.delete(invites);
+  await db.delete(passwordResets);
   await db.delete(sessions);
   await db.delete(memberships);
   await db.delete(orgs);
