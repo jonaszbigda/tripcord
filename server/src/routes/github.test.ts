@@ -84,6 +84,7 @@ describe("GitHub OAuth", () => {
     const user = await findUserByGithubId(getTestDb(), "42");
     expect(user).toMatchObject({ email: "ana@example.com", name: "Ana", passwordHash: null });
     expect((await listUserOrgs(getTestDb(), user!.id)).map((o) => o.name)).toEqual(["Ana's org"]);
+    expect((await findUserByGithubId(getTestDb(), String(ANA.id)))?.emailVerifiedAt).not.toBeNull();
   });
 
   it("strips control characters from the GitHub profile name", async () => {

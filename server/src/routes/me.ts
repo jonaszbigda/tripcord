@@ -11,12 +11,20 @@ import { authRateLimit } from "./auth";
 import type { ApiContext } from "./context";
 
 export interface MeBody {
-  user: { id: string; email: string; name: string; hasPassword: boolean; githubConnected: boolean };
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    hasPassword: boolean;
+    githubConnected: boolean;
+    /** False only while verification is active and the user hasn't verified. */
+    emailVerified: boolean;
+  };
   orgs: UserOrg[];
 }
 
 // Also the response body of signup and login, so the SPA can seed its cache.
-export async function meBody(db: Database, user: User): Promise<MeBody> {
+export async function meBody(db: Database, user: User, emailVerification: boolean): Promise<MeBody> {
   return {
     user: {
       id: user.id,
@@ -24,6 +32,7 @@ export async function meBody(db: Database, user: User): Promise<MeBody> {
       name: user.name,
       hasPassword: user.passwordHash !== null,
       githubConnected: user.githubId !== null,
+      emailVerified: !emailVerification || user.emailVerifiedAt !== null,
     },
     orgs: await listUserOrgs(db, user.id),
   };
@@ -32,12 +41,16 @@ export async function meBody(db: Database, user: User): Promise<MeBody> {
 export function registerMeRoutes(app: FastifyInstance, ctx: ApiContext): void {
   const { db } = ctx;
 
-  app.get("/api/me", { preValidation: requireUser(db) }, async (request) => meBody(db, currentUser(request)));
+  app.get(
+    "/api/me",
+    { preValidation: requireUser(db, ctx.emailVerification), config: { allowUnverified: true } },
+    async (request) => meBody(db, currentUser(request), ctx.emailVerification)
+  );
 
   app.post<{ Body: { currentPassword?: string; newPassword: string } }>(
     "/api/me/password",
     {
-      preValidation: requireUser(db),
+      preValidation: requireUser(db, ctx.emailVerification),
       schema: {
         body: {
           type: "object",
@@ -69,7 +82,7 @@ export function registerMeRoutes(app: FastifyInstance, ctx: ApiContext): void {
   app.delete<{ Body: { password?: string } }>(
     "/api/me",
     {
-      preValidation: requireUser(db),
+      preValidation: requireUser(db, ctx.emailVerification),
       schema: {
         body: {
           type: "object",
@@ -77,7 +90,7 @@ export function registerMeRoutes(app: FastifyInstance, ctx: ApiContext): void {
           additionalProperties: false,
         },
       },
-      config: { rateLimit: authRateLimit(ctx) },
+      config: { rateLimit: authRateLimit(ctx), allowUnverified: true },
     },
     async (request, reply) => {
       const user = currentUser(request);
@@ -93,7 +106,7 @@ export function registerMeRoutes(app: FastifyInstance, ctx: ApiContext): void {
     }
   );
 
-  app.delete("/api/me/github", { preValidation: requireUser(db) }, async (request, reply) => {
+  app.delete("/api/me/github", { preValidation: requireUser(db, ctx.emailVerification) }, async (request, reply) => {
     const user = currentUser(request);
     if (user.passwordHash === null) {
       return reply.code(409).send({ error: "Set a password before disconnecting GitHub" });

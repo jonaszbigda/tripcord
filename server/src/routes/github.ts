@@ -107,6 +107,7 @@ export function registerGithubRoutes(app: FastifyInstance, ctx: ApiContext): voi
       githubId: profile.id,
       inviteToken: invite,
       mode: ctx.signup,
+      emailVerified: true,
     });
     if (!result.ok) {
       return reply.redirect(SIGNUP_REDIRECTS[result.reason]);

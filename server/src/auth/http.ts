@@ -16,6 +16,11 @@ declare module "fastify" {
     /** Set by requireMembership. */
     membership?: Membership;
   }
+
+  interface FastifyContextConfig {
+    /** Lets an unverified user through requireUser: the routes they need to verify or leave. */
+    allowUnverified?: boolean;
+  }
 }
 
 export async function startSession(db: Database, reply: FastifyReply, userId: string, secure: boolean): Promise<void> {
@@ -52,12 +57,15 @@ export function csrfGuard(publicOrigin: string) {
   };
 }
 
-export function requireUser(db: Database) {
+export function requireUser(db: Database, emailVerification: boolean) {
   return async (request: FastifyRequest, reply: FastifyReply) => {
     const token = request.cookies[SESSION_COOKIE];
     const user = token ? await findSessionUser(db, token) : undefined;
     if (!token || !user) {
       return reply.code(401).send({ error: "Not logged in" });
+    }
+    if (emailVerification && user.emailVerifiedAt === null && !request.routeOptions.config.allowUnverified) {
+      return reply.code(403).send({ error: "Email not verified" });
     }
     request.user = user;
     request.sessionToken = token;

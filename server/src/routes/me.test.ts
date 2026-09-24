@@ -47,7 +47,7 @@ describe("GET /api/me", () => {
 
     expect(response.statusCode).toBe(200);
     expect(response.json()).toEqual({
-      user: { id: user.id, email: "ana@example.com", name: "Ana", hasPassword: true, githubConnected: false },
+      user: { id: user.id, email: "ana@example.com", name: "Ana", hasPassword: true, githubConnected: false, emailVerified: true },
       orgs: [{ id: org.id, name: "Acme", role: "owner" }],
     });
     expect(response.body).not.toContain("scrypt");

@@ -9,6 +9,7 @@ import type { SignupMode } from "./accounts";
 import type { GithubConfig } from "./config";
 import type { Database } from "./db/client";
 import type { Mailer } from "./email";
+import { isEmailVerificationActive } from "./email-verification";
 import { redactTokens } from "./redact";
 import { csrfGuard } from "./auth/http";
 import type { ApiContext } from "./routes/context";
@@ -170,15 +171,17 @@ export async function buildApp(db: Database, options: AppOptions = {}): Promise<
     { prefix: "/v1" }
   );
 
+  const signup = options.signup ?? "invite-only";
   const ctx: ApiContext = {
     db,
     publicUrl,
     secureCookies: publicUrl.startsWith("https:"),
-    signup: options.signup ?? "invite-only",
+    signup,
     github: options.github,
     githubFetch: options.githubFetch ?? fetch,
     authRateLimitMax: options.authRateLimitMax ?? 10,
     mailer: options.mailer,
+    emailVerification: isEmailVerificationActive(signup, options.mailer !== undefined),
   };
   registerAuthRoutes(app, ctx);
   registerPasswordResetRoutes(app, ctx);

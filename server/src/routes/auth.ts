@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { signUp } from "../accounts";
 import { hashPassword, verifyPasswordOrDummy } from "../auth/password";
 import { SESSION_COOKIE, clearSessionCookie, startSession } from "../auth/http";
+import { sendVerification } from "../email-verification";
 import { deleteSession } from "../db/sessions";
 import { countUsers, findUserByEmail, normalizeEmail } from "../db/users";
 import { rateLimitErrorBody } from "../rate-limit";
@@ -69,6 +70,7 @@ export function registerAuthRoutes(app: FastifyInstance, ctx: ApiContext): void 
     bootstrapped: (await countUsers(db)) > 0,
     github: ctx.github !== undefined,
     passwordReset: ctx.mailer !== undefined,
+    emailVerification: ctx.emailVerification,
   }));
 
   app.post<{ Body: SignupBody }>(
@@ -88,6 +90,7 @@ export function registerAuthRoutes(app: FastifyInstance, ctx: ApiContext): void 
         githubId: null,
         inviteToken: request.body.inviteToken,
         mode: ctx.signup,
+        emailVerified: !ctx.emailVerification,
       });
       if (!result.ok) {
         const [status, message] = SIGNUP_ERRORS[result.reason];
@@ -95,7 +98,14 @@ export function registerAuthRoutes(app: FastifyInstance, ctx: ApiContext): void 
       }
 
       await startSession(db, reply, result.user.id, ctx.secureCookies);
-      return reply.code(201).send(await meBody(db, result.user));
+      if (ctx.emailVerification && ctx.mailer) {
+        // Not awaited: a slow or failing SMTP server mustn't fail the signup.
+        // The user can resend from the "check your inbox" page.
+        void sendVerification(db, ctx.mailer, ctx.publicUrl, result.user).catch((error: unknown) => {
+          request.log.error({ err: error, userId: result.user.id }, "verification email failed");
+        });
+      }
+      return reply.code(201).send(await meBody(db, result.user, ctx.emailVerification));
     }
   );
 
@@ -112,7 +122,7 @@ export function registerAuthRoutes(app: FastifyInstance, ctx: ApiContext): void 
       }
 
       await startSession(db, reply, user.id, ctx.secureCookies);
-      return meBody(db, user);
+      return meBody(db, user, ctx.emailVerification);
     }
   );
 

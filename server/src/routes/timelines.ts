@@ -82,7 +82,7 @@ function filtersFrom(query: FilterQuery): TimelineFilters {
 // querystring is validated, so a non-member gets 404 even with a bad query.
 export function registerTimelineReadRoutes(app: FastifyInstance, ctx: ApiContext): void {
   const { db } = ctx;
-  const asMember = [requireUser(db), requireMembership(db, "member")];
+  const asMember = [requireUser(db, ctx.emailVerification), requireMembership(db, "member")];
   const base = "/api/orgs/:orgId/projects/:projectId/timelines";
 
   app.get<{ Params: ProjectParams; Querystring: FilterQuery & { cursor?: string; limit: number } }>(

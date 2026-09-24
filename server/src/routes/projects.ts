@@ -34,8 +34,8 @@ export async function requireProject(db: Database, { orgId, projectId }: Project
 // the tenant check: every project and key is looked up through :orgId first.
 export function registerProjectRoutes(app: FastifyInstance, ctx: ApiContext): void {
   const { db } = ctx;
-  const asMember = [requireUser(db), requireMembership(db, "member")];
-  const asOwner = [requireUser(db), requireMembership(db, "owner")];
+  const asMember = [requireUser(db, ctx.emailVerification), requireMembership(db, "member")];
+  const asOwner = [requireUser(db, ctx.emailVerification), requireMembership(db, "owner")];
 
   app.get<{ Params: OrgParams }>("/api/orgs/:orgId/projects", { preValidation: asMember }, async (request) => ({
     projects: await listProjects(db, { orgId: request.params.orgId }),
