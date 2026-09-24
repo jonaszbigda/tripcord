@@ -3491,16 +3491,16 @@ git commit -m "docs: off-site backups, email and deletion for self-hosters"
 **Files:**
 - Modify: `server/package.json`, `package-lock.json`, `packages/js/README.md` (only if the compatibility table needs a row; the client is unchanged, so it shouldn't)
 
-- [ ] **Step 1: Bump the server**
+- [x] **Step 1: Bump the server**
 
 Set `"version": "0.2.0"` in `server/package.json`, and run `npm install` so the lockfile matches.
 
-- [ ] **Step 2: Whole-repo check**
+- [x] **Step 2: Whole-repo check**
 
 Run: `npm run build && npm run typecheck && npm run lint && npm test`
 Expected: PASS.
 
-- [ ] **Step 3: Manual check on a local instance**
+- [x] **Step 3: Manual check on a local instance**
 
 With `docker compose up` (root, development), using a local SMTP catcher (e.g. `docker run -p 1025:1025 -p 8025:8025 axllent/mailpit`, `SMTP_URL=smtp://host.docker.internal:1025`, `EMAIL_FROM=Tripcord <no-reply@localhost>`):
 1. Bootstrap an account.
@@ -3510,7 +3510,7 @@ With `docker compose up` (root, development), using a local SMTP catcher (e.g. `
 5. Try deleting an account that's the only owner of an org with another member. The org is listed. Then delete an account that isn't.
 6. Check the server logs: no IPs, and `tpi_[redacted]` / `tpr_[redacted]` wherever a link was opened.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add server/package.json package-lock.json
