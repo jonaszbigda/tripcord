@@ -32,8 +32,11 @@ export function MembersPage() {
 
   const remove = useMutation({
     mutationFn: (userId: string) => api("DELETE", `/api/orgs/${orgId}/members/${userId}`),
-    onSuccess: (_result, userId) => {
+    onSuccess: async (_result, userId) => {
       if (userId === me.user.id) {
+        // A "me" request already in flight still lists this org; if it landed
+        // after setQueryData, HomePage would send the user back into the org.
+        await queryClient.cancelQueries({ queryKey: queryKeys.me });
         queryClient.setQueryData<Me>(queryKeys.me, (old) => old && { ...old, orgs: old.orgs.filter((o) => o.id !== orgId) });
         navigate("/");
       } else {

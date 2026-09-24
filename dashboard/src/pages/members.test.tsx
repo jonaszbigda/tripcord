@@ -68,10 +68,17 @@ describe("members page", () => {
   });
 
   it("lets a member leave, then sends them home", async () => {
+    // Like the server, "me" stops listing the org once the member has left, so a
+    // refetch after leaving can't bring it back.
+    let left = false;
+    const asUser2 = { ...AS_MEMBER, user: { ...AS_MEMBER.user, id: "user-2" } };
     mockApi(
       handlers({
-        "GET /api/me": { body: { ...AS_MEMBER, user: { ...AS_MEMBER.user, id: "user-2" } } },
-        [`DELETE /api/orgs/${ORG_ID}/members/user-2`]: { status: 204 },
+        "GET /api/me": () => ({ body: left ? { ...asUser2, orgs: [] } : asUser2 }),
+        [`DELETE /api/orgs/${ORG_ID}/members/user-2`]: () => {
+          left = true;
+          return { status: 204 };
+        },
       })
     );
     const user = userEvent.setup();
