@@ -1,19 +1,24 @@
 # Tripcord
 
-**Tripcord stays quiet until something breaks. Then it sends you the steps that led there.**
+**Mark the moments that matter in your app. When one happens, Tripcord sends you the path that led there.**
 
 [![CI](https://github.com/jonaszbigda/tripcord/actions/workflows/ci.yml/badge.svg)](https://github.com/jonaszbigda/tripcord/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/@tripcord/js)](https://www.npmjs.com/package/@tripcord/js)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-Tripcord is a self-hosted tool for reproducing frontend bugs. You mark the moments
-in your app that matter. Tripcord keeps the most recent ones in the user's tab and
-sends nothing. When an error is thrown, or you call `capture()`, it sends that short
-timeline to your server, where you can read what the user did right before things
-went wrong.
+Tripcord is a self-hosted timeline tool for web apps. You decide which steps are
+worth recording. The browser keeps the most recent ones and sends nothing, until
+something happens that you care about. That might be a crash, or it might be a
+checkout, an abandoned form, or a signup. Then Tripcord sends the short timeline
+that led up to it to your server.
 
-A stack trace tells you where the code failed. A Tripcord timeline tells you what
-the user did to get there:
+No noise, only signal: every event on a timeline is one you chose to record.
+
+## One tool, two questions
+
+**Why did this break?** Uncaught errors are captured automatically. A stack trace
+tells you where the code failed. The timeline tells you what the user did to get
+there:
 
 ```text
 TypeError: Cannot read properties of undefined (reading 'price')
@@ -23,7 +28,19 @@ on /checkout · tagged checkout
    −18.7s  custom  checkout.step    { step: "shipping" }
     −6.3s  trace   "Apply coupon"
     −1.1s  custom  coupon.applied   { code: "SPRING", valid: false }
-     0.0s  error   TypeError: Cannot read properties of undefined (reading 'price')
+```
+
+**How did people get here?** Call `capture()` at any moment that matters to you,
+not just failures. The dashboard counts each moment over time, ranks them, filters
+them by area of the app, and shows the path behind every one:
+
+```text
+signup.completed { plan: "team" }
+on /welcome · tagged onboarding
+
+   −95.0s  trace   "Pricing: Team plan"
+   −61.4s  custom  signup.step      { step: "account" }
+   −22.8s  custom  signup.step      { step: "invite_team", invited: 3 }
 ```
 
 ## How it works
@@ -34,23 +51,25 @@ on /checkout · tagged checkout
 2. **The client waits.** `@tripcord/js` keeps the last 50 events in
    `sessionStorage`, so the timeline survives page loads within the tab. Nothing
    leaves the browser.
-3. **Something breaks.** An uncaught error, an unhandled rejection, a React error
-   boundary, or your own `capture("payment-declined")` sends the timeline to your
+3. **A moment happens.** An uncaught error, an unhandled rejection, a React error
+   boundary, or your own `capture("signup.completed")` sends the timeline to your
    Tripcord server.
-4. **You read it.** The dashboard lists timelines by volume, reason and tag, and
-   links timelines from the same session together.
+4. **You read it.** The dashboard charts volume over time, ranks the most common
+   errors and captures, filters by tag, and links timelines from the same session
+   together.
 
-## Why not session replay, or an error tracker?
+## How it compares
 
-| | Error tracker | Session replay | Tripcord |
-| --- | --- | --- | --- |
-| What you get | A stack trace | A recording of everything | The steps you chose to mark |
-| What leaves the browser | Errors | Everything, all the time | A short timeline, only when something breaks |
-| Keeping personal data out | Mostly easy | Masking rules and audits | You write every event, so you decide |
-| Payload size | Small | Large | Small |
+|  | Error tracker | Session replay | Product analytics | Tripcord |
+| --- | --- | --- | --- | --- |
+| What you get | A stack trace | A recording of everything | Aggregate counts and funnels | The path to each moment you mark |
+| When data is sent | On errors | Continuously | On every event | Only when a marked moment happens |
+| What's sent | The error | Everything on the page | Every tracked event | A short timeline you wrote |
+| Keeping personal data out | Mostly easy | Masking rules and audits | Per-event review | You write every event, so you decide |
 
-Tripcord doesn't replace an error tracker. It answers the question the stack trace
-leaves open: *what did the user do before this broke?*
+Tripcord sits between these tools. An error tracker tells you what failed, and
+analytics tells you how many. Tripcord shows the steps an individual user took to
+reach a moment, and how often that moment happens.
 
 ## Quick start
 
@@ -66,22 +85,23 @@ npm i @tripcord/js
 ```
 
 ```ts
-import { init, track, setTags } from "@tripcord/js";
+import { init, track, capture, setTags } from "@tripcord/js";
 
 init({
   endpoint: "https://tripcord.example.com/v1/timeline",
   apiKey: "rpk_…",
 });
 
-setTags(["checkout"]);                       // which area of the app this is
-track("checkout.step", { step: "shipping" }); // a moment worth remembering
+setTags(["onboarding"]);                       // which area of the app this is
+track("signup.step", { step: "account" });     // a step worth remembering
+capture("signup.completed", { plan: "team" }); // a moment worth a timeline
 ```
 
 ```html
-<button data-trace="Apply coupon">Apply</button>
+<button data-trace="Pricing: Team plan">Choose Team</button>
 ```
 
-Uncaught errors are captured automatically. For React, wrap your tree in
+Uncaught errors are captured without any code. For React, wrap your tree in
 `<ErrorBoundary>` from `@tripcord/js/react`. The
 [client README](packages/js/README.md) covers tags, manual captures and
 controlling which page URLs are sent.
@@ -94,11 +114,13 @@ today:
 - **`@tripcord/js`**: the browser client, with a framework-agnostic core and a React
   error boundary. TypeScript, ESM and CommonJS.
 - **The server**: the ingest API, with API keys per project and rate limits, and
-  a dashboard with accounts, orgs, invites, GitHub login and a timeline viewer.
+  a dashboard with accounts, orgs, invites, GitHub login and a timeline viewer:
+  a volume chart, top errors and captures, tag filters, and per-timeline detail.
   Released as a Docker image for amd64 and arm64.
 
-Not yet: a hosted version, server-side (SSR) tracing, alerts, and grouping of
-similar errors.
+Not yet: a hosted version, clients for platforms other than the browser,
+server-side (SSR) tracing, alerts, grouping similar errors, and analytics across
+timelines, such as funnels or the most common paths to a moment.
 
 ## Repository
 
