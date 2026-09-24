@@ -2,7 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { signUp } from "../accounts";
 import { hashPassword, verifyPasswordOrDummy } from "../auth/password";
 import { SESSION_COOKIE, clearSessionCookie, startSession } from "../auth/http";
-import { sendVerification } from "../email-verification";
+import { sendVerification, verifyEmail } from "../email-verification";
 import { deleteSession } from "../db/sessions";
 import { countUsers, findUserByEmail, normalizeEmail } from "../db/users";
 import { rateLimitErrorBody } from "../rate-limit";
@@ -134,4 +134,29 @@ export function registerAuthRoutes(app: FastifyInstance, ctx: ApiContext): void 
     clearSessionCookie(reply);
     return reply.code(204).send();
   });
+
+  // No session needed: the link may be opened on another device. Answers only
+  // 204 or 400, so it says nothing about which accounts exist.
+  if (ctx.emailVerification) {
+    app.post<{ Body: { token: string } }>(
+      "/api/auth/verify-email",
+      {
+        schema: {
+          body: {
+            type: "object",
+            required: ["token"],
+            properties: { token: { type: "string", maxLength: 100 } },
+            additionalProperties: false,
+          },
+        },
+        config: { rateLimit },
+      },
+      async (request, reply) => {
+        if (!(await verifyEmail(db, request.body.token))) {
+          return reply.code(400).send({ error: "Invalid or expired link" });
+        }
+        return reply.code(204).send();
+      }
+    );
+  }
 }
