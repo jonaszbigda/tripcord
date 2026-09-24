@@ -5,11 +5,12 @@ frontend bug reproduction.
 
 ## Packages
 
-- [`packages/js`](packages/js) — `@tripcord/js`, the browser client library. Built,
-  tested, not yet published to npm.
+- [`packages/js`](packages/js) — `@tripcord/js`, the browser client library,
+  published to npm (`npm i @tripcord/js`).
 - [`server`](server) — `@tripcord/server`, the ingest API that receives what the client
-  sends. Built, tested, self-hostable via `docker compose up` — see
-  [`server/README.md`](server/README.md) for how to run it and provision an API key.
+  sends. Released as the `ghcr.io/jonaszbigda/tripcord` Docker image — see
+  [`docs/self-hosting.md`](docs/self-hosting.md) to run it, and
+  [`server/README.md`](server/README.md) for configuration and running from source.
 - [`dashboard`](dashboard) — `@tripcord/dashboard`, the web dashboard (React SPA) where
   users sign up, manage orgs and members, and create projects and API keys. Built into
   and served by the server.
@@ -29,6 +30,9 @@ npm run lint             # lints every workspace
 ```
 
 To work on a single package: `npm test -w packages/js` or `cd packages/js && npm test`.
+
+CI runs build, typecheck, lint and tests on every push. Releases are cut from git
+tags; see [`docs/releasing.md`](docs/releasing.md).
 
 ## License
 

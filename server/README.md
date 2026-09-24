@@ -7,6 +7,10 @@ repo), where people sign up, create projects and manage API keys.
 
 ## Running it
 
+To run a released version in production, see
+[`docs/self-hosting.md`](../docs/self-hosting.md). This section covers running from
+source.
+
 The simplest way to run the server plus its Postgres database is `docker compose`
 from the repo root:
 

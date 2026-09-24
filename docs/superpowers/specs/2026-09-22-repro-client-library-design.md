@@ -1,5 +1,8 @@
 # repro — client library design
 
+> Renamed 2026-09-24: the product is now Tripcord and the package `@tripcord/js`
+> (see `2026-09-23-repro-release-design.md`). This spec keeps the old names.
+
 Status: approved (client library only)
 Date: 2026-09-22
 Scope: the browser client library (`@repro/js`) only. Backend/ingest API, dashboard,

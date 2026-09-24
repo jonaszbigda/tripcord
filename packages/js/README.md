@@ -17,32 +17,36 @@ everything by default — because you control exactly what goes into every event
 ## Status
 
 This project is early and the idea itself is still being validated. Here's what
-actually exists right now versus what's planned:
+exists right now versus what's planned:
 
 **Built, tested, working:**
-- `@tripcord/js` — the browser client library. Framework-agnostic core, a browser adapter
-  (DOM error hooks, `data-trace` click capture, `sessionStorage`-backed persistence,
-  `fetch`-based delivery), and a thin React `ErrorBoundary` adapter.
-- Full test suite (50 tests), TypeScript types, dual ESM/CJS build.
+- `@tripcord/js` — this browser client library. Framework-agnostic core, a browser
+  adapter (DOM error hooks, `data-trace` click capture, `sessionStorage`-backed
+  persistence, `fetch`-based delivery), and a thin React `ErrorBoundary` adapter.
+  TypeScript types, dual ESM/CJS build.
+- A self-hostable server: the ingest API that receives timelines, and a dashboard
+  for browsing them, filtering by tag and managing projects and API keys. It ships as
+  a Docker image for amd64 and arm64.
 
 **Not built yet:**
-- A backend to actually receive and store what the client sends (`endpoint`/`apiKey`
-  in the config below currently point at nothing — you need to run your own stub
-  server, or just use the console, to try this out today).
-- A dashboard for viewing captured timelines.
-- Self-host Docker packaging.
-- A hosted SaaS option.
+- A hosted SaaS option. For now you run your own server.
 - An SSR/Node adapter (e.g. tracing Next.js's `getServerSideProps`) — the client
   library has two small hooks (`sessionId`, `seedEvents`) reserved for this, but the
   adapter itself doesn't exist yet.
-- Publishing to npm — this package is not on the registry yet. To use it today, clone
-  this repo and build it locally (see [Development](#development)), or install directly
-  from the GitHub repo.
 
 The full design rationale — why breadcrumbs instead of session replay, why
 `sessionStorage` over `localStorage`, why `fetch({ keepalive: true })` over
-`sendBeacon`, and everything else — is written up in
-[`docs/superpowers/specs/2026-09-22-repro-client-library-design.md`](docs/superpowers/specs/2026-09-22-repro-client-library-design.md).
+`sendBeacon`, and everything else — is written up in the
+[client library design spec](https://github.com/jonaszbigda/tripcord/blob/main/docs/superpowers/specs/2026-09-22-repro-client-library-design.md).
+
+## Install
+
+```bash
+npm i @tripcord/js
+```
+
+You need a Tripcord server to send timelines to. See
+[Self-hosting](https://github.com/jonaszbigda/tripcord/blob/main/docs/self-hosting.md).
 
 ## Quick start
 
@@ -50,8 +54,8 @@ The full design rationale — why breadcrumbs instead of session replay, why
 import { init, track, capture } from "@tripcord/js";
 
 init({
-  endpoint: "https://your-ingest-server.example.com/timeline", // you have to run this yourself for now
-  apiKey: "your-api-key",
+  endpoint: "https://tripcord.example.com/v1/timeline", // your server's PUBLIC_URL + /v1/timeline
+  apiKey: "your-api-key", // from the project's Keys tab in the dashboard
 });
 
 // Explicit breadcrumbs
@@ -124,6 +128,19 @@ init({
 If `sanitizeUrl` throws or doesn't return a string, the default is used and a
 warning is logged.
 
+### Server compatibility
+
+The client and the server are versioned independently. This table says which
+server version each client feature needs:
+
+| @tripcord/js | Needs server |
+| --- | --- |
+| 0.2.x, with tags | 0.1.0 or later |
+| 0.2.x, without tags | any |
+
+The server always accepts older clients' payloads: the ingest schema only ever
+gains optional fields.
+
 ## Development
 
 ```bash
@@ -140,4 +157,4 @@ package's default entry point. `src/react/` is optional sugar.
 
 ## License
 
-MIT — see [`LICENSE`](LICENSE).
+MIT — see [`LICENSE`](https://github.com/jonaszbigda/tripcord/blob/main/LICENSE).
