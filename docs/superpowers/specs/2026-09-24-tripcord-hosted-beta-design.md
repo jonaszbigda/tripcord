@@ -1,6 +1,6 @@
 # Tripcord — hosted beta design
 
-Status: draft
+Status: approved
 Date: 2026-09-24
 Scope: running Tripcord at `app.tripcord.dev` for people outside the project, with
 enough in place that they can trust it with a production app. This covers signup

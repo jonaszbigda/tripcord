@@ -3356,7 +3356,7 @@ git commit -m "feat(site): landing site with beta commitments and privacy page"
 - Create: `deploy/backup.sh`, `deploy/backup.env.example`
 - Modify: `deploy/docker-compose.yml`, `deploy/.env.example`, `docs/self-hosting.md`, `server/README.md`, `docs/superpowers/specs/2026-09-24-tripcord-hosted-beta-design.md`
 
-- [ ] **Step 1: The backup script**
+- [x] **Step 1: The backup script**
 
 Create `deploy/backup.sh` (and `git update-index --chmod=+x deploy/backup.sh`, since the repo is developed on Windows):
 
@@ -3411,7 +3411,7 @@ AWS_SECRET_ACCESS_KEY=
 # BACKUP_HEARTBEAT_URL=
 ```
 
-- [ ] **Step 2: Try it**
+- [x] **Step 2: Try it**
 
 Against the local deploy compose, with a local restic repository:
 
@@ -3425,7 +3425,7 @@ restic init
 
 Expected: one snapshot holding `/tripcord.dump`. Then run the restore drill from Step 4's docs text against it. Afterwards: `docker compose down -v && rm -rf /tmp/tripcord-restic .env`.
 
-- [ ] **Step 3: Deploy compose**
+- [x] **Step 3: Deploy compose**
 
 In `deploy/docker-compose.yml`, add to the `server` service's `environment`:
 
@@ -3452,7 +3452,7 @@ In `deploy/.env.example`, add a commented block:
 # EMAIL_FROM=Tripcord <no-reply@example.com>
 ```
 
-- [ ] **Step 4: Docs**
+- [x] **Step 4: Docs**
 
 In `docs/self-hosting.md`:
 - **Email (optional)**, after GitHub login: what it enables (password reset, `invite create --email`), the two variables, the URL encoding needed for special characters in the SMTP password, and that the sending domain needs SPF, DKIM and DMARC records.
@@ -3477,7 +3477,7 @@ In `server/README.md`, add `SMTP_URL` and `EMAIL_FROM` to the environment table.
 
 In the hosted beta spec, set `Status: approved`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add deploy docs server/README.md

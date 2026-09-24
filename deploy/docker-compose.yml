@@ -15,6 +15,11 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    logging: &logging
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
 
   server:
     image: ghcr.io/jonaszbigda/tripcord:${TRIPCORD_VERSION:-0.1}
@@ -28,9 +33,12 @@ services:
       RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-100}
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+      SMTP_URL: ${SMTP_URL:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
     ports:
       # Only reachable from this machine; put a reverse proxy in front for HTTPS.
       - "127.0.0.1:3000:3000"
+    logging: *logging
     depends_on:
       postgres:
         condition: service_healthy

@@ -48,6 +48,14 @@ After that, `SIGNUP` decides who can join:
 - `open`: anyone who can reach the instance can sign up, and each new user gets
   their own org.
 
+To let someone new in with their own org on an `invite-only` instance, create a
+signup invite with the [admin CLI](#recovery-the-admin-cli). It prints a link once,
+valid for 7 days. With [email](#email-optional) set up, `--email` sends it too:
+
+```bash
+docker compose exec server node server/dist/cli.js invite create --email someone@example.com
+```
+
 ## HTTPS
 
 Put a reverse proxy in front of the server. With [Caddy](https://caddyserver.com),
@@ -77,6 +85,23 @@ session cookie `Secure`.
 
 Users can then sign in with GitHub, or connect GitHub to an existing account in
 their settings.
+
+## Email (optional)
+
+With SMTP set up, users can reset a forgotten password from the login page, and
+`invite create --email` sends signup invites. Without it, both are hidden, and
+`user reset-password` in the admin CLI is the fallback.
+
+Set both variables in `.env`, then run `docker compose up -d`:
+
+```bash
+SMTP_URL=smtps://user:password@smtp.example.com:465
+EMAIL_FROM=Tripcord <no-reply@example.com>
+```
+
+URL-encode special characters in the password (`@` becomes `%40`, and so on). For
+mail to arrive rather than land in spam, the sending domain needs SPF, DKIM and
+DMARC records; your mail provider's docs list them.
 
 ## Configuration
 
@@ -124,6 +149,68 @@ docker compose exec -T postgres pg_restore -U tripcord -d tripcord --clean --if-
 The retention job already deletes timelines older than `RETENTION_DAYS` (default
 30), so a backup holds at most that window of timelines, plus accounts, orgs,
 projects and keys.
+
+### Off-site backups
+
+A dump on the same disk doesn't survive losing the machine. `deploy/backup.sh` dumps
+the database and sends it, encrypted, to any [restic](https://restic.net)
+repository: S3-compatible storage such as Backblaze B2, an SFTP server, and others.
+It keeps 14 daily backups by default.
+
+1. Install restic on the host, and put the script and its settings next to
+   `docker-compose.yml`:
+
+   ```bash
+   curl -fsSLO https://raw.githubusercontent.com/jonaszbigda/tripcord/main/deploy/backup.sh
+   curl -fsSL -o backup.env https://raw.githubusercontent.com/jonaszbigda/tripcord/main/deploy/backup.env.example
+   chmod +x backup.sh && chmod 600 backup.env
+   ```
+
+2. Fill in `backup.env`. Keep a copy of `RESTIC_PASSWORD` somewhere other than
+   this server: without it, the backups can't be restored.
+3. Create the repository once, then try a backup:
+
+   ```bash
+   set -a && . ./backup.env && set +a
+   restic init
+   ./backup.sh && restic snapshots
+   ```
+
+4. Run it nightly from cron:
+
+   ```cron
+   15 3 * * * /path/to/tripcord/backup.sh >> /var/log/tripcord-backup.log 2>&1
+   ```
+
+The script exits non-zero on any failure. Set `BACKUP_HEARTBEAT_URL` in
+`backup.env` to a heartbeat monitor, so a backup that stops running doesn't go
+unnoticed.
+
+### Restore drill
+
+A backup you haven't restored is a guess. Restore the latest one into a throwaway
+Postgres and compare it with the live database:
+
+```bash
+set -a && . ./backup.env && set +a
+restic restore latest --tag tripcord --target /tmp/tripcord-restore
+docker run -d --name tripcord-drill -e POSTGRES_PASSWORD=drill postgres:16-alpine
+sleep 5
+docker exec tripcord-drill createdb -U postgres tripcord
+docker exec -i tripcord-drill pg_restore -U postgres -d tripcord --no-owner < /tmp/tripcord-restore/tripcord.dump
+docker exec tripcord-drill psql -U postgres -d tripcord -tc "select count(*) from users"
+docker compose exec -T postgres psql -U tripcord -d tripcord -tc "select count(*) from users"
+docker rm -f tripcord-drill && rm -rf /tmp/tripcord-restore
+```
+
+The counts should match, give or take what changed since the backup. Do this once
+after setting up backups, and again after upgrading to a new minor version.
+
+## Logs
+
+The server writes no client IP addresses and no invite or reset tokens to its logs.
+`deploy/docker-compose.yml` rotates them at 50 MB per container. If you turn on
+access logs in your reverse proxy, those will contain IP addresses.
 
 ## Connecting your app
 

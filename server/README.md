@@ -153,6 +153,8 @@ After upgrading, for each existing project:
 | `GITHUB_CLIENT_ID`     | no       | —              | With `GITHUB_CLIENT_SECRET`, enables GitHub login.                        |
 | `GITHUB_CLIENT_SECRET` | no       | —              | See above. Setting only one of the two fails startup.                     |
 | `GITHUB_BASE_URL`      | no       | `https://github.com` | GitHub Enterprise Server URL.                                       |
+| `SMTP_URL`             | no       | —              | SMTP connection URL, e.g. `smtps://user:pass@smtp.example.com:465`. With `EMAIL_FROM`, enables password reset by email and `invite create --email`. |
+| `EMAIL_FROM`           | no       | —              | From header of those emails, e.g. `Tripcord <no-reply@example.com>`. Setting only one of the two fails startup. |
 | `TRUST_PROXY`          | no       | `false`        | Set `true` behind a reverse proxy so login and invalid-key limits see client IPs. |
 | `DASHBOARD_DIR`        | no       | `../dashboard/dist` next to the server | Where the built dashboard is served from.         |
 
@@ -173,6 +175,17 @@ The timeline viewer reads through `GET /api/orgs/:orgId/projects/:projectId/time
 (filtered, keyset-paginated list), `…/timelines/summary` (volume buckets and top
 reasons), `…/timelines/tags` and `…/timelines/:timelineId`. Any member of the org
 can call them. See `docs/superpowers/specs/2026-09-23-repro-dashboard-timelines-design.md`.
+
+Hosted-beta additions (see `docs/superpowers/specs/2026-09-24-tripcord-hosted-beta-design.md`):
+
+- `POST /api/auth/password-reset` and `POST /api/auth/password-reset/confirm` exist
+  only when SMTP is configured. The first always answers `204`.
+- `DELETE /api/orgs/:orgId/projects/:projectId` and `DELETE /api/orgs/:orgId` (owners)
+  delete a project or an org with everything under it. `DELETE /api/me` deletes the
+  caller's account, and answers `409` with the blocking orgs if they're the only
+  owner of an org with other members.
+- `GET /api/orgs/:orgId/projects/:projectId/export` (any member) streams the
+  project's timelines as NDJSON, oldest first.
 
 Every error response, on any route, is `{ "error": "message" }` — 4xx bodies include
 a client-facing reason (e.g. a validation failure), 5xx bodies are deliberately
