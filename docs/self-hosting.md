@@ -85,6 +85,18 @@ Every environment variable is documented in
 To set one that `docker-compose.yml` doesn't list, add it to the `server` service's
 `environment`.
 
+## Capacity: rate limits
+
+The server accepts up to `RATE_LIMIT_MAX` timelines per project per minute (default
+100) and rejects the rest with `429`. The client doesn't retry, so those timelines
+are lost.
+
+That's plenty for errors. If you `capture()` moments that happen often, such as
+every signup or checkout on a busy app, estimate your peak per minute and raise
+`RATE_LIMIT_MAX` in `.env`, then `docker compose up -d`. `RATE_LIMIT_WINDOW` changes
+the window. Both are described in
+[`server/README.md` → Environment variables](../server/README.md#environment-variables).
+
 ## Upgrading
 
 `TRIPCORD_VERSION` pins a minor version (`0.1`), so pulling picks up patch releases

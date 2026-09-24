@@ -1,18 +1,21 @@
 # Tripcord
 
-**Opt-in, developer-instrumented breadcrumb timeline for frontend bug reproduction.**
+**Mark the moments that matter in your app. When one happens, Tripcord sends you the path that led there.**
 
-Most error-tracking tools give you a stack trace and not much else. Session-replay tools
-give you everything — a full recording of the page — which is heavy, hard to keep
-private, and mostly noise. Tripcord takes a third approach: you explicitly mark the
-moments in your own code that matter (`track("checkout.step", { step: "shipping" })`, or
-declaratively via `data-trace="Sign up submit"` on an element). Nothing is captured
-unless you say so. When something goes wrong — an uncaught error, or a manual
-`capture()` call — the recent timeline of those moments is sent to a server, giving
-engineers a rough reconstruction of what the user actually did leading up to the bug.
+This is the browser client for [Tripcord](https://github.com/jonaszbigda/tripcord).
+You mark the steps worth recording in your own code
+(`track("checkout.step", { step: "shipping" })`, or `data-trace="Sign up submit"` on
+an element). Nothing is recorded unless you say so. The client keeps the recent
+steps in the tab and sends nothing until a moment you care about happens:
 
-Low noise, small payloads, and much easier to keep anonymized than a tool that records
-everything by default — because you control exactly what goes into every event.
+- **Something breaks.** Uncaught errors and unhandled rejections are captured
+  automatically, so you see what the user did before the bug.
+- **Something you want to understand happens.** Call `capture("signup.completed")`
+  at a checkout, a signup or an abandoned form, and see the path users took to get
+  there, and how often it happens.
+
+No noise, only signal: small payloads, and much easier to keep anonymized than a
+tool that records everything by default, because you write every event.
 
 ## Status
 
