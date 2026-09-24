@@ -7,6 +7,7 @@ export interface AuthConfig {
   bootstrapped: boolean;
   github: boolean;
   passwordReset: boolean;
+  emailVerification: boolean;
 }
 
 export interface UserOrg {
@@ -16,7 +17,15 @@ export interface UserOrg {
 }
 
 export interface Me {
-  user: { id: string; email: string; name: string; hasPassword: boolean; githubConnected: boolean };
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    hasPassword: boolean;
+    githubConnected: boolean;
+    /** False only while the server requires verification and it hasn't happened. */
+    emailVerified: boolean;
+  };
   orgs: UserOrg[];
 }
 

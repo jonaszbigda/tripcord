@@ -1,6 +1,7 @@
 import { Navigate, Outlet, useLocation } from "react-router";
 import { ApiError } from "../api";
 import { useMe } from "../queries";
+import { VerifyEmailPendingPage } from "../pages/VerifyEmailPendingPage";
 import { FullPageMessage } from "./ui";
 
 // Gate for every logged-in page: children can assume useMe().data is loaded.
@@ -14,7 +15,8 @@ export function RequireAuth() {
   }
   // Checked before other errors: a failed background refetch keeps the page up.
   if (me.data) {
-    return <Outlet />;
+    // The URL stays as it is, so the page the user asked for opens once they verify.
+    return me.data.user.emailVerified ? <Outlet /> : <VerifyEmailPendingPage me={me.data} />;
   }
   if (me.error) {
     return <FullPageMessage>{me.error.message}</FullPageMessage>;
