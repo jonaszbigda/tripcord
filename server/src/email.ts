@@ -65,3 +65,20 @@ export function signupInviteMail(to: string, link: string, expiresAt: Date): Mai
     ].join("\n"),
   };
 }
+
+export function verifyEmailMail(to: string, name: string, link: string): Mail {
+  return {
+    to,
+    subject: "Confirm your Tripcord email",
+    text: [
+      `Hi ${name},`,
+      "",
+      "To finish signing up for Tripcord, confirm your email address:",
+      "",
+      link,
+      "",
+      "This link expires in 24 hours. If you didn't sign up for Tripcord, ignore this",
+      "email and the account will be deleted in 7 days.",
+    ].join("\n"),
+  };
+}
