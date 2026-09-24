@@ -6,6 +6,8 @@
 [![npm](https://img.shields.io/npm/v/@tripcord/js)](https://www.npmjs.com/package/@tripcord/js)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
+![The Tripcord dashboard: timeline volume over the last 7 days by reason type, and the top reasons](docs/dashboard.png)
+
 Tripcord is a self-hosted timeline tool for web apps. You decide which steps are
 worth recording. The browser keeps the most recent ones and sends nothing, until
 something happens that you care about. That might be a crash, or it might be a
