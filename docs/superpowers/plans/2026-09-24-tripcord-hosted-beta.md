@@ -1138,7 +1138,7 @@ git commit -m "feat(server): password reset by email"
   - `deleteUser(db: Database, userId: string): Promise<DeleteUserResult>`.
   - `orgDeletionSummary(ex: Executor, orgId: string): Promise<{ memberCount: number; projectCount: number; timelineCount: number }>`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `server/src/deletion.test.ts`:
 
@@ -1273,12 +1273,12 @@ describe("deleteUser", () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npm test -w server -- src/deletion.test.ts`
 Expected: FAIL. `./deletion` doesn't exist.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Create `server/src/deletion.ts`:
 
@@ -1391,12 +1391,12 @@ export async function deleteUser(db: Database, userId: string): Promise<DeleteUs
 }
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `npm test -w server -- src/deletion.test.ts && npm run typecheck -w server`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/src/deletion.ts server/src/deletion.test.ts
