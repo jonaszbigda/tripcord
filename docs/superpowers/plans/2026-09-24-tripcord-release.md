@@ -473,7 +473,7 @@ This workflow isn't exercised until `0.2.1`. `0.2.0` is published by hand (see `
 - Create: `.github/workflows/release-server.yml`
 - Modify: `server/Dockerfile`
 
-- [ ] **Step 1: Build the dashboard natively**
+- [x] **Step 1: Build the dashboard natively**
 
 In `server/Dockerfile`, change the first stage and extend its comment:
 
@@ -487,7 +487,7 @@ FROM --platform=$BUILDPLATFORM node:22-bookworm-slim AS dashboard-build
 
 The `build` and `runtime` stages stay per-platform.
 
-- [ ] **Step 2: Build both platforms locally**
+- [x] **Step 2: Build both platforms locally**
 
 ```bash
 docker buildx build --platform linux/amd64,linux/arm64 -f server/Dockerfile .
@@ -504,7 +504,7 @@ docker run --rm --platform linux/arm64 tripcord:arm64-test sh -c "uname -m && no
 
 Expected: `aarch64`, then `0.1.0`.
 
-- [ ] **Step 3: Write the workflow**
+- [x] **Step 3: Write the workflow**
 
 Create `.github/workflows/release-server.yml`:
 
@@ -568,7 +568,7 @@ jobs:
           cache-to: type=gha,mode=max
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add .github/workflows/release-server.yml server/Dockerfile
