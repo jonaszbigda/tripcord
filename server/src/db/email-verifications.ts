@@ -19,6 +19,11 @@ export async function createEmailVerification(ex: Executor, userId: string, emai
   return token;
 }
 
+/** Removes a link entirely, so it no longer counts toward the limits. */
+export async function deleteEmailVerification(ex: Executor, token: string): Promise<void> {
+  await ex.delete(emailVerifications).where(eq(emailVerifications.tokenHash, hashToken(token)));
+}
+
 /** Makes the user's unused links unusable. The rows stay, for the daily limit. */
 export async function revokeEmailVerifications(ex: Executor, userId: string, now = new Date()): Promise<void> {
   await ex

@@ -4,6 +4,7 @@ import type { User } from "./db/schema";
 import {
   consumeEmailVerification,
   createEmailVerification,
+  deleteEmailVerification,
   recentEmailVerifications,
   revokeEmailVerifications,
 } from "./db/email-verifications";
@@ -54,7 +55,7 @@ async function throttleSeconds(ex: Executor, userId: string, email: string, now:
   return Math.ceil(Math.max(...waits) / 1000);
 }
 
-/** Emails `user` a new link. Throws if the mailer does; the link is created first. */
+/** Emails `user` a new link. Throws if the mailer does, after removing the link. */
 export async function sendVerification(
   db: Database,
   mailer: Mailer,
@@ -70,7 +71,13 @@ export async function sendVerification(
     return { status: "throttled", retryAfterSeconds: wait };
   }
   const token = await createEmailVerification(db, user.id, user.email, now);
-  await mailer.send(verifyEmailMail(user.email, user.name, `${publicUrl}/verify-email/${token}`));
+  try {
+    await mailer.send(verifyEmailMail(user.email, user.name, `${publicUrl}/verify-email/${token}`));
+  } catch (error) {
+    // An email that never left doesn't use up the throttle.
+    await deleteEmailVerification(db, token);
+    throw error;
+  }
   return { status: "sent" };
 }
 

@@ -110,6 +110,16 @@ describe("sendVerification and verifyEmail", () => {
     expect(await verifyEmail(getTestDb(), tokenFrom(mailer, 1))).toBe(true);
   });
 
+  it("doesn't count a link whose email failed to send", async () => {
+    const user = await createTestUser(getTestDb(), { emailVerified: false });
+    const failing = { send: () => Promise.reject(new Error("SMTP down")) };
+    const now = new Date();
+
+    await expect(sendVerification(getTestDb(), failing, PUBLIC_URL, user, now)).rejects.toThrow("SMTP down");
+
+    expect(await sendVerification(getTestDb(), new FakeMailer(), PUBLIC_URL, user, now)).toEqual({ status: "sent" });
+  });
+
   it("sends at most five links per user per day", async () => {
     const user = await createTestUser(getTestDb(), { emailVerified: false });
     const mailer = new FakeMailer();
