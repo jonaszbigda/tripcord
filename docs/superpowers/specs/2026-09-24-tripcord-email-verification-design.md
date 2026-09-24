@@ -1,6 +1,6 @@
 # Tripcord — email verification design
 
-Status: draft
+Status: approved
 Date: 2026-09-24
 Scope: confirming that a password signup owns its email address, so an instance can
 run `SIGNUP=open` in public. Covers the schema, the gate on the dashboard API, the
@@ -41,6 +41,7 @@ primary email, so those accounts are verified from the start.
 | Abandoned signups | Accounts unverified for 7 days are deleted by the daily retention job, which frees the address. |
 | Switching back to `invite-only` | The gate and the cleanup are off whenever verification is inactive, so existing unverified users can then use the app rather than being locked out or deleted. |
 | Changing address | Only while unverified, to fix a typo. Changing the email of a verified account stays out of scope. |
+| Daily limit | At most 5 verification emails per user per 24 hours, across resends and address changes. Added during planning: without it, changing the address could mail arbitrary people every few seconds. |
 
 The startup warning, logged once by `index.ts` when `SIGNUP=open` and SMTP is not
 configured:
