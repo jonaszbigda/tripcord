@@ -271,8 +271,9 @@ fails CI before it's deployed.
   - Accounts: email, name, password hash, and GitHub user id if connected.
   - Timelines: whatever your app records, plus the page URL (origin and path by
     default) and the browser's user agent.
-  - Server access logs, which include IP addresses, rotated after 14 days.
-  - No IP addresses are stored with timelines.
+  - No IP addresses are stored, with timelines or in the server's logs. Rate
+    limits use them briefly, in memory. The logs also never hold invite or
+    reset tokens.
 - **Where it's stored:** on a server at OVH in France. Encrypted backups are
   stored with Backblaze (B2), in the bucket's region.
 - **Subprocessors:** OVH (server and email), Backblaze (backups), and GitHub
@@ -309,7 +310,8 @@ self-hosters don't need and attackers don't need to see. Everything reusable
 
 - **Server:** firewall allowing only 22, 80 and 443. SSH keys only. Unattended
   security upgrades. Docker's `json-file` log driver with rotation
-  (`max-size`, `max-file`) so logs don't fill the disk and IPs age out.
+  (`max-size`, `max-file`) so logs don't fill the disk. No Caddy access log,
+  since it would record IPs.
 - **DNS:**
   - `app.tripcord.dev` points at the server.
   - `tripcord.dev` points at GitHub Pages.
