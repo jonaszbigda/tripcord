@@ -585,7 +585,7 @@ The first real run is `server-v0.1.0`, in Task 7.
 - Create: `deploy/docker-compose.yml`, `deploy/.env.example`, `docs/self-hosting.md`, `docs/releasing.md`
 - Modify: `README.md`, `server/README.md`, `packages/js/README.md`, `docs/superpowers/specs/2026-09-22-repro-client-library-design.md`
 
-- [ ] **Step 1: The deploy compose file**
+- [x] **Step 1: The deploy compose file**
 
 Create `deploy/docker-compose.yml`:
 
@@ -651,7 +651,7 @@ GITHUB_CLIENT_ID=
 GITHUB_CLIENT_SECRET=
 ```
 
-- [ ] **Step 2: `docs/self-hosting.md`**
+- [x] **Step 2: `docs/self-hosting.md`**
 
 Write the guide with these sections. Keep it task-shaped: commands first, then only as much explanation as the operator needs.
 
@@ -681,7 +681,7 @@ Write the guide with these sections. Keep it task-shaped: commands first, then o
 9. **Connecting the client:** `npm i @tripcord/js`, create a project and key in the dashboard, then `init({ endpoint: "${PUBLIC_URL}/v1/timeline", apiKey })`. Link to `packages/js/README.md`.
 10. **Admin CLI:** `docker compose exec server node server/dist/cli.js --help` for recovery (e.g. `user reset-password`). Link to `server/README.md` → "The admin CLI".
 
-- [ ] **Step 3: `docs/releasing.md`**
+- [x] **Step 3: `docs/releasing.md`**
 
 ```markdown
 # Releasing
@@ -737,7 +737,7 @@ tag the fixed commit and push it again. npm never allows re-publishing a version
 so a client release that reached npm needs a new version number.
 ```
 
-- [ ] **Step 4: READMEs**
+- [x] **Step 4: READMEs**
 
 `packages/js/README.md`:
 - In "## Status", rewrite the lists to match reality: the ingest server, dashboard and self-host Docker packaging are built. Hosted SaaS and the SSR/Node adapter aren't. Remove the "Publishing to npm — not on the registry yet" bullet. Update the stale "(50 tests)" count or drop it.
@@ -770,17 +770,17 @@ Links in this README must be absolute GitHub URLs, because it's rendered on npmj
 > (see `2026-09-23-repro-release-design.md`). This spec keeps the old names.
 ```
 
-- [ ] **Step 5: Check the deploy compose file parses**
+- [x] **Step 5: Check the deploy compose file parses**
 
 Run: `POSTGRES_PASSWORD=x PUBLIC_URL=http://localhost:3000 docker compose -f deploy/docker-compose.yml config --quiet`
 Expected: no output, exit 0. Without the variables, `docker compose -f deploy/docker-compose.yml config` fails with "Set POSTGRES_PASSWORD in .env".
 
-- [ ] **Step 6: Verify the whole repo**
+- [x] **Step 6: Verify the whole repo**
 
 Run: `npm run build && npm run typecheck && npm run lint && npm test`
 Expected: everything passes. Record the test counts per workspace plus the script tests.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add deploy docs/self-hosting.md docs/releasing.md README.md server/README.md packages/js/README.md docs/superpowers/specs/2026-09-22-repro-client-library-design.md
