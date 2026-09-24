@@ -68,6 +68,10 @@ const CASES: RouteCase[] = [
     route: "GET /api/orgs/:orgId/projects/:projectId/timelines/:timelineId",
     url: (f) => `/api/orgs/${f.orgId}/projects/${f.projectId}/timelines/${f.timelineId}`,
   },
+  {
+    route: "GET /api/orgs/:orgId/projects/:projectId/export",
+    url: (f) => `/api/orgs/${f.orgId}/projects/${f.projectId}/export`,
+  },
   { route: "DELETE /api/orgs/:orgId/members/:userId", url: (f) => `/api/orgs/${f.orgId}/members/${f.memberId}` },
   {
     route: "DELETE /api/orgs/:orgId/projects/:projectId",

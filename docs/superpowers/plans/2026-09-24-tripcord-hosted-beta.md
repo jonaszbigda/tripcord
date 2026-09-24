@@ -1637,7 +1637,7 @@ git commit -m "feat(server): API routes to delete projects, orgs and accounts"
   - `exportFilename(projectName: string, date: Date): string`.
   - `GET /api/orgs/:orgId/projects/:projectId/export` (member) → NDJSON.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `server/src/db/timelines-export.test.ts`:
 
@@ -1738,12 +1738,12 @@ Add the case to `server/src/routes/isolation.test.ts`, right after `GET …/time
   },
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npm test -w server -- src/db/timelines-export.test.ts src/routes/timelines.test.ts src/routes/isolation.test.ts`
 Expected: FAIL.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Append to `server/src/db/timelines.ts`:
 
@@ -1836,12 +1836,12 @@ and inside `registerTimelineReadRoutes`:
   );
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `npm test -w server && npm run typecheck -w server && npm run lint -w server`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/src

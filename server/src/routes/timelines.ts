@@ -1,7 +1,9 @@
 import type { FastifyInstance } from "fastify";
+import { Readable } from "node:stream";
 import { requireMembership, requireUser } from "../auth/http";
 import {
   decodeCursor,
+  exportTimelines,
   getTimeline,
   listTags,
   listTimelines,
@@ -52,6 +54,23 @@ export function isTimeZone(value: string): boolean {
     return true;
   } catch {
     return false;
+  }
+}
+
+/** e.g. "web-shop-2026-09-24.ndjson". */
+export function exportFilename(projectName: string, date: Date): string {
+  const slug =
+    projectName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 60) || "project";
+  return `${slug}-${date.toISOString().slice(0, 10)}.ndjson`;
+}
+
+async function* ndjson(rows: AsyncIterable<unknown>): AsyncGenerator<string> {
+  for await (const row of rows) {
+    yield `${JSON.stringify(row)}\n`;
   }
 }
 
@@ -110,6 +129,19 @@ export function registerTimelineReadRoutes(app: FastifyInstance, ctx: ApiContext
     async (request) => {
       await requireProject(db, request.params);
       return { tags: await listTags(db, request.params.projectId, request.query.range) };
+    }
+  );
+
+  // Streamed, so a large project never sits in memory. Any member may export.
+  app.get<{ Params: ProjectParams }>(
+    "/api/orgs/:orgId/projects/:projectId/export",
+    { preValidation: asMember },
+    async (request, reply) => {
+      const project = await requireProject(db, request.params);
+      return reply
+        .header("Content-Type", "application/x-ndjson; charset=utf-8")
+        .header("Content-Disposition", `attachment; filename="${exportFilename(project.name, new Date())}"`)
+        .send(Readable.from(ndjson(exportTimelines(db, project.id))));
     }
   );
 

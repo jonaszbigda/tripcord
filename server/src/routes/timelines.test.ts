@@ -125,3 +125,32 @@ describe("timeline read routes", () => {
     expect((await call(app, "GET", base)).statusCode).toBe(401);
   });
 });
+
+describe("GET …/export", () => {
+  beforeEach(async () => {
+    await resetDb(getTestDb());
+  });
+
+  it("downloads the project's timelines as NDJSON for any member", async () => {
+    const db = getTestDb();
+    const owner = await createTestUser(db);
+    const member = await createTestUser(db);
+    const org = await createOrgWithOwner(db, owner.id, "Acme");
+    await addMember(db, org.id, member.id, "member");
+    const { project } = await createTestProject(db, "Web Shop!", org.id);
+    await insertTestTimeline(db, project.id);
+    await insertTestTimeline(db, project.id);
+    const app = await buildTestApp(db);
+
+    const response = await call(app, "GET", `/api/orgs/${org.id}/projects/${project.id}/export`, {
+      cookie: await sessionCookie(db, member.id),
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.headers["content-type"]).toBe("application/x-ndjson; charset=utf-8");
+    expect(response.headers["content-disposition"]).toMatch(/^attachment; filename="web-shop-\d{4}-\d{2}-\d{2}\.ndjson"$/);
+    const lines = response.payload.trimEnd().split("\n").map((line) => JSON.parse(line));
+    expect(lines).toHaveLength(2);
+    expect(lines[0]).toHaveProperty("events");
+  });
+});

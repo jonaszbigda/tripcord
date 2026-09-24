@@ -286,3 +286,52 @@ export async function getTimeline(db: Database, projectId: string, timelineId: s
 
   return { timeline, siblings };
 }
+
+export interface ExportedTimeline {
+  id: string;
+  receivedAt: string;
+  sessionId: string;
+  reasonType: string;
+  reason: unknown;
+  events: unknown;
+  meta: unknown;
+  tags: string[];
+}
+
+/**
+ * Every timeline of a project, oldest first, `batchSize` rows per query.
+ * Keyset-paged on (received_at, id) with microsecond timestamps, the same way
+ * listTimelines pages, so rows sharing a timestamp are neither lost nor repeated.
+ */
+export async function* exportTimelines(db: Database, projectId: string, batchSize = 500): AsyncGenerator<ExportedTimeline> {
+  let after: Cursor | undefined;
+  for (;;) {
+    const conditions: SQL[] = [eq(timelines.projectId, projectId)];
+    if (after) {
+      conditions.push(
+        sql`(${timelines.receivedAt}, ${timelines.id}) > (${after.receivedAt}::timestamp, ${after.id}::uuid)`
+      );
+    }
+    const rows = await db
+      .select({
+        id: timelines.id,
+        receivedAt: isoTimestamp(timelines.receivedAt),
+        sessionId: timelines.sessionId,
+        reasonType: timelines.reasonType,
+        reason: timelines.reason,
+        events: timelines.events,
+        meta: timelines.meta,
+        tags: timelines.tags,
+      })
+      .from(timelines)
+      .where(whereAll(conditions))
+      .orderBy(asc(timelines.receivedAt), asc(timelines.id))
+      .limit(batchSize);
+    yield* rows;
+    if (rows.length < batchSize) {
+      return;
+    }
+    const last = rows[rows.length - 1];
+    after = { receivedAt: last.receivedAt, id: last.id };
+  }
+}
