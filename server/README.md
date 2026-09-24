@@ -186,8 +186,10 @@ Hosted-beta additions (see `docs/superpowers/specs/2026-09-24-tripcord-hosted-be
   `DELETE /api/me`, `POST /api/me/verify-email/resend` and `PATCH /api/me/email`
   answers `403 { "error": "Email not verified" }` until the user opens the emailed
   link, which calls `POST /api/auth/verify-email`. These three routes exist only
-  while verification is active. `GET /api/me` includes `user.emailVerified`, and
-  `GET /api/auth/config` includes `emailVerification`.
+  while verification is active. Connecting GitHub (`intent=connect`) is refused
+  for unverified users: it redirects to `/` without linking. `GET /api/me`
+  includes `user.emailVerified`, and `GET /api/auth/config` includes
+  `emailVerification`.
 - `DELETE /api/orgs/:orgId/projects/:projectId` and `DELETE /api/orgs/:orgId` (owners)
   delete a project or an org with everything under it. `DELETE /api/me` deletes the
   caller's account, and answers `409` with the blocking orgs if they're the only

@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import type { FastifyInstance } from "fastify";
 import { createTestOrg, createTestUser, getTestDb, resetDb, sessionCookie } from "../../test/db";
 import { TEST_ORIGIN, buildTestApp, call } from "../../test/http";
+import { FakeMailer } from "../../test/mailer";
 import { createInvite } from "../db/invites";
 import { addMember, listUserOrgs } from "../db/orgs";
 import { findUserByEmail, findUserByGithubId, findUserById } from "../db/users";
@@ -161,6 +162,16 @@ describe("GitHub OAuth", () => {
 
     expect(response.headers.location).toBe("/settings");
     expect((await findUserById(getTestDb(), user.id))?.githubId).toBe("42");
+  });
+
+  it("won't connect GitHub to an unverified user while verification is on", async () => {
+    const user = await createTestUser(getTestDb(), { emailVerified: false });
+    const app = await githubApp(ANA, { signup: "open", mailer: new FakeMailer() });
+
+    const response = await oauthRoundTrip(app, "intent=connect", await sessionCookie(getTestDb(), user.id));
+
+    expect(response.headers.location).toBe("/");
+    expect((await findUserById(getTestDb(), user.id))?.githubId).toBeNull();
   });
 
   it("won't connect a GitHub account that belongs to another user", async () => {

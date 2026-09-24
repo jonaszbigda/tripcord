@@ -92,6 +92,26 @@ describe("resetPassword", () => {
 
     expect((await findUserById(getTestDb(), user.id))?.emailVerifiedAt).not.toBeNull();
   });
+
+  it("unlinks GitHub from an unverified user: a link made before the reset is untrusted", async () => {
+    const user = await createTestUser(getTestDb(), { emailVerified: false, githubId: "42" });
+    const token = await createPasswordReset(getTestDb(), user.id);
+
+    expect(await resetPassword(getTestDb(), token, "hash")).toBe(true);
+
+    const updated = await findUserById(getTestDb(), user.id);
+    expect(updated?.githubId).toBeNull();
+    expect(updated?.emailVerifiedAt).not.toBeNull();
+  });
+
+  it("keeps a verified user's GitHub link", async () => {
+    const user = await createTestUser(getTestDb(), { githubId: "42" });
+    const token = await createPasswordReset(getTestDb(), user.id);
+
+    expect(await resetPassword(getTestDb(), token, "hash")).toBe(true);
+
+    expect((await findUserById(getTestDb(), user.id))?.githubId).toBe("42");
+  });
 });
 
 describe("deleteStalePasswordResets", () => {
