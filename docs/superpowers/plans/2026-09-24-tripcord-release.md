@@ -793,7 +793,7 @@ git commit -m "docs: self-hosting guide, deploy compose file and release checkli
 
 Every step here publishes something or needs the user's accounts. Do each one only after the user says to.
 
-- [ ] **Step 1: Push and confirm CI is green** on the commits from Tasks 4–6.
+- [x] **Step 1: Push and confirm CI is green** on the commits from Tasks 4–6.
 
 - [ ] **Step 2: Publish `@tripcord/js@0.2.0` by hand.** The user runs `npm login` and `npm publish -w @tripcord/js --provenance=false` (suggest the `!` prefix). Then `npm view @tripcord/js version` should print `0.2.0`. Tag the published commit: `git tag js-v0.2.0 && git push origin js-v0.2.0`. The release workflow runs and skips the publish step.
 
