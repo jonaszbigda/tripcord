@@ -104,3 +104,31 @@ describe("unverified email", () => {
     expect(await screen.findByRole("heading", { name: "Check your inbox" })).toBeInTheDocument();
   });
 });
+
+describe("verify-email link", () => {
+  it("verifies the token exactly once and links into the app (review focus 3)", async () => {
+    const calls = mockApi({
+      "GET /api/me": { status: 401, body: { error: "Not logged in" } },
+      "POST /api/auth/verify-email": { status: 204 },
+    });
+    renderApp("/verify-email/tpv_tok", { strict: true });
+
+    expect(await screen.findByRole("heading", { name: "Email verified" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Continue to Tripcord" })).toHaveAttribute("href", "/");
+    const posts = calls.filter((c) => c.path === "/api/auth/verify-email");
+    expect(posts).toHaveLength(1);
+    expect(posts[0].body).toEqual({ token: "tpv_tok" });
+  });
+
+  it("explains a dead link", async () => {
+    mockApi({
+      "GET /api/me": { status: 401, body: { error: "Not logged in" } },
+      "POST /api/auth/verify-email": { status: 400, body: { error: "Invalid or expired link" } },
+    });
+    renderApp("/verify-email/tpv_old");
+
+    expect(await screen.findByRole("heading", { name: "Link expired" })).toBeInTheDocument();
+    expect(screen.getByText("This link is invalid or has expired. Log in to send a new one.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Log in" })).toHaveAttribute("href", "/login");
+  });
+});
