@@ -46,7 +46,7 @@ describe("dashboard serving", () => {
       expect(response.json()).toEqual({ error: "Not Found" });
     }
     expect((await call(app, "POST", "/somewhere")).statusCode).toBe(404);
-    expect((await call(app, "GET", "/health")).json()).toEqual({ status: "ok" });
+    expect((await call(app, "GET", "/health")).json()).toMatchObject({ status: "ok" });
   });
 
   it("serves nothing when the directory is unset or has no index.html", async () => {

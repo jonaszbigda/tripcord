@@ -18,6 +18,7 @@ import { registerOrgRoutes } from "./routes/orgs";
 import { registerProjectRoutes } from "./routes/projects";
 import { registerTimelineRoute } from "./routes/timeline";
 import { registerTimelineReadRoutes } from "./routes/timelines";
+import { SERVER_VERSION } from "./version";
 
 export interface AppOptions {
   rateLimitMax?: number;
@@ -131,7 +132,7 @@ export async function buildApp(db: Database, options: AppOptions = {}): Promise<
   app.addHook("onRequest", csrfGuard(publicUrl));
 
   app.get("/health", async () => {
-    return { status: "ok" };
+    return { status: "ok", version: SERVER_VERSION };
   });
 
   // Ingest is called cross-origin from customers' sites and authenticates with

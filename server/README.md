@@ -22,7 +22,7 @@ Check it's alive:
 
 ```bash
 curl http://localhost:3000/health
-# {"status":"ok"}
+# {"status":"ok","version":"0.1.0"}
 ```
 
 Tear it down (including the Postgres volume) with:
@@ -154,7 +154,8 @@ type), authenticated via the `X-Tripcord-Key` header. Returns `201 { id }` on su
 It accepts an optional `tags` array (at most 10 tags, each matching
 `^[a-z0-9][a-z0-9_.:-]{0,49}$`).
 
-`GET /health` — liveness check, always `200 { status: "ok" }`.
+`GET /health` — liveness check, always `200 { status: "ok", version }`, where
+`version` is the running server's version.
 
 `/api/*` holds the dashboard's JSON API. It's cookie-authenticated, same-origin only,
 and has no CORS. See `docs/superpowers/specs/2026-09-23-repro-dashboard-accounts-design.md`.

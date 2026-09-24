@@ -1,14 +1,18 @@
 import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { createTestProject, createTestUser, getTestDb, resetDb, sessionCookie } from "../test/db";
 import { TEST_ORIGIN, call } from "../test/http";
 import { buildApp } from "./app";
 
 describe("GET /health", () => {
-  it("returns 200 with status ok", async () => {
+  it("returns 200 with status ok and the version from server/package.json", async () => {
+    const { version } = JSON.parse(readFileSync(path.join(__dirname, "..", "package.json"), "utf8")) as { version: string };
     const app = await buildApp(getTestDb());
     const response = await app.inject({ method: "GET", url: "/health" });
     expect(response.statusCode).toBe(200);
-    expect(response.json()).toEqual({ status: "ok" });
+    expect(response.json()).toEqual({ status: "ok", version });
+    expect(version).toMatch(/^\d+\.\d+\.\d+$/);
   });
 });
 
