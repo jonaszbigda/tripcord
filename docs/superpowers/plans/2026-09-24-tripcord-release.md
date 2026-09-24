@@ -171,7 +171,7 @@ git commit -m "feat(server): report the server version in /health; bump to 0.1.0
 - Create: `scripts/check-tag-version.mjs`, `scripts/check-tag-version.test.mjs`
 - Modify: `package.json` (root)
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `scripts/check-tag-version.test.mjs`:
 
@@ -223,12 +223,12 @@ test("the CLI exits 2 without arguments", () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `node --test "scripts/*.test.mjs"`
 Expected: FAIL. `check-tag-version.mjs` doesn't exist.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Create `scripts/check-tag-version.mjs`:
 
@@ -269,12 +269,12 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 }
 ```
 
-- [ ] **Step 4: Run the tests**
+- [x] **Step 4: Run the tests**
 
 Run: `node --test "scripts/*.test.mjs"`
 Expected: PASS, 5 tests.
 
-- [ ] **Step 5: Run them with the rest of the suite**
+- [x] **Step 5: Run them with the rest of the suite**
 
 In the root `package.json`, change `test` to:
 
@@ -287,7 +287,7 @@ The glob is quoted so Node expands it (Node 22+), not the shell. That works the 
 Run: `npm test`
 Expected: every workspace passes, then the 5 script tests.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add scripts/check-tag-version.mjs scripts/check-tag-version.test.mjs package.json
