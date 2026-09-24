@@ -8,7 +8,7 @@ export const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000;
 /** A new reset token for the user. Their earlier unused tokens stop working. */
 export async function createPasswordReset(ex: Executor, userId: string, now = new Date()): Promise<string> {
   const { token, hash } = generateToken("tpr_");
-  await ex.delete(passwordResets).where(and(eq(passwordResets.userId, userId), isNull(passwordResets.usedAt)));
+  await deleteUnusedPasswordResets(ex, userId);
   await ex.insert(passwordResets).values({
     tokenHash: hash,
     userId,
@@ -16,6 +16,11 @@ export async function createPasswordReset(ex: Executor, userId: string, now = ne
     expiresAt: new Date(now.getTime() + PASSWORD_RESET_TTL_MS),
   });
   return token;
+}
+
+/** Makes the user's unused reset links unusable. */
+export async function deleteUnusedPasswordResets(ex: Executor, userId: string): Promise<void> {
+  await ex.delete(passwordResets).where(and(eq(passwordResets.userId, userId), isNull(passwordResets.usedAt)));
 }
 
 export async function latestPasswordResetAt(ex: Executor, userId: string): Promise<Date | undefined> {

@@ -7,6 +7,7 @@ import {
   recentEmailVerifications,
   revokeEmailVerifications,
 } from "./db/email-verifications";
+import { deleteUnusedPasswordResets } from "./db/password-resets";
 import { findUserByEmail, findUserById, listUnverifiedUserIds, markEmailVerified, normalizeEmail, setEmail } from "./db/users";
 import { deleteUser } from "./deletion";
 import { verifyEmailMail, type Mailer } from "./email";
@@ -117,6 +118,8 @@ export async function changeUnverifiedEmail(
   await db.transaction(async (tx) => {
     await setEmail(tx, user.id, normalized);
     await revokeEmailVerifications(tx, user.id, now);
+    // A reset link sent to the old address would otherwise verify the new one.
+    await deleteUnusedPasswordResets(tx, user.id);
   });
   return sendVerification(db, mailer, publicUrl, { ...user, email: normalized }, now);
 }

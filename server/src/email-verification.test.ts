@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { createTestUser, getTestDb, resetDb } from "../test/db";
 import { FakeMailer } from "../test/mailer";
 import { deleteStaleEmailVerifications } from "./db/email-verifications";
+import { createPasswordReset } from "./db/password-resets";
 import { createOrgWithOwner, addMember } from "./db/orgs";
 import { emailVerifications, users } from "./db/schema";
 import { findUserById } from "./db/users";
@@ -14,6 +15,7 @@ import {
   sendVerification,
   verifyEmail,
 } from "./email-verification";
+import { resetPassword } from "./password-reset";
 
 const PUBLIC_URL = "https://app.tripcord.dev";
 const MINUTE = 60 * 1000;
@@ -141,6 +143,18 @@ describe("changeUnverifiedEmail", () => {
     expect(mailer.sent[1].to).toBe("ana@example.com");
     expect(await verifyEmail(getTestDb(), tokenFrom(mailer, 0))).toBe(false);
     expect(await verifyEmail(getTestDb(), tokenFrom(mailer, 1))).toBe(true);
+  });
+
+  it("kills reset links sent to the old address, so they can't verify the new one", async () => {
+    const user = await createTestUser(getTestDb(), { email: "attacker@example.com", emailVerified: false });
+    const resetToken = await createPasswordReset(getTestDb(), user.id);
+
+    expect(await changeUnverifiedEmail(getTestDb(), new FakeMailer(), PUBLIC_URL, user, "victim@example.com")).toEqual({
+      status: "sent",
+    });
+
+    expect(await resetPassword(getTestDb(), resetToken, "hash")).toBe(false);
+    expect((await reload(user.id)).emailVerifiedAt).toBeNull();
   });
 
   it("refuses an address another account has", async () => {
