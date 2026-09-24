@@ -1,18 +1,25 @@
-# repro — first release: packaging, CI and self-hosting design
+# Tripcord — first release: rename, packaging, CI and self-hosting design
 
 Status: draft
-Date: 2026-09-23
-Scope: making repro installable by someone other than its author. This covers the npm
-package (renamed to `reprojs`), a versioned multi-arch server image on GHCR, CI that
-checks every push, tag-driven release workflows, a self-hosting guide, and a period
-of dogfooding. No product features.
+Date: 2026-09-23 (revised 2026-09-24: product renamed from repro to Tripcord)
+Scope: making Tripcord installable by someone other than its author. This covers
+renaming the product from repro to Tripcord, the npm package (`@tripcord/js`), a
+versioned multi-arch server image on GHCR, CI that checks every push, tag-driven
+release workflows, a self-hosting guide, and a period of dogfooding. No product
+features.
 
 ## Problem & concept
 
-Every approved spec is built, but repro only runs from a clone of this repository:
+Every approved spec is built, but the product only runs from a clone of this
+repository:
 
 - The client has never been published, and its name, `@repro/js`, can't be: the
   `repro` org on npm belongs to someone else.
+- The name "repro" itself is taken in practice: an existing open-source project,
+  ReproJs, does frontend bug reporting under it. The product is renamed to
+  **Tripcord**. It stays quiet until something goes wrong, and then it sends the
+  timeline that led up to it. The name also carries no "js" or "bug", which leaves
+  room for clients on other platforms later.
 - The server image is only built locally by `docker compose`. There's no versioned
   image to pull, so there's nothing stable to upgrade from or to.
 - Nothing runs the test suite on push. The 416 tests only run when someone
@@ -20,42 +27,75 @@ Every approved spec is built, but repro only runs from a clone of this repositor
 - There's no guide for running it anywhere but a laptop.
 
 The client spec calls the idea itself "not validated yet". Features like issue
-grouping or alerts are guesses until someone uses repro on a real app. This
+grouping or alerts are guesses until someone uses Tripcord on a real app. This
 sub-project gets it into a state where that can happen, starting with its author.
 
 ## Decisions
 
 | Question | Decision |
 | --- | --- |
-| npm name | `reprojs`, unscoped. Subpaths: `reprojs/react` today, `reprojs/node` for the future SSR adapter. |
-| If npm rejects `reprojs` at first publish | `@reprojs/js`, which needs a `reprojs` npm org. The rename is mechanical either way. |
+| Product name | Tripcord. Domain `tripcord.dev` (registered). |
+| npm name | `@tripcord/js`, in the `tripcord` npm org (created). Subpaths: `@tripcord/js/react` today, `@tripcord/js/node` for the future SSR adapter. Clients for other platforms would be siblings (`@tripcord/<platform>`) where they ship through npm at all. |
+| Repository | Renamed on GitHub from `jonaszbigda/repro` to `jonaszbigda/tripcord`, before any release workflow runs. GitHub redirects the old URLs. |
+| Old names on the wire and in storage | Renamed with no compatibility shims. Nothing has shipped, so there are no clients, cookies or databases to stay compatible with. |
 | Versioning | Independent per package, driven by git tags: `js-vX.Y.Z` releases the client, `server-vX.Y.Z` releases the server image |
-| Image registry and platforms | `ghcr.io/jonaszbigda/repro`, `linux/amd64` and `linux/arm64` |
+| Image registry and platforms | `ghcr.io/jonaszbigda/tripcord`, `linux/amd64` and `linux/arm64` |
 | npm authentication | Trusted publishing (OIDC) from GitHub Actions, with provenance. The first version is published by hand. |
-| First versions | `reprojs@0.2.0` (already built, unreleased) and server `0.1.0` |
+| First versions | `@tripcord/js@0.2.0` (already built, unreleased) and server `0.1.0` |
 
-## Renaming the client to `reprojs`
+## Renaming repro to Tripcord
 
-The directory stays `packages/js`. Only the package name changes.
+The rename is one mechanical change across the repo, done before anything else in
+this spec. Directory names (`packages/js`, `server`, `dashboard`) stay as they are.
 
-- `packages/js/package.json`: `"name": "reprojs"`. Add `"repository.directory":
-  "packages/js"`, `"homepage": "https://reprojs.dev"`, `keywords`, and
-  `"publishConfig": { "provenance": true }`. Unscoped packages are public by default.
+**Packages.**
+- Root `package.json`: `"name": "tripcord"`.
+- `packages/js/package.json`: `"name": "@tripcord/js"`, `"repository.url"`
+  pointing at `jonaszbigda/tripcord`, `"repository.directory": "packages/js"`,
+  `"homepage": "https://tripcord.dev"`, `keywords`, and `"publishConfig": {
+  "access": "public", "provenance": true }`. Scoped packages are private by
+  default, so `access: public` is required.
 - `packages/js/LICENSE`: a copy of the root `LICENSE`. npm only packs a license
   file from the package's own directory, and `files: ["dist"]` doesn't cover it.
-- `server/package.json`: the dependency becomes `"reprojs": "^0.2.0"`, and the
-  `prebuild` / `pretypecheck` scripts become `npm run build -w reprojs`.
-- `server/src/routes/timeline.ts`: `import type { TimelinePayload } from "reprojs"`.
-  It's type-only, so nothing changes at runtime, and the image needs no new files.
-- The dashboard's setup snippet (`EmptyState.tsx`) and the Keys tab's text import
-  from `"reprojs"`.
-- READMEs (root, `packages/js`, `server`): the install line becomes `npm i reprojs`,
-  and imports become `"reprojs"` / `"reprojs/react"`.
-- The older specs keep `@repro/js` in their text, following the "superseded notes,
-  not rewrites" convention. The client spec gets one note that the package was
-  renamed.
-- The private workspaces `@repro/server` and `@repro/dashboard` are never published
-  and keep their names.
+- The private workspaces become `@tripcord/server` and `@tripcord/dashboard`.
+  They're never published. The org means nobody else can take those names either.
+- `server/package.json`: the dependency becomes `"@tripcord/js": "^0.2.0"`, and the
+  `prebuild` / `pretypecheck` scripts become `npm run build -w @tripcord/js`.
+- `server/src/routes/timeline.ts`: `import type { TimelinePayload } from
+  "@tripcord/js"`. It's type-only, so nothing changes at runtime, and the image
+  needs no new files.
+
+**On the wire and in the browser.**
+- The API key header becomes `X-Tripcord-Key`: in the client's transport, in the
+  server's CORS `allowedHeaders` and key lookup, and in `server/README.md`.
+- Cookies: `repro_session` becomes `tripcord_session`, and `repro_oauth` becomes
+  `tripcord_oauth`.
+- Client `sessionStorage` keys: `__tripcord_buffer` and `__tripcord_session_id`.
+- Dashboard `localStorage`: `tripcord.chartMode`.
+- The GitHub API `User-Agent` becomes `tripcord`.
+
+**What people see.**
+- Client console warnings use the `[tripcord]` prefix, and server logs use
+  `[tripcord-server]`.
+- The admin CLI's usage text says `tripcord-admin`.
+- The dashboard's `<title>`, the wordmark in `AppShell.tsx`, and the one in
+  `ui.tsx` say "Tripcord".
+- The setup snippet in `EmptyState.tsx` and the text on the Keys tab import from
+  `"@tripcord/js"`.
+- READMEs (root, `packages/js`, `server`): the install line becomes
+  `npm i @tripcord/js`, and imports become `"@tripcord/js"` /
+  `"@tripcord/js/react"`.
+- Example URLs in tests and comments (`app.reprojs.dev`) become `app.tripcord.dev`.
+
+**Development setup.** In `docker-compose.yml`, the Postgres user, password,
+database and volume become `tripcord` / `tripcord-postgres-data`. An existing local
+database isn't carried over. `docker compose down -v` followed by `up` starts
+fresh, which is fine before a first release.
+
+**Docs.** The older specs and plans keep "repro" and `@repro/js` in their text,
+following the "superseded notes, not rewrites" convention. The client spec gets one
+note at the top saying the product and package were renamed. Spec file names keep
+their `repro-` prefix, and new specs use `tripcord-`.
 
 ## CI (`.github/workflows/ci.yml`)
 
@@ -78,7 +118,7 @@ It triggers on tags matching `js-v*`.
    tag `js-v0.2.1` on a commit where the package still says `0.2.0` fails before
    anything is published. A small script, `scripts/check-tag-version.mjs <tag>
    <package.json>`, does this check, and both release workflows use it.
-3. Builds and publishes with `npm publish -w reprojs`, using trusted publishing:
+3. Builds and publishes with `npm publish -w @tripcord/js`, using trusted publishing:
    the job has `permissions: id-token: write` and no npm token. The npm CLI must be
    new enough for trusted publishing (11.5.1 or later at the time of writing), so
    the workflow installs it explicitly rather than relying on the version bundled
@@ -86,10 +126,11 @@ It triggers on tags matching `js-v*`.
 
 **First release, by hand.** npm can only set up a trusted publisher for a package
 that already exists. So `0.2.0` is published once from a logged-in machine
-(`npm publish -w reprojs`), without provenance, since that can only be generated in
+(`npm publish -w @tripcord/js`), without provenance, since that can only be generated in
 CI. Then the trusted publisher is configured on npmjs.com for this repository and
-`release-js.yml`. From `0.2.1` on, releases go through the workflow. Publishing
-`0.2.0` early is also how the name gets claimed: npm doesn't reserve names.
+`release-js.yml`. From `0.2.1` on, releases go through the workflow. The
+`tripcord` org already reserves the `@tripcord/` scope, so there's no race to claim
+the name.
 
 ## Server release (`.github/workflows/release-server.yml`)
 
@@ -128,7 +169,7 @@ an operator, or the self-hosting guide's upgrade steps, confirm what's running.
 The two are versioned independently, so the client README has a short table saying
 which server version each client feature needs:
 
-| reprojs | Needs server |
+| @tripcord/js | Needs server |
 | --- | --- |
 | 0.2.x, with tags | 0.1.0 or later |
 | 0.2.x, without tags | any |
@@ -140,7 +181,7 @@ optional fields.
 ## Self-hosting guide (`docs/self-hosting.md`)
 
 It's linked from the root README, and it comes with a ready-to-use
-`deploy/docker-compose.yml` that pulls `ghcr.io/jonaszbigda/repro:0.1` instead of
+`deploy/docker-compose.yml` that pulls `ghcr.io/jonaszbigda/tripcord:0.1` instead of
 building from source. The root `docker-compose.yml` stays as the development setup.
 
 It covers:
@@ -155,15 +196,16 @@ It covers:
   advisory lock. Check `/health` for the new version.
 - **Backups:** a `pg_dump` / `pg_restore` pair, and the reminder that retention
   already deletes timelines older than `RETENTION_DAYS`.
-- **Connecting the client:** `npm i reprojs`, and pointing `init()` at
+- **Connecting the client:** `npm i @tripcord/js`, and pointing `init()` at
   `${PUBLIC_URL}/v1/timeline`.
 
 ## Release checklist (`docs/releasing.md`)
 
 **One-time setup**, which needs the maintainer's accounts:
-1. Publish `reprojs@0.2.0` by hand.
-2. Configure the npm trusted publisher.
-3. Optionally, create the `reprojs` npm org to protect `@reprojs/*`.
+1. Rename the GitHub repository to `jonaszbigda/tripcord`. The trusted publisher
+   and the GHCR package are tied to the repository name, so this comes first.
+2. Publish `@tripcord/js@0.2.0` by hand (`--access public`).
+3. Configure the npm trusted publisher.
 4. After the first server release, make the GHCR package public.
 
 **Each release:** bump the version in the package's `package.json`, commit, tag
@@ -175,7 +217,7 @@ server, add a row to the compatibility table.
 This is a checklist, not code. It's the reason for the release:
 
 - Run a released server image somewhere other than a laptop.
-- Instrument one real app with `reprojs` from npm, using `setTags` for its main
+- Instrument one real app with `@tripcord/js` from npm, using `setTags` for its main
   areas.
 - Use it for one to two weeks. Note every time the dashboard answered, or failed to
   answer, "what did the user do before this broke?".
@@ -191,16 +233,16 @@ This is a checklist, not code. It's the reason for the release:
 - `/health`: the existing tests in `app.test.ts` and `static.test.ts` expect
   `version` equal to `server/package.json`'s.
 - **Rename:** the whole-repo build, typecheck and tests pass with the new name, and
-  `npm pack --dry-run -w reprojs` lists `dist/`, `README.md`, `LICENSE` and
+  `npm pack --dry-run -w @tripcord/js` lists `dist/`, `README.md`, `LICENSE` and
   `package.json`, and nothing else.
-- **Manual:** after the first releases, a clean directory can run `npm i reprojs`
+- **Manual:** after the first releases, a clean directory can run `npm i @tripcord/js`
   and import both entry points. On an arm64 machine, `docker pull
-  ghcr.io/jonaszbigda/repro:0.1` gets an arm64 image, and `deploy/docker-compose.yml`
+  ghcr.io/jonaszbigda/tripcord:0.1` gets an arm64 image, and `deploy/docker-compose.yml`
   starts the server with a healthy `/health`.
 
 ## Explicitly out of scope
 
-- The marketing site at `reprojs.dev`.
+- The marketing site at `tripcord.dev`.
 - Hosted SaaS: multi-region, managed backups, billing.
 - Changelog tooling (changesets, release-please) and generated release notes.
 - Docker Hub, or any registry other than GHCR.
