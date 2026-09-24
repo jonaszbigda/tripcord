@@ -12,7 +12,12 @@ RUN npm ci
 COPY dashboard dashboard
 RUN npm run build -w dashboard
 
-FROM node:22-alpine AS build
+# The server also builds on the build machine's platform: running npm under QEMU
+# for arm64 crashes (SIGILL). Its output is plain JS, and its production
+# dependencies are pure JS too (no install scripts or platform packages), so the
+# node_modules it leaves behind run on any target. Dev dependencies are pruned
+# because they carry native binaries (esbuild, rollup) for the build platform.
+FROM --platform=$BUILDPLATFORM node:22-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY packages/js/package.json packages/js/package.json
@@ -23,6 +28,7 @@ COPY packages/js packages/js
 COPY server server
 RUN npm run build -w packages/js
 RUN npm run build -w server
+RUN npm prune --omit=dev
 
 FROM node:22-alpine AS runtime
 WORKDIR /app
