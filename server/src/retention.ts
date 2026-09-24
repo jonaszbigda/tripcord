@@ -13,19 +13,28 @@ export async function cleanupOldTimelines(db: Database, retentionDays: number): 
 }
 
 export async function runCleanup(db: Database, retentionDays: number, emailVerification: boolean): Promise<void> {
-  await Promise.all([
+  // One failing step doesn't stop the others; the failures are thrown together at the end.
+  const results = await Promise.allSettled([
     cleanupOldTimelines(db, retentionDays),
     deleteExpiredSessions(db),
     deleteStalePasswordResets(db),
     deleteStaleEmailVerifications(db),
   ]);
+  const errors: unknown[] = results.flatMap((result) => (result.status === "rejected" ? [result.reason] : []));
   // Only while verification is on: after a switch back to invite-only, the
   // unverified users can use the app and must not be deleted.
   if (emailVerification) {
-    const { skipped } = await deleteUnverifiedAccounts(db);
-    for (const userId of skipped) {
-      console.warn(`[tripcord-server] kept unverified user ${userId}: only owner of an org with other members`);
+    try {
+      const { skipped } = await deleteUnverifiedAccounts(db);
+      for (const userId of skipped) {
+        console.warn(`[tripcord-server] kept unverified user ${userId}: only owner of an org with other members`);
+      }
+    } catch (error) {
+      errors.push(error);
     }
+  }
+  if (errors.length > 0) {
+    throw new AggregateError(errors, `${errors.length} cleanup step(s) failed`);
   }
 }
 

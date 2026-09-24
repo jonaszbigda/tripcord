@@ -65,6 +65,15 @@ describe("runCleanup", () => {
     expect(await findUserById(getTestDb(), user.id)).toBeUndefined();
   });
 
+  it("still deletes them when another step fails, then reports the failure", async () => {
+    const user = await staleUnverifiedUser();
+    // NaN makes an invalid cutoff date, so the timeline step rejects.
+    const error = await runCleanup(getTestDb(), NaN, true).catch((reason: unknown) => reason);
+    expect(await findUserById(getTestDb(), user.id)).toBeUndefined();
+    expect(error).toBeInstanceOf(AggregateError);
+    expect((error as AggregateError).errors).toHaveLength(1);
+  });
+
   it("keeps them when verification is off (review focus 4)", async () => {
     const user = await staleUnverifiedUser();
     await runCleanup(getTestDb(), 30, false);
