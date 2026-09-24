@@ -211,3 +211,34 @@ export function CopyButton({ value }: { value: string }) {
     </Button>
   );
 }
+
+/** A destructive action behind typing `expected` (a name or an email) exactly. */
+export function TypeToConfirm({
+  label,
+  expected,
+  buttonLabel,
+  pending,
+  onConfirm,
+}: {
+  label: string;
+  expected: string;
+  buttonLabel: string;
+  pending: boolean;
+  onConfirm: () => void;
+}) {
+  const [typed, setTyped] = useState("");
+  return (
+    <form
+      className="flex flex-wrap items-end gap-3"
+      onSubmit={(event) => {
+        event.preventDefault();
+        onConfirm();
+      }}
+    >
+      <TextField className="min-w-48 flex-1" label={label} value={typed} onChange={setTyped} autoComplete="off" />
+      <Button type="submit" variant="danger" disabled={pending || typed !== expected}>
+        {buttonLabel}
+      </Button>
+    </form>
+  );
+}

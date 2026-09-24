@@ -2649,7 +2649,7 @@ git commit -m "feat(dashboard): password reset and signup invites"
   - `TypeToConfirm({ label, expected, buttonLabel, pending, onConfirm })`.
   - Route `orgs/:orgId/projects/:projectId/settings`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `dashboard/src/pages/danger.test.tsx`:
 
@@ -2768,12 +2768,12 @@ describe("account settings", () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npm test -w dashboard -- src/pages/danger.test.tsx`
 Expected: FAIL.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Append to `dashboard/src/components/ui.tsx`:
 
@@ -3005,12 +3005,12 @@ and a last card:
       </Card>
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `npm test -w dashboard && npm run typecheck -w dashboard && npm run lint -w dashboard`
 Expected: PASS, including the existing settings tests. The new "Password" label must not collide with "Current password" / "New password", because `getByLabelText` matches whole strings.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add dashboard

@@ -12,6 +12,7 @@ import { OrgLayout } from "./pages/OrgLayout";
 import { OrgSettingsPage } from "./pages/OrgSettingsPage";
 import { ProjectKeysPage } from "./pages/ProjectKeysPage";
 import { ProjectLayout } from "./pages/ProjectLayout";
+import { ProjectSettingsPage } from "./pages/ProjectSettingsPage";
 import { TimelinesPage } from "./pages/TimelinesPage";
 import { ProjectsPage } from "./pages/ProjectsPage";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage";
@@ -38,6 +39,7 @@ export function AppRoutes() {
             <Route path="projects/:projectId" element={<ProjectLayout />}>
               <Route index element={<TimelinesPage />} />
               <Route path="keys" element={<ProjectKeysPage />} />
+              <Route path="settings" element={<ProjectSettingsPage />} />
             </Route>
             <Route path="projects/:projectId/timelines/:timelineId" element={<TimelinePage />} />
             <Route path="members" element={<MembersPage />} />

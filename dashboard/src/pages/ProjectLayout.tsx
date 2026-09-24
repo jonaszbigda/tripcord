@@ -41,6 +41,9 @@ export function ProjectLayout() {
         <NavLink to={`${base}/keys`} className={tabClass}>
           Keys
         </NavLink>
+        <NavLink to={`${base}/settings`} className={tabClass}>
+          Settings
+        </NavLink>
       </nav>
       <Outlet />
     </div>
