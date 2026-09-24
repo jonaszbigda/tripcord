@@ -734,7 +734,7 @@ git commit -m "feat(server): optional SMTP email"
   - `resetPassword(db, token, passwordHash): Promise<boolean>`.
   - `POST /api/auth/password-reset` and `POST /api/auth/password-reset/confirm`, registered only with a mailer.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `server/src/password-reset.test.ts`:
 
@@ -919,12 +919,12 @@ describe("password reset routes", () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npm test -w server -- src/password-reset.test.ts src/routes/password-reset.test.ts`
 Expected: FAIL. The modules don't exist.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Create `server/src/db/password-resets.ts`:
 
@@ -1108,12 +1108,12 @@ In `server/src/app.ts`, import and call `registerPasswordResetRoutes(app, ctx);`
 
 In `server/src/retention.ts`, import `deleteStalePasswordResets` and add it to the `Promise.all` in `run`.
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `npm test -w server && npm run typecheck -w server && npm run lint -w server`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server

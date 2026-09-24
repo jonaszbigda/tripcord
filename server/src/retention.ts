@@ -1,6 +1,7 @@
 import { lt } from "drizzle-orm";
 import type { Database } from "./db/client";
 import { timelines } from "./db/schema";
+import { deleteStalePasswordResets } from "./db/password-resets";
 import { deleteExpiredSessions } from "./db/sessions";
 
 export async function cleanupOldTimelines(db: Database, retentionDays: number): Promise<number> {
@@ -15,7 +16,11 @@ export function scheduleCleanup(
   intervalMs: number = 24 * 60 * 60 * 1000
 ): ReturnType<typeof setInterval> {
   const run = () => {
-    Promise.all([cleanupOldTimelines(db, retentionDays), deleteExpiredSessions(db)]).catch((error: unknown) => {
+    Promise.all([
+      cleanupOldTimelines(db, retentionDays),
+      deleteExpiredSessions(db),
+      deleteStalePasswordResets(db),
+    ]).catch((error: unknown) => {
       console.error("[tripcord-server] cleanup job failed:", error);
     });
   };

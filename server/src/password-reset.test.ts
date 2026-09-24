@@ -1,0 +1,103 @@
+import { describe, it, expect, beforeEach } from "vitest";
+import { eq } from "drizzle-orm";
+import { createTestUser, getTestDb, resetDb } from "../test/db";
+import { FakeMailer } from "../test/mailer";
+import { hashPassword, verifyPassword } from "./auth/password";
+import { createPasswordReset, deleteStalePasswordResets } from "./db/password-resets";
+import { passwordResets } from "./db/schema";
+import { createSession, findSessionUser } from "./db/sessions";
+import { findUserById } from "./db/users";
+import { requestPasswordReset, resetPassword } from "./password-reset";
+
+const PUBLIC_URL = "https://app.tripcord.dev";
+
+function tokenFrom(mailer: FakeMailer, index = 0): string {
+  const match = mailer.sent[index].text.match(/\/reset-password\/(tpr_[A-Za-z0-9_-]+)/);
+  if (!match) throw new Error("no reset link in the email");
+  return match[1];
+}
+
+describe("requestPasswordReset", () => {
+  beforeEach(async () => {
+    await resetDb(getTestDb());
+  });
+
+  it("emails a one-hour reset link to a known address, whatever its case", async () => {
+    const user = await createTestUser(getTestDb(), { email: "ana@example.com", name: "Ana" });
+    const mailer = new FakeMailer();
+
+    expect(await requestPasswordReset(getTestDb(), mailer, PUBLIC_URL, " ANA@example.com ")).toBe("sent");
+
+    expect(mailer.sent).toHaveLength(1);
+    expect(mailer.sent[0].to).toBe("ana@example.com");
+    const [row] = await getTestDb().select().from(passwordResets).where(eq(passwordResets.userId, user.id));
+    expect(row.expiresAt.getTime() - row.createdAt.getTime()).toBe(60 * 60 * 1000);
+    expect(tokenFrom(mailer)).toMatch(/^tpr_[A-Za-z0-9_-]{43}$/);
+  });
+
+  it("sends nothing for an unknown address", async () => {
+    const mailer = new FakeMailer();
+    expect(await requestPasswordReset(getTestDb(), mailer, PUBLIC_URL, "nobody@example.com")).toBe("no_user");
+    expect(mailer.sent).toEqual([]);
+  });
+
+  it("allows one request per user per two minutes, and a new link replaces the old one", async () => {
+    const user = await createTestUser(getTestDb(), { email: "ana@example.com" });
+    const mailer = new FakeMailer();
+
+    expect(await requestPasswordReset(getTestDb(), mailer, PUBLIC_URL, "ana@example.com")).toBe("sent");
+    expect(await requestPasswordReset(getTestDb(), mailer, PUBLIC_URL, "ana@example.com")).toBe("cooldown");
+    expect(mailer.sent).toHaveLength(1);
+
+    const threeMinutesAgo = new Date(Date.now() - 3 * 60 * 1000);
+    await getTestDb().update(passwordResets).set({ createdAt: threeMinutesAgo }).where(eq(passwordResets.userId, user.id));
+    expect(await requestPasswordReset(getTestDb(), mailer, PUBLIC_URL, "ana@example.com")).toBe("sent");
+
+    expect(await resetPassword(getTestDb(), tokenFrom(mailer, 0), "hash")).toBe(false);
+    expect(await resetPassword(getTestDb(), tokenFrom(mailer, 1), "hash")).toBe(true);
+  });
+});
+
+describe("resetPassword", () => {
+  beforeEach(async () => {
+    await resetDb(getTestDb());
+  });
+
+  it("sets the password, ends every session, and works once", async () => {
+    const user = await createTestUser(getTestDb(), { password: "old-password" });
+    const { token: session } = await createSession(getTestDb(), user.id);
+    const token = await createPasswordReset(getTestDb(), user.id);
+
+    expect(await resetPassword(getTestDb(), token, await hashPassword("new-password"))).toBe(true);
+
+    const updated = await findUserById(getTestDb(), user.id);
+    expect(await verifyPassword("new-password", updated!.passwordHash!)).toBe(true);
+    expect(await findSessionUser(getTestDb(), session)).toBeUndefined();
+    expect(await resetPassword(getTestDb(), token, "hash")).toBe(false);
+  });
+
+  it("refuses an expired or unknown token", async () => {
+    const user = await createTestUser(getTestDb());
+    const token = await createPasswordReset(getTestDb(), user.id, new Date(Date.now() - 2 * 60 * 60 * 1000));
+
+    expect(await resetPassword(getTestDb(), token, "hash")).toBe(false);
+    expect(await resetPassword(getTestDb(), "tpr_nope", "hash")).toBe(false);
+  });
+});
+
+describe("deleteStalePasswordResets", () => {
+  beforeEach(async () => {
+    await resetDb(getTestDb());
+  });
+
+  it("deletes tokens that expired more than a day ago and keeps the rest", async () => {
+    const user = await createTestUser(getTestDb());
+    await createPasswordReset(getTestDb(), user.id, new Date(Date.now() - 3 * 24 * 60 * 60 * 1000));
+    const other = await createTestUser(getTestDb());
+    await createPasswordReset(getTestDb(), other.id);
+
+    expect(await deleteStalePasswordResets(getTestDb())).toBe(1);
+    const left = await getTestDb().select().from(passwordResets);
+    expect(left.map((row) => row.userId)).toEqual([other.id]);
+  });
+});

@@ -16,6 +16,7 @@ import { registerGithubRoutes } from "./routes/github";
 import { registerInviteRoutes } from "./routes/invites";
 import { registerMeRoutes } from "./routes/me";
 import { registerOrgRoutes } from "./routes/orgs";
+import { registerPasswordResetRoutes } from "./routes/password-reset";
 import { registerProjectRoutes } from "./routes/projects";
 import { registerTimelineRoute } from "./routes/timeline";
 import { registerTimelineReadRoutes } from "./routes/timelines";
@@ -169,6 +170,7 @@ export async function buildApp(db: Database, options: AppOptions = {}): Promise<
     mailer: options.mailer,
   };
   registerAuthRoutes(app, ctx);
+  registerPasswordResetRoutes(app, ctx);
   registerMeRoutes(app, ctx);
   registerOrgRoutes(app, ctx);
   registerInviteRoutes(app, ctx);
