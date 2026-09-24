@@ -1,6 +1,6 @@
 # Tripcord — first release: rename, packaging, CI and self-hosting design
 
-Status: draft
+Status: approved
 Date: 2026-09-23 (revised 2026-09-24: product renamed from repro to Tripcord)
 Scope: making Tripcord installable by someone other than its author. This covers
 renaming the product from repro to Tripcord, the npm package (`@tripcord/js`), a
@@ -36,7 +36,7 @@ sub-project gets it into a state where that can happen, starting with its author
 | --- | --- |
 | Product name | Tripcord. Domain `tripcord.dev` (registered). |
 | npm name | `@tripcord/js`, in the `tripcord` npm org (created). Subpaths: `@tripcord/js/react` today, `@tripcord/js/node` for the future SSR adapter. Clients for other platforms would be siblings (`@tripcord/<platform>`) where they ship through npm at all. |
-| Repository | Renamed on GitHub from `jonaszbigda/repro` to `jonaszbigda/tripcord`, before any release workflow runs. GitHub redirects the old URLs. |
+| Repository | Renamed on GitHub from `jonaszbigda/repro` to `jonaszbigda/tripcord` (done 2026-09-24), before any release workflow runs. GitHub redirects the old URLs. |
 | Old names on the wire and in storage | Renamed with no compatibility shims. Nothing has shipped, so there are no clients, cookies or databases to stay compatible with. |
 | Versioning | Independent per package, driven by git tags: `js-vX.Y.Z` releases the client, `server-vX.Y.Z` releases the server image |
 | Image registry and platforms | `ghcr.io/jonaszbigda/tripcord`, `linux/amd64` and `linux/arm64` |
@@ -204,6 +204,7 @@ It covers:
 **One-time setup**, which needs the maintainer's accounts:
 1. Rename the GitHub repository to `jonaszbigda/tripcord`. The trusted publisher
    and the GHCR package are tied to the repository name, so this comes first.
+   (Done 2026-09-24.)
 2. Publish `@tripcord/js@0.2.0` by hand, with `--provenance=false`.
 3. Configure the npm trusted publisher.
 4. After the first server release, make the GHCR package public.
