@@ -1,4 +1,4 @@
-import { count, eq } from "drizzle-orm";
+import { and, count, eq, isNull, lt } from "drizzle-orm";
 import type { Executor } from "./client";
 import { users, type User } from "./schema";
 
@@ -11,6 +11,8 @@ export interface NewUser {
   name: string;
   passwordHash: string | null;
   githubId: string | null;
+  /** NULL (the default) until the owner proves the address. */
+  emailVerifiedAt?: Date | null;
 }
 
 export async function insertUser(ex: Executor, input: NewUser): Promise<User> {
@@ -47,4 +49,24 @@ export async function setPasswordHash(ex: Executor, userId: string, passwordHash
 
 export async function setGithubId(ex: Executor, userId: string, githubId: string | null): Promise<void> {
   await ex.update(users).set({ githubId }).where(eq(users.id, userId));
+}
+
+export async function setEmail(ex: Executor, userId: string, email: string): Promise<void> {
+  await ex.update(users).set({ email: normalizeEmail(email) }).where(eq(users.id, userId));
+}
+
+/** Records the first verification; later calls keep the original time. */
+export async function markEmailVerified(ex: Executor, userId: string, now = new Date()): Promise<void> {
+  await ex
+    .update(users)
+    .set({ emailVerifiedAt: now })
+    .where(and(eq(users.id, userId), isNull(users.emailVerifiedAt)));
+}
+
+export async function listUnverifiedUserIds(ex: Executor, createdBefore: Date): Promise<string[]> {
+  const rows = await ex
+    .select({ id: users.id })
+    .from(users)
+    .where(and(isNull(users.emailVerifiedAt), lt(users.createdAt, createdBefore)));
+  return rows.map((row) => row.id);
 }

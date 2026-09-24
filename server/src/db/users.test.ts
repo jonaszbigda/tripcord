@@ -1,12 +1,17 @@
 import { describe, it, expect, beforeEach } from "vitest";
+import { eq } from "drizzle-orm";
 import { createTestUser, getTestDb, resetDb } from "../../test/db";
+import { users } from "./schema";
 import {
   countUsers,
   findUserByEmail,
   findUserByGithubId,
   findUserById,
   insertUser,
+  listUnverifiedUserIds,
+  markEmailVerified,
   normalizeEmail,
+  setEmail,
   setGithubId,
   setPasswordHash,
 } from "./users";
@@ -61,5 +66,43 @@ describe("users", () => {
     const user = await createTestUser(db);
     await setPasswordHash(db, user.id, "scrypt$fake");
     expect((await findUserById(db, user.id))?.passwordHash).toBe("scrypt$fake");
+  });
+
+  it("stores emailVerifiedAt when given, and NULL by default", async () => {
+    const db = getTestDb();
+    const at = new Date("2026-09-24T10:00:00Z");
+    const verified = await insertUser(db, { email: "v@example.com", name: "V", passwordHash: null, githubId: null, emailVerifiedAt: at });
+    const plain = await insertUser(db, { email: "p@example.com", name: "P", passwordHash: null, githubId: null });
+    expect(verified.emailVerifiedAt).toEqual(at);
+    expect(plain.emailVerifiedAt).toBeNull();
+  });
+
+  it("markEmailVerified sets the time once and never moves it", async () => {
+    const db = getTestDb();
+    const user = await createTestUser(db, { emailVerified: false });
+    const first = new Date("2026-09-24T10:00:00Z");
+    await markEmailVerified(db, user.id, first);
+    await markEmailVerified(db, user.id, new Date("2026-09-25T10:00:00Z"));
+    expect((await findUserById(db, user.id))?.emailVerifiedAt).toEqual(first);
+  });
+
+  it("setEmail stores the normalized address", async () => {
+    const db = getTestDb();
+    const user = await createTestUser(db);
+    await setEmail(db, user.id, " New@Example.com ");
+    expect((await findUserById(db, user.id))?.email).toBe("new@example.com");
+  });
+
+  it("lists unverified users created before a cutoff", async () => {
+    const db = getTestDb();
+    const old = await createTestUser(db, { emailVerified: false });
+    const recent = await createTestUser(db, { emailVerified: false });
+    await createTestUser(db); // verified
+    await db.update(users).set({ createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000) }).where(eq(users.id, old.id));
+
+    const ids = await listUnverifiedUserIds(db, new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
+
+    expect(ids).toEqual([old.id]);
+    expect(ids).not.toContain(recent.id);
   });
 });

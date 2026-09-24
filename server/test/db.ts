@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm";
 import { createDb, type Database } from "../src/db/client";
 import {
   apiKeys,
+  emailVerifications,
   invites,
   memberships,
   orgs,
@@ -36,6 +37,7 @@ export async function resetDb(db: Database): Promise<void> {
   await db.delete(projects);
   await db.delete(invites);
   await db.delete(passwordResets);
+  await db.delete(emailVerifications);
   await db.delete(sessions);
   await db.delete(memberships);
   await db.delete(orgs);
@@ -71,6 +73,8 @@ export interface TestUserOptions {
   /** Hashed with real scrypt (~100ms) — only pass one when the test logs in with it. */
   password?: string;
   githubId?: string;
+  /** Default true: most tests are about something else, and the gate is only on with SIGNUP=open and a mailer. */
+  emailVerified?: boolean;
 }
 
 export async function createTestUser(db: Database, options: TestUserOptions = {}): Promise<User> {
@@ -80,6 +84,7 @@ export async function createTestUser(db: Database, options: TestUserOptions = {}
     name: options.name ?? `User ${userSeq}`,
     passwordHash: options.password === undefined ? null : await hashPassword(options.password),
     githubId: options.githubId ?? null,
+    emailVerifiedAt: options.emailVerified === false ? null : new Date(),
   });
 }
 
