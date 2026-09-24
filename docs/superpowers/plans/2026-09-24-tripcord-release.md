@@ -22,7 +22,8 @@
 - **Tags:** `js-vX.Y.Z` and `server-vX.Y.Z`, with plain `X.Y.Z` and no prerelease suffix. The tag script rejects anything else.
 - **No secrets in any workflow.** npm uses OIDC (`id-token: write`), and GHCR uses the workflow's own `GITHUB_TOKEN` (`packages: write`). Each job gets only the `permissions` it needs, and the workflow default is `contents: read`.
 - **The image name is `ghcr.io/jonaszbigda/tripcord`**, hard-coded rather than derived from `github.repository`, so a fork can't push to a surprising name.
-- **Action versions:** the steps below pin `actions/checkout@v5`, `actions/setup-node@v5`, `docker/setup-qemu-action@v3`, `docker/setup-buildx-action@v3`, `docker/login-action@v3`, `docker/metadata-action@v5` and `docker/build-push-action@v6`. Before committing, check each action's releases page. If a newer major exists, use it and check its changelog for breaking input changes.
+- **Action versions:** the steps below pin `actions/checkout@v7`, `actions/setup-node@v7`, `docker/setup-qemu-action@v4`, `docker/setup-buildx-action@v4`, `docker/login-action@v4`, `docker/metadata-action@v6` and `docker/build-push-action@v7`, the latest majors on 2026-09-24. None of their breaking changes touch the inputs used here.
+- **No dependency cache in publishing jobs.** CI jobs use `cache: npm`. The npm publish job doesn't, so a poisoned cache entry can't reach a release (setup-node v7's guidance).
 - **Development setup is unchanged.** The root `docker-compose.yml` still builds from source. Only `deploy/docker-compose.yml` pulls the image.
 
 ## Review Focus
@@ -322,8 +323,8 @@ jobs:
     name: Build, typecheck, lint, test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -338,9 +339,9 @@ jobs:
     name: Build server image (amd64, not pushed)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/build-push-action@v6
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/build-push-action@v7
         with:
           context: .
           file: server/Dockerfile
@@ -411,7 +412,7 @@ jobs:
     name: Tag matches packages/js version
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: node scripts/check-tag-version.mjs "$GITHUB_REF_NAME" packages/js/package.json
 
   ci:
@@ -425,11 +426,10 @@ jobs:
       contents: read
       id-token: write # npm trusted publishing (OIDC) and provenance
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
-          cache: npm
           registry-url: https://registry.npmjs.org
       # Trusted publishing needs npm 11.5.1+, newer than the npm bundled with Node 22.
       - run: npm install -g npm@^11.5.1
@@ -519,7 +519,7 @@ jobs:
     name: Tag matches server version
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: node scripts/check-tag-version.mjs "$GITHUB_REF_NAME" server/package.json
 
   ci:
@@ -533,16 +533,16 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v5
-      - uses: docker/setup-qemu-action@v3
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: actions/checkout@v7
+      - uses: docker/setup-qemu-action@v4
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ghcr.io/jonaszbigda/tripcord
           flavor: latest=false
@@ -551,7 +551,7 @@ jobs:
             type=match,pattern=server-v(\d+\.\d+\.\d+),group=1
             type=match,pattern=server-v(\d+\.\d+)\.\d+,group=1
             type=raw,value=latest
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v7
         with:
           context: .
           file: server/Dockerfile
