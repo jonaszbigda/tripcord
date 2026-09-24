@@ -16,7 +16,13 @@ async function fixture() {
   const org = await createOrgWithOwner(db, user.id, "Acme");
   const member = await createTestUser(db);
   await addMember(db, org.id, member.id, "member");
-  return { db, app: await buildTestApp(db), org, cookie: await sessionCookie(db, member.id) };
+  return {
+    db,
+    app: await buildTestApp(db),
+    org,
+    cookie: await sessionCookie(db, member.id),
+    ownerCookie: await sessionCookie(db, user.id),
+  };
 }
 
 function ingest(app: Awaited<ReturnType<typeof buildTestApp>>, key: string) {
@@ -119,5 +125,24 @@ describe("project routes", () => {
       const url = `/api/orgs/${org.id}/projects/${project.id}/keys/${keyId}/revoke`;
       expect((await call(app, "POST", url, { cookie })).statusCode).toBe(404);
     }
+  });
+
+  it("an owner deletes a project; its key stops working at ingest", async () => {
+    const { app, db, org, ownerCookie } = await fixture();
+    const { project, key } = await createTestProject(db, "doomed", org.id);
+
+    const response = await call(app, "DELETE", `/api/orgs/${org.id}/projects/${project.id}`, { cookie: ownerCookie });
+
+    expect(response.statusCode).toBe(204);
+    const list = await call(app, "GET", `/api/orgs/${org.id}/projects`, { cookie: ownerCookie });
+    expect(list.json().projects.map((p: { id: string }) => p.id)).not.toContain(project.id);
+    expect((await ingest(app, key)).statusCode).toBe(401);
+  });
+
+  it("a member can't delete a project", async () => {
+    const { app, db, org, cookie } = await fixture();
+    const { project } = await createTestProject(db, "kept", org.id);
+    const response = await call(app, "DELETE", `/api/orgs/${org.id}/projects/${project.id}`, { cookie });
+    expect(response.statusCode).toBe(403);
   });
 });

@@ -181,4 +181,19 @@ describe("org routes", () => {
     expect((await call(app, "GET", `/api/orgs/${org.id}/members`)).statusCode).toBe(401);
     expect((await call(app, "GET", `/api/orgs/nope/members`, { cookie: ownerCookie })).statusCode).toBe(404);
   });
+
+  it("an owner deletes the org; members lose it and keep their accounts", async () => {
+    const { app, org, ownerCookie, memberCookie } = await fixture();
+
+    expect((await call(app, "DELETE", `/api/orgs/${org.id}`, { cookie: ownerCookie })).statusCode).toBe(204);
+
+    const me = await call(app, "GET", "/api/me", { cookie: memberCookie });
+    expect(me.statusCode).toBe(200);
+    expect(me.json().orgs).toEqual([]);
+  });
+
+  it("a member can't delete the org", async () => {
+    const { app, org, memberCookie } = await fixture();
+    expect((await call(app, "DELETE", `/api/orgs/${org.id}`, { cookie: memberCookie })).statusCode).toBe(403);
+  });
 });

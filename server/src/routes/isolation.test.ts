@@ -69,6 +69,11 @@ const CASES: RouteCase[] = [
     url: (f) => `/api/orgs/${f.orgId}/projects/${f.projectId}/timelines/${f.timelineId}`,
   },
   { route: "DELETE /api/orgs/:orgId/members/:userId", url: (f) => `/api/orgs/${f.orgId}/members/${f.memberId}` },
+  {
+    route: "DELETE /api/orgs/:orgId/projects/:projectId",
+    url: (f) => `/api/orgs/${f.orgId}/projects/${f.projectId}`,
+  },
+  { route: "DELETE /api/orgs/:orgId", url: (f) => `/api/orgs/${f.orgId}` },
 ];
 
 function methodOf(route: string): Method {

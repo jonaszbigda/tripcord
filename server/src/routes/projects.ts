@@ -1,6 +1,8 @@
 import type { FastifyInstance } from "fastify";
 import { requireMembership, requireUser } from "../auth/http";
 import type { Database } from "../db/client";
+import type { Project } from "../db/schema";
+import { deleteProject } from "../deletion";
 import {
   createApiKey,
   createProject,
@@ -20,10 +22,12 @@ export type ProjectParams = OrgParams & { projectId: string };
 type KeyParams = ProjectParams & { keyId: string };
 
 /** 404 unless the project exists in the org. Every project-scoped route calls it first. */
-export async function requireProject(db: Database, { orgId, projectId }: ProjectParams): Promise<void> {
-  if (!isUuid(projectId) || !(await findProjectInOrg(db, orgId, projectId))) {
+export async function requireProject(db: Database, { orgId, projectId }: ProjectParams): Promise<Project> {
+  const project = isUuid(projectId) ? await findProjectInOrg(db, orgId, projectId) : undefined;
+  if (!project) {
     throw httpError(404, "Not Found");
   }
+  return project;
 }
 
 // Key logic lives in db/projects.ts (shared with the CLI). These routes only add
@@ -31,6 +35,7 @@ export async function requireProject(db: Database, { orgId, projectId }: Project
 export function registerProjectRoutes(app: FastifyInstance, ctx: ApiContext): void {
   const { db } = ctx;
   const asMember = [requireUser(db), requireMembership(db, "member")];
+  const asOwner = [requireUser(db), requireMembership(db, "owner")];
 
   app.get<{ Params: OrgParams }>("/api/orgs/:orgId/projects", { preValidation: asMember }, async (request) => ({
     projects: await listProjects(db, { orgId: request.params.orgId }),
@@ -42,6 +47,16 @@ export function registerProjectRoutes(app: FastifyInstance, ctx: ApiContext): vo
     async (request, reply) => {
       const name = requireName(request.body.name, "Project name");
       return reply.code(201).send(await createProject(db, request.params.orgId, name));
+    }
+  );
+
+  app.delete<{ Params: ProjectParams }>(
+    "/api/orgs/:orgId/projects/:projectId",
+    { preValidation: asOwner },
+    async (request, reply) => {
+      const project = await requireProject(db, request.params);
+      await deleteProject(db, project.id);
+      return reply.code(204).send();
     }
   );
 

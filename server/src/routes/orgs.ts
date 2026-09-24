@@ -3,6 +3,7 @@ import { currentMembership, currentUser, requireMembership, requireUser } from "
 import { createInvite, listPendingInvites, revokeInvite } from "../db/invites";
 import { changeRole, createOrgWithOwner, listMembers, removeMember, renameOrg, type MembershipChange } from "../db/orgs";
 import { ROLES, type Role } from "../db/schema";
+import { deleteOrg } from "../deletion";
 import { isUuid } from "../uuid";
 import type { ApiContext } from "./context";
 import { httpError, requireName } from "./errors";
@@ -60,6 +61,11 @@ export function registerOrgRoutes(app: FastifyInstance, ctx: ApiContext): void {
       return { id: org.id, name: org.name };
     }
   );
+
+  app.delete<{ Params: OrgParams }>("/api/orgs/:orgId", { preValidation: asOwner }, async (request, reply) => {
+    await deleteOrg(db, request.params.orgId);
+    return reply.code(204).send();
+  });
 
   app.get<{ Params: OrgParams }>("/api/orgs/:orgId/members", { preValidation: asMember }, async (request) => ({
     members: await listMembers(db, request.params.orgId),

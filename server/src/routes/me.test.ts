@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { createTestUser, getTestDb, resetDb, sessionCookie } from "../../test/db";
 import { buildTestApp, call } from "../../test/http";
 import { hashToken } from "../auth/tokens";
-import { createOrgWithOwner } from "../db/orgs";
+import { addMember, createOrgWithOwner } from "../db/orgs";
 import { sessions } from "../db/schema";
 import { createSession, findSessionUser } from "../db/sessions";
 import { findUserById } from "../db/users";
@@ -131,5 +131,53 @@ describe("DELETE /api/me/github", () => {
 
     expect(response.statusCode).toBe(409);
     expect(response.json()).toEqual({ error: "Set a password before disconnecting GitHub" });
+  });
+});
+
+describe("DELETE /api/me", () => {
+  beforeEach(async () => {
+    await resetDb(getTestDb());
+  });
+
+  it("deletes a password user who confirms with their password, and clears the cookie", async () => {
+    const db = getTestDb();
+    const user = await createTestUser(db, { password: "correct horse" });
+    const cookie = await sessionCookie(db, user.id);
+    const app = await buildTestApp(db);
+
+    const wrong = await call(app, "DELETE", "/api/me", { cookie, body: { password: "wrong horse" } });
+    expect(wrong.statusCode).toBe(403);
+    expect(wrong.json()).toEqual({ error: "Password is incorrect" });
+
+    const response = await call(app, "DELETE", "/api/me", { cookie, body: { password: "correct horse" } });
+    expect(response.statusCode).toBe(204);
+    expect(String(response.headers["set-cookie"])).toMatch(/^tripcord_session=;/);
+    expect((await call(app, "GET", "/api/me", { cookie })).statusCode).toBe(401);
+    expect(await findUserById(db, user.id)).toBeUndefined();
+  });
+
+  it("deletes a GitHub-only user with an empty body", async () => {
+    const db = getTestDb();
+    const user = await createTestUser(db, { githubId: "42" });
+    const app = await buildTestApp(db);
+    const response = await call(app, "DELETE", "/api/me", { cookie: await sessionCookie(db, user.id), body: {} });
+    expect(response.statusCode).toBe(204);
+  });
+
+  it("lists the orgs that block deletion", async () => {
+    const db = getTestDb();
+    const user = await createTestUser(db);
+    const other = await createTestUser(db);
+    const team = await createOrgWithOwner(db, user.id, "Team");
+    await addMember(db, team.id, other.id, "member");
+    const app = await buildTestApp(db);
+
+    const response = await call(app, "DELETE", "/api/me", { cookie: await sessionCookie(db, user.id), body: {} });
+
+    expect(response.statusCode).toBe(409);
+    expect(response.json()).toEqual({
+      error: "You're the only owner of an org with other members",
+      orgs: [{ id: team.id, name: "Team" }],
+    });
   });
 });

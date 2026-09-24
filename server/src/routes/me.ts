@@ -2,10 +2,12 @@ import type { FastifyInstance } from "fastify";
 import type { Database } from "../db/client";
 import type { User } from "../db/schema";
 import { listUserOrgs, type UserOrg } from "../db/orgs";
-import { currentUser, requireUser } from "../auth/http";
+import { clearSessionCookie, currentUser, requireUser } from "../auth/http";
 import { hashPassword, verifyPassword } from "../auth/password";
 import { deleteUserSessions } from "../db/sessions";
 import { setGithubId, setPasswordHash } from "../db/users";
+import { deleteUser } from "../deletion";
+import { authRateLimit } from "./auth";
 import type { ApiContext } from "./context";
 
 export interface MeBody {
@@ -59,6 +61,34 @@ export function registerMeRoutes(app: FastifyInstance, ctx: ApiContext): void {
       }
       await setPasswordHash(db, user.id, await hashPassword(request.body.newPassword));
       await deleteUserSessions(db, user.id, { except: request.sessionToken });
+      return reply.code(204).send();
+    }
+  );
+
+  // The dashboard always sends a body ({} for GitHub-only users), which the schema requires.
+  app.delete<{ Body: { password?: string } }>(
+    "/api/me",
+    {
+      preValidation: requireUser(db),
+      schema: {
+        body: {
+          type: "object",
+          properties: { password: { type: "string", maxLength: 256 } },
+          additionalProperties: false,
+        },
+      },
+      config: { rateLimit: authRateLimit(ctx) },
+    },
+    async (request, reply) => {
+      const user = currentUser(request);
+      if (user.passwordHash !== null && !(await verifyPassword(request.body.password ?? "", user.passwordHash))) {
+        return reply.code(403).send({ error: "Password is incorrect" });
+      }
+      const result = await deleteUser(db, user.id);
+      if (!result.ok) {
+        return reply.code(409).send({ error: "You're the only owner of an org with other members", orgs: result.orgs });
+      }
+      clearSessionCookie(reply);
       return reply.code(204).send();
     }
   );

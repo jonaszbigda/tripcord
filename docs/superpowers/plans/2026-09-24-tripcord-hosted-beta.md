@@ -1418,7 +1418,7 @@ git commit -m "feat(server): delete projects, orgs and users"
   - `DELETE /api/me` with body `{ password? }` → `204`, or `403 { error: "Password is incorrect" }`, or `409 { error, orgs }`.
   - `requireProject` now returns `Promise<Project>`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Append to the describe in `server/src/routes/projects.test.ts`. It reuses that file's fixture; check its field names before pasting. The owner/member cookies and the org id are available as in `orgs.test.ts`.
 
@@ -1533,12 +1533,12 @@ In `server/src/routes/isolation.test.ts`, after the last `DELETE …/members/:us
   { route: "DELETE /api/orgs/:orgId", url: (f) => `/api/orgs/${f.orgId}` },
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npm test -w server -- src/routes`
 Expected: FAIL. The routes return 404, and isolation's "covers every registered route" fails.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `server/src/routes/projects.ts`, make `requireProject` return the project:
 
@@ -1610,12 +1610,12 @@ In `server/src/routes/me.ts`, import `clearSessionCookie`, `deleteUser` and `aut
 
 `routes/me.ts` importing from `routes/auth.ts`, while `auth.ts` imports `meBody` from `me.ts`, is a circular import. Both only use each other's exports inside functions at request time, so it's safe. If lint or the build objects, move `authRateLimit` and `passwordSchema` into `routes/context.ts` instead.
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `npm test -w server && npm run typecheck -w server && npm run lint -w server`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server/src/routes
