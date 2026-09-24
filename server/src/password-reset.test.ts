@@ -83,6 +83,15 @@ describe("resetPassword", () => {
     expect(await resetPassword(getTestDb(), token, "hash")).toBe(false);
     expect(await resetPassword(getTestDb(), "tpr_nope", "hash")).toBe(false);
   });
+
+  it("verifies the email: the link proves the inbox is theirs", async () => {
+    const user = await createTestUser(getTestDb(), { emailVerified: false });
+    const token = await createPasswordReset(getTestDb(), user.id);
+
+    expect(await resetPassword(getTestDb(), token, "hash")).toBe(true);
+
+    expect((await findUserById(getTestDb(), user.id))?.emailVerifiedAt).not.toBeNull();
+  });
 });
 
 describe("deleteStalePasswordResets", () => {

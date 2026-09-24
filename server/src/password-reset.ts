@@ -1,7 +1,7 @@
 import type { Database } from "./db/client";
 import { consumePasswordReset, createPasswordReset, latestPasswordResetAt } from "./db/password-resets";
 import { deleteUserSessions } from "./db/sessions";
-import { findUserByEmail, setPasswordHash } from "./db/users";
+import { findUserByEmail, markEmailVerified, setPasswordHash } from "./db/users";
 import { passwordResetMail, type Mailer } from "./email";
 
 export const PASSWORD_RESET_COOLDOWN_MS = 2 * 60 * 1000;
@@ -36,6 +36,8 @@ export async function resetPassword(db: Database, token: string, passwordHash: s
       return false;
     }
     await setPasswordHash(tx, userId, passwordHash);
+    // The reset link reached this inbox, which is what verification proves.
+    await markEmailVerified(tx, userId);
     await deleteUserSessions(tx, userId);
     return true;
   });
