@@ -1968,7 +1968,7 @@ git commit -m "feat(server): keep client IPs and tokens out of logs"
   - `runCli(argv, db, out, deps: CliDeps = { publicUrl: "http://localhost:3000" })`.
   - Commands: `invite create [--email <address>]`, `invite list`, `invite revoke <inviteId>`, `user delete <email> [--yes]`, `org delete <orgId> [--yes]`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 In `server/src/admin.test.ts`, change `run` to take deps:
 
@@ -2083,12 +2083,12 @@ async function run(argv: string[], deps?: CliDeps) {
 
 (imports: `FakeMailer` from `../test/mailer`; `addMember`, `createOrgWithOwner`, `findOrg` from `./db/orgs`; `insertTestTimeline` from `../test/db`.)
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npm test -w server -- src/admin.test.ts`
 Expected: FAIL.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `server/src/admin.ts`:
 
@@ -2269,12 +2269,12 @@ and pass `deps` as `runCli`'s fourth argument.
 
 In `server/README.md`, add the five commands to "The admin CLI" table, with the same wording as `USAGE`.
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `npm test -w server && npm run typecheck -w server && npm run lint -w server`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add server

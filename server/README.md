@@ -111,6 +111,11 @@ All commands:
 | `key list <projectId>`                  | List a project's keys (prefix, created, revoked).              |
 | `key revoke <keyId>`                    | Revoke a key. Ingest rejects it immediately.                   |
 | `user reset-password <email>`           | Print a new random password once and log the user out everywhere. |
+| `user delete <email> [--yes]`           | Delete a user and the orgs where they're the only member. Without `--yes`, only shows what would be deleted. |
+| `org delete <orgId> [--yes]`            | Delete an org with its projects, keys and timelines. Without `--yes`, only shows what would be deleted. |
+| `invite create [--email <address>]`     | Create a signup invite: a new account with its own org, on an `invite-only` instance. Prints the link once; with `--email` (needs SMTP), also emails it. |
+| `invite list`                           | List pending signup invites.                                   |
+| `invite revoke <inviteId>`              | Revoke a pending signup invite.                                |
 
 To rotate a key without dropping events: `key create`, deploy the new key to your
 app, then `key revoke` the old one.

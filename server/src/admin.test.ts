@@ -1,7 +1,9 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { createTestOrg, createTestProject, createTestUser, getTestDb, resetDb } from "../test/db";
+import { createTestOrg, createTestProject, createTestUser, getTestDb, insertTestTimeline, resetDb } from "../test/db";
+import { FakeMailer } from "../test/mailer";
+import { addMember, createOrgWithOwner, findOrg } from "./db/orgs";
 import { findProjectByApiKey, listApiKeys, listProjects, revokeApiKey } from "./db/projects";
-import { runCli, USAGE } from "./admin";
+import { runCli, USAGE, type CliDeps } from "./admin";
 import { verifyPassword } from "./auth/password";
 import { createSession, findSessionUser } from "./db/sessions";
 import { findUserById } from "./db/users";
@@ -9,13 +11,18 @@ import { findUserById } from "./db/users";
 const MISSING_ID = "00000000-0000-0000-0000-000000000000";
 const KEY_PATTERN = /^tpk_[A-Za-z0-9_-]{43}$/;
 
-async function run(argv: string[]) {
+async function run(argv: string[], deps?: CliDeps) {
   const stdout: string[] = [];
   const stderr: string[] = [];
-  const code = await runCli(argv, getTestDb(), {
-    stdout: (line) => stdout.push(line),
-    stderr: (line) => stderr.push(line),
-  });
+  const code = await runCli(
+    argv,
+    getTestDb(),
+    {
+      stdout: (line) => stdout.push(line),
+      stderr: (line) => stderr.push(line),
+    },
+    deps
+  );
   return { code, stdout, stderr };
 }
 
@@ -315,6 +322,107 @@ describe("runCli", () => {
       const result = await run(["user", "reset-password", "nobody@example.com"]);
       expect(result.code).toBe(1);
       expect(result.stderr).toEqual(["User not found: nobody@example.com"]);
+    });
+  });
+
+  describe("invite", () => {
+    it("create prints a signup link once, and list/revoke manage it", async () => {
+      const result = await run(["invite", "create"], { publicUrl: "https://app.tripcord.dev" });
+      expect(result.code).toBe(0);
+      expect(result.stdout[1]).toMatch(/^https:\/\/app\.tripcord\.dev\/invite\/tpi_[A-Za-z0-9_-]{43}$/);
+      expect(result.stdout[2]).toBe("Store this link now. It will not be shown again.");
+      const id = result.stdout[0].match(/signup invite ([0-9a-f-]{36})/)![1];
+
+      const list = await run(["invite", "list"]);
+      expect(list.stdout[0]).toMatch(/^ID\s+CREATED\s+EXPIRES$/);
+      expect(list.stdout[1]).toContain(id);
+
+      expect((await run(["invite", "revoke", id])).code).toBe(0);
+      expect((await run(["invite", "list"])).stdout).toEqual(["No pending signup invites."]);
+      expect((await run(["invite", "revoke", id])).code).toBe(1);
+    });
+
+    it("create --email sends the link", async () => {
+      const mailer = new FakeMailer();
+      const result = await run(["invite", "create", "--email", "Neo@Example.com"], { publicUrl: "https://app.tripcord.dev", mailer });
+      expect(result.code).toBe(0);
+      expect(mailer.sent).toHaveLength(1);
+      expect(mailer.sent[0].to).toBe("neo@example.com");
+      expect(mailer.sent[0].text).toContain(result.stdout[1]);
+      expect(result.stdout[2]).toBe("Sent to neo@example.com");
+    });
+
+    it("create --email without SMTP is a usage error that creates nothing", async () => {
+      const result = await run(["invite", "create", "--email", "neo@example.com"]);
+      expect(result.code).toBe(2);
+      expect(result.stderr[0]).toBe("--email needs SMTP_URL and EMAIL_FROM to be set");
+      expect((await run(["invite", "list"])).stdout).toEqual(["No pending signup invites."]);
+    });
+
+    it("create --email reports a failed send and keeps the link", async () => {
+      const mailer = { send: async () => Promise.reject(new Error("SMTP down")) };
+      const result = await run(["invite", "create", "--email", "neo@example.com"], { publicUrl: "https://x.dev", mailer });
+      expect(result.code).toBe(1);
+      expect(result.stderr[0]).toBe("Sending failed: SMTP down");
+      expect(result.stdout[1]).toMatch(/^https:\/\/x\.dev\/invite\/tpi_/);
+    });
+
+    it("rejects --email on other commands", async () => {
+      const result = await run(["org", "list", "--email", "a@b.c"]);
+      expect(result.code).toBe(2);
+      expect(result.stderr[0]).toBe("Unknown option: --email");
+    });
+  });
+
+  describe("user delete", () => {
+    it("previews without --yes, then deletes with it", async () => {
+      const user = await createTestUser(getTestDb(), { email: "ana@example.com", name: "Ana" });
+      const org = await createOrgWithOwner(getTestDb(), user.id, "Solo");
+
+      const preview = await run(["user", "delete", "ana@example.com"]);
+      expect(preview.code).toBe(2);
+      expect(preview.stdout).toEqual([
+        "User ana@example.com (Ana)",
+        `Also deletes 1 org where they're the only member: Solo (${org.id})`,
+      ]);
+      expect(preview.stderr).toEqual(["Nothing deleted. Run again with --yes to delete."]);
+      expect(await findUserById(getTestDb(), user.id)).toBeDefined();
+
+      const done = await run(["user", "delete", "ana@example.com", "--yes"]);
+      expect(done.code).toBe(0);
+      expect(done.stdout.at(-1)).toBe("Deleted user ana@example.com");
+      expect(await findUserById(getTestDb(), user.id)).toBeUndefined();
+    });
+
+    it("refuses when they're the only owner of an org with other members", async () => {
+      const user = await createTestUser(getTestDb(), { email: "ana@example.com" });
+      const other = await createTestUser(getTestDb());
+      const team = await createOrgWithOwner(getTestDb(), user.id, "Team");
+      await addMember(getTestDb(), team.id, other.id, "member");
+
+      const result = await run(["user", "delete", "ana@example.com", "--yes"]);
+      expect(result.code).toBe(1);
+      expect(result.stderr[0]).toBe(
+        `ana@example.com is the only owner of orgs with other members: Team (${team.id}). Make someone else an owner or delete those orgs first.`
+      );
+    });
+  });
+
+  describe("org delete", () => {
+    it("previews without --yes, then deletes with it", async () => {
+      const owner = await createTestUser(getTestDb());
+      const org = await createOrgWithOwner(getTestDb(), owner.id, "Acme");
+      const { project } = await createTestProject(getTestDb(), "web", org.id);
+      await insertTestTimeline(getTestDb(), project.id);
+
+      const preview = await run(["org", "delete", org.id]);
+      expect(preview.code).toBe(2);
+      expect(preview.stdout).toEqual([`Org Acme (${org.id}): 1 member, 1 project, 1 timeline`]);
+
+      const done = await run(["org", "delete", org.id, "--yes"]);
+      expect(done.code).toBe(0);
+      expect(done.stdout.at(-1)).toBe("Deleted org Acme");
+      expect(await findOrg(getTestDb(), org.id)).toBeUndefined();
     });
   });
 });
