@@ -1,0 +1,50 @@
+name: Release @tripcord/js
+
+on:
+  push:
+    tags: ["js-v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  tag:
+    name: Tag matches packages/js version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: node scripts/check-tag-version.mjs "$GITHUB_REF_NAME" packages/js/package.json
+
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    name: Publish to npm
+    needs: [tag, ci]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # npm trusted publishing (OIDC) and provenance
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+          # No dependency cache in a job that can publish: a poisoned cache could reach the OIDC token.
+          package-manager-cache: false
+      # Trusted publishing needs npm 11.5.1+, newer than the npm bundled with Node 22.
+      - run: npm install -g npm@^11.5.1
+      - id: published
+        name: Skip versions already on npm
+        run: |
+          version=$(node -p "require('./packages/js/package.json').version")
+          if npm view "@tripcord/js@$version" version >/dev/null 2>&1; then
+            echo "@tripcord/js@$version is already published; nothing to do."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.published.outputs.skip != 'true'
+        run: npm ci
+      # prepack builds dist/; publishConfig sets access=public and provenance.
+      - if: steps.published.outputs.skip != 'true'
+        run: npm publish -w @tripcord/js
