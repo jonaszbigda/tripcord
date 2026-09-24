@@ -44,7 +44,7 @@ export function FilterBar({
                 type="button"
                 aria-pressed={on}
                 onClick={() => toggleType(type)}
-                className={`inline-flex items-center gap-2 rounded-md border px-2.5 py-1 text-sm ${on ? "border-fg/30 bg-surface font-medium text-fg" : "border-border text-muted hover:text-fg"}`}
+                className={`inline-flex items-center gap-2 rounded-lg border px-2.5 py-1 text-sm transition ${on ? "border-fg/30 bg-raised font-medium text-fg" : "border-border bg-surface text-muted hover:text-fg"}`}
               >
                 <Swatch color={SERIES_COLORS[type]} />
                 {REASON_LABELS[type]}

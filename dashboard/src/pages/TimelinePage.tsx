@@ -19,7 +19,7 @@ function DataBlock({ data }: { data: Record<string, unknown> | undefined }) {
   return (
     <details className="mt-1">
       <summary className="cursor-pointer text-xs text-muted hover:text-fg">Data</summary>
-      <pre className="mt-1 overflow-x-auto rounded-md bg-bg p-2 font-mono text-xs">{JSON.stringify(data, null, 2)}</pre>
+      <pre className="mt-1.5 overflow-x-auto rounded-lg border border-border bg-bg p-2.5 font-mono text-xs text-amber/90">{JSON.stringify(data, null, 2)}</pre>
     </details>
   );
 }
@@ -76,8 +76,8 @@ export function TimelinePage() {
             {formatRelative(timeline.receivedAt)}
           </time>
         </p>
-        <h1 className="break-words text-xl font-semibold">{reason.name ?? REASON_LABELS[reason.type]}</h1>
-        {reason.message && <p className="whitespace-pre-wrap break-words font-mono text-sm">{reason.message}</p>}
+        <h1 className="break-words text-3xl font-semibold tracking-tight">{reason.name ?? REASON_LABELS[reason.type]}</h1>
+        {reason.message && <p className="whitespace-pre-wrap break-words font-mono text-sm text-amber">{reason.message}</p>}
         <TagChips tags={timeline.tags} />
       </header>
 
@@ -87,9 +87,16 @@ export function TimelinePage() {
           {timeline.events.length === 0 && (
             <p className="text-sm text-muted">No breadcrumbs were recorded before this capture.</p>
           )}
-          <ol aria-label="Events" className="space-y-3">
+          {/* The cord: breadcrumbs hang off one rail that brightens toward the capture. */}
+          <ol
+            aria-label="Events"
+            className="relative space-y-4 pl-6 before:absolute before:top-2 before:bottom-3 before:left-[5px] before:w-0.5 before:rounded-full before:bg-[linear-gradient(180deg,var(--color-border),var(--color-accent)_85%,var(--color-amber))]"
+          >
             {timeline.events.map((event, i) => (
-              <li key={i} className="border-l border-border pl-3 text-sm">
+              <li
+                key={i}
+                className="relative text-sm before:absolute before:top-1.5 before:-left-6 before:size-3 before:rounded-full before:border-2 before:border-accent/70 before:bg-bg"
+              >
                 <p className="flex flex-wrap items-baseline gap-x-3">
                   <span className="w-16 shrink-0 font-mono text-xs tabular-nums text-muted">
                     {formatOffset(event.timestamp - meta.capturedAt)}
@@ -100,10 +107,13 @@ export function TimelinePage() {
                 <DataBlock data={event.data} />
               </li>
             ))}
-            <li aria-current="step" className="rounded-md border-l-2 border-accent bg-accent/5 py-1 pl-3 text-sm">
+            <li
+              aria-current="step"
+              className="relative rounded-lg border border-accent/40 bg-accent/10 px-3 py-2 text-sm before:absolute before:top-3.5 before:-left-[1.625rem] before:size-3.5 before:rounded-full before:bg-cord before:shadow-[0_0_0_4px_rgb(255_122_26/0.2),0_0_18px_rgb(255_150_60/0.8)]"
+            >
               <p className="flex flex-wrap items-baseline gap-x-3">
                 <span className="w-16 shrink-0 font-mono text-xs tabular-nums text-muted">{formatOffset(0)}</span>
-                <span className="text-xs text-muted">Captured</span>
+                <span className="text-xs font-medium text-accent">Captured</span>
                 <span className="break-words font-medium">
                   {[reason.name, reason.message].filter(Boolean).join(": ") || REASON_LABELS[reason.type]}
                 </span>

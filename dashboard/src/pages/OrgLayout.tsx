@@ -34,7 +34,7 @@ export function OrgLayout() {
             key={tab.path}
             to={`/orgs/${orgId}/${tab.path}`}
             className={({ isActive }) =>
-              `-mb-px border-b-2 pb-2 text-sm ${isActive ? "border-accent font-medium" : "border-transparent text-muted hover:text-fg"}`
+              `relative pb-3 text-sm transition ${isActive ? "font-medium text-fg after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:rounded-full after:bg-cord" : "text-muted hover:text-fg"}`
             }
           >
             {tab.label}

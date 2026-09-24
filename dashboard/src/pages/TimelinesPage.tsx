@@ -8,6 +8,9 @@ import { TopReasons } from "../components/timelines/TopReasons";
 import { Button, Card, ErrorText } from "../components/ui";
 import { useTimelineSummary, useTimelineTags, useTimelines } from "../queries";
 import { useTimelineFilters } from "../timelineFilters";
+import type { Range } from "../types";
+
+const RANGE_TEXT: Record<Range, string> = { "24h": "24 hours", "7d": "7 days", "30d": "30 days" };
 
 export function TimelinesPage() {
   const { orgId = "", projectId = "" } = useParams();
@@ -24,6 +27,7 @@ export function TimelinesPage() {
   const series = SERIES.filter((s) => filters.reasonTypes.length === 0 || filters.reasonTypes.includes(s.key));
   const topReasons = summary.data?.topReasons ?? [];
   const timelines = list.data?.pages.flatMap((page) => page.timelines) ?? [];
+  const total = summary.data?.buckets.reduce((sum, b) => sum + series.reduce((n, s) => n + b[s.key], 0), 0);
 
   return (
     <div className="space-y-6">
@@ -35,7 +39,15 @@ export function TimelinesPage() {
       />
 
       <Card className="space-y-4">
-        <h2 className="font-medium">Volume</h2>
+        <div className="flex items-baseline justify-between gap-4">
+          <h2 className="font-medium">Volume</h2>
+          {total !== undefined && (
+            <p className="text-sm text-muted">
+              <span className="text-cord text-2xl font-semibold tabular-nums">{total.toLocaleString()}</span>{" "}
+              {total === 1 ? "timeline" : "timelines"} in the last {RANGE_TEXT[filters.range]}
+            </p>
+          )}
+        </div>
         <ErrorText error={summary.error} />
         {summary.data && <VolumeChart summary={summary.data} series={series} />}
       </Card>

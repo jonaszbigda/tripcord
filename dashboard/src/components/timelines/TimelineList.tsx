@@ -11,12 +11,12 @@ export function TimelineList({ orgId, projectId, timelines }: { orgId: string; p
     return <p className="text-sm text-muted">No timelines match these filters.</p>;
   }
   return (
-    <ul className="divide-y divide-border">
+    <ul className="-mx-3 divide-y divide-border/70">
       {timelines.map((t) => (
         <li key={t.id}>
           <Link
             to={`/orgs/${orgId}/projects/${projectId}/timelines/${t.id}`}
-            className="grid gap-1 rounded-md px-2 py-3 hover:bg-bg sm:grid-cols-[7rem_minmax(0,1fr)_auto] sm:items-baseline sm:gap-4"
+            className="grid gap-1 rounded-lg px-3 py-3 transition hover:bg-raised sm:grid-cols-[7rem_minmax(0,1fr)_auto] sm:items-baseline sm:gap-4"
           >
             <time dateTime={t.receivedAt} title={formatDateTime(t.receivedAt)} className="text-sm text-muted">
               {formatRelative(t.receivedAt)}
@@ -28,7 +28,7 @@ export function TimelineList({ orgId, projectId, timelines }: { orgId: string; p
                 <span className="truncate font-medium">{reasonText({ name: t.reasonName, message: t.reasonMessage })}</span>
               </span>
               <span className="flex flex-wrap items-center gap-2 text-xs text-muted">
-                <span className="truncate font-mono">{urlPath(t.url)}</span>
+                <span className="truncate font-mono text-amber/80">{urlPath(t.url)}</span>
                 <TagChips tags={t.tags} />
               </span>
             </span>
