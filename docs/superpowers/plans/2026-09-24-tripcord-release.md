@@ -795,7 +795,9 @@ Every step here publishes something or needs the user's accounts. Do each one on
 
 - [x] **Step 1: Push and confirm CI is green** on the commits from Tasks 4–6.
 
-- [ ] **Step 2: Publish `@tripcord/js@0.2.0` by hand.** The user runs `npm login` and `npm publish -w @tripcord/js --provenance=false` (suggest the `!` prefix). Then `npm view @tripcord/js version` should print `0.2.0`. Tag the published commit: `git tag js-v0.2.0 && git push origin js-v0.2.0`. The release workflow runs and skips the publish step.
+- [x] **Step 2: Publish `@tripcord/js@0.2.0` by hand.** The user runs `npm login` and `npm publish -w @tripcord/js --provenance=false` (suggest the `!` prefix). Then `npm view @tripcord/js version` should print `0.2.0`. Tag the published commit: `git tag js-v0.2.0 && git push origin js-v0.2.0`. The release workflow runs and skips the publish step.
+
+  > Published 2026-09-24 after a fresh `npm login` (the stored token had expired, and npm answered the publish with a misleading 404). `js-v0.2.0` tags `242a2e3`. Release run 35974365435 first failed on a flaky dashboard test (`members.test.tsx`, fixed in the next commit), then passed on re-run and skipped the publish as designed.
 
 - [ ] **Step 3: Configure the npm trusted publisher.** The user does this on npmjs.com, as in `docs/releasing.md`.
 
