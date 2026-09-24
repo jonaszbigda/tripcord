@@ -302,7 +302,7 @@ git commit -m "build: add the release tag/version check script"
 **Files:**
 - Create: `.github/workflows/ci.yml`
 
-- [ ] **Step 1: Write the workflow**
+- [x] **Step 1: Write the workflow**
 
 Create `.github/workflows/ci.yml`:
 
@@ -351,11 +351,11 @@ jobs:
           cache-to: type=gha,mode=max
 ```
 
-- [ ] **Step 2: Lint the workflow locally**
+- [x] **Step 2: Lint the workflow locally**
 
 If `actionlint` is installed, run `actionlint` from the repo root. Expected: no findings. If it isn't, skip this step. Step 4's real run is the check.
 
-- [ ] **Step 3: Commit and push**
+- [x] **Step 3: Commit and push**
 
 ```bash
 git add .github/workflows/ci.yml
@@ -365,10 +365,12 @@ git push origin main
 
 Pushing to `main` is what triggers the workflow. Confirm with the user before pushing.
 
-- [ ] **Step 4: Watch the run**
+- [x] **Step 4: Watch the run**
 
 Run: `gh run watch --exit-status $(gh run list --workflow ci.yml --limit 1 --json databaseId -q '.[0].databaseId')`
 Expected: both jobs succeed. If `npm ci` fails on a missing Linux native optional dependency (Tailwind's oxide, Rollup, esbuild), the lockfile lacks that platform's entry. Regenerate the entries with `npm install --os=linux --cpu=x64` and commit the lockfile. If anything else fails, fix it before Task 4. Release workflows call this one.
+
+> Run 35970389090 on 2026-09-24: both jobs passed. The logs show 73 + 282 + 70 Vitest tests and 5 script tests, with the server suite on testcontainers Postgres. actionlint wasn't installed, so Step 2 was skipped.
 
 ---
 
@@ -378,7 +380,7 @@ Expected: both jobs succeed. If `npm ci` fails on a missing Linux native optiona
 - Create: `.github/workflows/release-js.yml`
 - Modify: `packages/js/package.json`
 
-- [ ] **Step 1: Build before every pack**
+- [x] **Step 1: Build before every pack**
 
 In `packages/js/package.json`, add to `scripts`:
 
@@ -388,12 +390,12 @@ In `packages/js/package.json`, add to `scripts`:
 
 `npm publish` and `npm pack` run `prepack`, so a publish, including the manual first one, can't ship a stale or missing `dist/`.
 
-- [ ] **Step 2: Check the packed contents**
+- [x] **Step 2: Check the packed contents**
 
 Run: `npm pack --dry-run -w @tripcord/js`
 Expected: the build runs, then the file list is `LICENSE`, `README.md`, `package.json` and files under `dist/`, and nothing else (no `src/`, no test files, no `tsup.config.ts`).
 
-- [ ] **Step 3: Write the workflow**
+- [x] **Step 3: Write the workflow**
 
 Create `.github/workflows/release-js.yml`:
 
@@ -431,6 +433,8 @@ jobs:
         with:
           node-version: 22
           registry-url: https://registry.npmjs.org
+          # No dependency cache in a job that can publish: a poisoned cache could reach the OIDC token.
+          package-manager-cache: false
       # Trusted publishing needs npm 11.5.1+, newer than the npm bundled with Node 22.
       - run: npm install -g npm@^11.5.1
       - id: published
@@ -452,7 +456,7 @@ The skip step makes the workflow safe to re-run, and it lets `js-v0.2.0`, which 
 
 The tag check is its own job, running in parallel with CI rather than after it, so a bad tag fails in seconds. `publish` needs both, so a mismatch still stops the release before `npm publish`, as the spec requires.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add .github/workflows/release-js.yml packages/js/package.json
