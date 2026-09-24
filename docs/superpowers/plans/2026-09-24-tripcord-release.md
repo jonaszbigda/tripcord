@@ -71,7 +71,7 @@ Commands: `npm test -w server` (a single file: `npm test -w server -- src/app.te
 - Create: `server/src/version.ts`
 - Modify: `server/src/app.ts`, `server/src/app.test.ts`, `server/src/static.test.ts`, `server/package.json`, `package-lock.json`
 
-- [ ] **Step 1: Update the tests to expect a version**
+- [x] **Step 1: Update the tests to expect a version**
 
 In `server/src/app.test.ts`, add to the imports:
 
@@ -103,12 +103,12 @@ In `server/src/static.test.ts`, in "keeps JSON 404s for API paths and non-GET re
 
 The version is pinned in `app.test.ts`. This test only checks that `/health` isn't swallowed by the SPA fallback.
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npm test -w server -- src/app.test.ts`
 Expected: FAIL. The response lacks `version`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Create `server/src/version.ts`:
 
@@ -139,7 +139,7 @@ and change the health route to:
 
 In `server/package.json`, set `"version": "0.1.0"`. Then run `npm install` from the root so `package-lock.json` records the workspace's new version.
 
-- [ ] **Step 4: Run the server tests**
+- [x] **Step 4: Run the server tests**
 
 Run: `npm test -w server`
 Expected: PASS, including `GET /health` with `version: "0.1.0"`.
@@ -147,7 +147,7 @@ Expected: PASS, including `GET /health` with `version: "0.1.0"`.
 Also run `npm run build -w server && node -e "console.log(require('./server/dist/version.js').SERVER_VERSION)"`.
 Expected: `0.1.0`. This proves the `dist/` path resolves too.
 
-- [ ] **Step 5: Update the server README**
+- [x] **Step 5: Update the server README**
 
 In `server/README.md`, change the health-check comment under "Running it" to `# {"status":"ok","version":"0.1.0"}`. In "## API", change the `/health` line to:
 
@@ -156,7 +156,7 @@ In `server/README.md`, change the health-check comment under "Running it" to `# 
 `version` is the running server's version.
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add server/src/version.ts server/src/app.ts server/src/app.test.ts server/src/static.test.ts server/package.json package-lock.json server/README.md
