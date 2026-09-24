@@ -12,6 +12,13 @@ function retryAfter(error: Error | null): number {
     : 0;
 }
 
+// The daily cap can mean a wait of hours, which reads badly in seconds.
+function formatWait(seconds: number): string {
+  if (seconds <= 120) return `${seconds} s`;
+  if (seconds <= 90 * 60) return `${Math.ceil(seconds / 60)} min`;
+  return `${Math.ceil(seconds / 3600)} h`;
+}
+
 // Shown by RequireAuth in place of any page while the server requires
 // verification. Offers only what an unverified account can do.
 export function VerifyEmailPendingPage({ me }: { me: Me }) {
@@ -61,7 +68,7 @@ export function VerifyEmailPendingPage({ me }: { me: Me }) {
             Resend email
           </Button>
           {resend.isSuccess && wait === 0 && <p className="text-muted">Sent. Check your inbox and spam folder.</p>}
-          {wait > 0 && <p className="text-muted">You can resend in {wait} s.</p>}
+          {wait > 0 && <p className="text-muted">You can resend in {formatWait(wait)}.</p>}
           {resend.error && retryAfter(resend.error) === 0 && <ErrorText error={resend.error} />}
         </div>
 

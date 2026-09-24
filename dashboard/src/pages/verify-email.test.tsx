@@ -38,6 +38,21 @@ describe("unverified email", () => {
     expect(screen.getByRole("button", { name: "Resend email" })).toBeDisabled();
   });
 
+  it("shows a long wait in hours", async () => {
+    mockApi({
+      "GET /api/me": { body: UNVERIFIED_ME },
+      "POST /api/me/verify-email/resend": {
+        status: 429,
+        body: { error: "Too many verification emails", retryAfterSeconds: 7200 },
+      },
+    });
+    const user = userEvent.setup();
+    renderApp("/");
+
+    await user.click(await screen.findByRole("button", { name: "Resend email" }));
+    expect(await screen.findByText("You can resend in 2 h.")).toBeInTheDocument();
+  });
+
   it("fixes a typo'd address", async () => {
     let me = UNVERIFIED_ME;
     const calls = mockApi({
