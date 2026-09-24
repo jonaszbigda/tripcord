@@ -1,4 +1,5 @@
 import { SIGNUP_MODES, type SignupMode } from "./accounts";
+import type { EmailConfig } from "./email";
 
 export interface GithubConfig {
   clientId: string;
@@ -13,6 +14,8 @@ export interface DashboardConfig {
   github?: GithubConfig;
   trustProxy: boolean;
   dashboardDir: string;
+  /** Password reset and emailed invites are enabled only when set. */
+  email?: EmailConfig;
 }
 
 function parseOrigin(value: string, name: string): string {
@@ -48,11 +51,21 @@ export function loadDashboardConfig(env: Record<string, string | undefined>, def
       ? { clientId, clientSecret, baseUrl: parseOrigin(env.GITHUB_BASE_URL ?? "https://github.com", "GITHUB_BASE_URL") }
       : undefined;
 
+  const smtpUrl = env.SMTP_URL;
+  const from = env.EMAIL_FROM;
+  if (Boolean(smtpUrl) !== Boolean(from)) {
+    throw new Error("SMTP_URL and EMAIL_FROM must be set together");
+  }
+  if (smtpUrl && !/^smtps?:\/\//.test(smtpUrl)) {
+    throw new Error("SMTP_URL must start with smtp:// or smtps://");
+  }
+
   return {
     publicUrl,
     signup: signup as SignupMode,
     github,
     trustProxy: env.TRUST_PROXY === "true" || env.TRUST_PROXY === "1",
     dashboardDir: env.DASHBOARD_DIR ?? defaultDashboardDir,
+    email: smtpUrl && from ? { smtpUrl, from } : undefined,
   };
 }

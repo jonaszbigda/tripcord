@@ -11,7 +11,12 @@ import { meBody } from "./me";
 
 export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+$/;
 
-const passwordSchema = { type: "string", minLength: 8, maxLength: 256 } as const;
+export const passwordSchema = { type: "string", minLength: 8, maxLength: 256 } as const;
+
+/** Per-IP limit for login, signup, password reset and account deletion. */
+export function authRateLimit(ctx: ApiContext) {
+  return { max: ctx.authRateLimitMax, timeWindow: "1 minute", errorResponseBuilder: rateLimitErrorBody };
+}
 
 const signupSchema = {
   type: "object",
@@ -56,22 +61,19 @@ interface LoginBody {
 
 export function registerAuthRoutes(app: FastifyInstance, ctx: ApiContext): void {
   const { db } = ctx;
-  const authRateLimit = {
-    max: ctx.authRateLimitMax,
-    timeWindow: "1 minute",
-    errorResponseBuilder: rateLimitErrorBody,
-  };
+  const rateLimit = authRateLimit(ctx);
 
   // Drives the login/signup UI: whether to offer signup and a GitHub button.
   app.get("/api/auth/config", async () => ({
     signup: ctx.signup,
     bootstrapped: (await countUsers(db)) > 0,
     github: ctx.github !== undefined,
+    passwordReset: ctx.mailer !== undefined,
   }));
 
   app.post<{ Body: SignupBody }>(
     "/api/auth/signup",
-    { schema: { body: signupSchema }, config: { rateLimit: authRateLimit } },
+    { schema: { body: signupSchema }, config: { rateLimit } },
     async (request, reply) => {
       const email = normalizeEmail(request.body.email);
       if (!EMAIL_PATTERN.test(email)) {
@@ -99,7 +101,7 @@ export function registerAuthRoutes(app: FastifyInstance, ctx: ApiContext): void 
 
   app.post<{ Body: LoginBody }>(
     "/api/auth/login",
-    { schema: { body: loginSchema }, config: { rateLimit: authRateLimit } },
+    { schema: { body: loginSchema }, config: { rateLimit } },
     async (request, reply) => {
       const user = await findUserByEmail(db, request.body.email);
       // Always one scrypt verification, so timing doesn't reveal whether the

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { createTestOrg, createTestUser, getTestDb, resetDb, sessionCookie } from "../../test/db";
+import { FakeMailer } from "../../test/mailer";
 import { buildTestApp, call } from "../../test/http";
 import { addMember } from "../db/orgs";
 import { createInvite } from "../db/invites";
@@ -16,6 +17,7 @@ describe("GET /api/auth/config", () => {
       signup: "invite-only",
       bootstrapped: false,
       github: false,
+      passwordReset: false,
     });
 
     await createTestUser(getTestDb());
@@ -27,7 +29,13 @@ describe("GET /api/auth/config", () => {
       signup: "open",
       bootstrapped: true,
       github: true,
+      passwordReset: false,
     });
+  });
+
+  it("reports password reset when a mailer is configured", async () => {
+    const app = await buildTestApp(getTestDb(), { mailer: new FakeMailer() });
+    expect((await call(app, "GET", "/api/auth/config")).json()).toMatchObject({ passwordReset: true });
   });
 });
 

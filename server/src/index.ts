@@ -3,6 +3,7 @@ import { createDb } from "./db/client";
 import { runMigrations } from "./db/migrate";
 import { buildApp } from "./app";
 import { loadDashboardConfig } from "./config";
+import { createSmtpMailer } from "./email";
 import { scheduleCleanup } from "./retention";
 
 async function main(): Promise<void> {
@@ -27,6 +28,7 @@ async function main(): Promise<void> {
     github: dashboard.github,
     trustProxy: dashboard.trustProxy,
     dashboardDir: dashboard.dashboardDir,
+    mailer: dashboard.email ? createSmtpMailer(dashboard.email) : undefined,
   });
 
   const retentionDays = process.env.RETENTION_DAYS ? Number(process.env.RETENTION_DAYS) : 30;

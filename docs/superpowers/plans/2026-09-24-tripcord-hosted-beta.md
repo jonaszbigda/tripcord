@@ -495,11 +495,11 @@ git commit -m "feat(server): signup invites and the hosted beta schema"
   - `authRateLimit(ctx)` and `passwordSchema` exported from `routes/auth.ts`.
   - `FakeMailer` in `server/test/mailer.ts`.
 
-- [ ] **Step 1: Add the dependency**
+- [x] **Step 1: Add the dependency**
 
 Run: `npm install nodemailer -w server && npm install -D @types/nodemailer -w server`
 
-- [ ] **Step 2: Write the failing tests**
+- [x] **Step 2: Write the failing tests**
 
 In `server/src/config.test.ts`, add `email: undefined` to the "applies defaults" expectation. Add `SMTP_URL: "smtps://u:p@smtp.example.com:465"` and `EMAIL_FROM: "Tripcord <no-reply@tripcord.dev>"` to "reads every variable", and `email: { smtpUrl: "smtps://u:p@smtp.example.com:465", from: "Tripcord <no-reply@tripcord.dev>" }` to its expectation. Then append:
 
@@ -557,12 +557,12 @@ In `server/src/routes/auth.test.ts`, add `passwordReset: false` to both `/api/au
 
 (import `FakeMailer` from `../../test/mailer`).
 
-- [ ] **Step 3: Run the tests to verify they fail**
+- [x] **Step 3: Run the tests to verify they fail**
 
 Run: `npm test -w server -- src/config.test.ts src/email.test.ts src/routes/auth.test.ts`
 Expected: FAIL. The modules and fields don't exist yet.
 
-- [ ] **Step 4: Implement**
+- [x] **Step 4: Implement**
 
 Create `server/src/email.ts`:
 
@@ -701,12 +701,12 @@ Inside `registerAuthRoutes`, replace the local `authRateLimit` object with `cons
 
 In `server/src/index.ts`, import `createSmtpMailer`, and pass `mailer: dashboard.email ? createSmtpMailer(dashboard.email) : undefined,` to `buildApp`.
 
-- [ ] **Step 5: Run the tests to verify they pass**
+- [x] **Step 5: Run the tests to verify they pass**
 
 Run: `npm test -w server && npm run typecheck -w server && npm run lint -w server`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add server package-lock.json

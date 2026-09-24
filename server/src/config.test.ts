@@ -9,6 +9,7 @@ describe("loadDashboardConfig", () => {
       github: undefined,
       trustProxy: false,
       dashboardDir: "/default/dist",
+      email: undefined,
     });
   });
 
@@ -22,6 +23,8 @@ describe("loadDashboardConfig", () => {
         GITHUB_BASE_URL: "https://ghe.example.com",
         TRUST_PROXY: "true",
         DASHBOARD_DIR: "/srv/dashboard",
+        SMTP_URL: "smtps://u:p@smtp.example.com:465",
+        EMAIL_FROM: "Tripcord <no-reply@tripcord.dev>",
       },
       "/default/dist"
     );
@@ -31,7 +34,23 @@ describe("loadDashboardConfig", () => {
       github: { clientId: "id", clientSecret: "secret", baseUrl: "https://ghe.example.com" },
       trustProxy: true,
       dashboardDir: "/srv/dashboard",
+      email: { smtpUrl: "smtps://u:p@smtp.example.com:465", from: "Tripcord <no-reply@tripcord.dev>" },
     });
+  });
+
+  it("requires SMTP_URL and EMAIL_FROM together", () => {
+    expect(() => loadDashboardConfig({ SMTP_URL: "smtp://localhost" }, "/d")).toThrow(
+      "SMTP_URL and EMAIL_FROM must be set together"
+    );
+    expect(() => loadDashboardConfig({ EMAIL_FROM: "a@b.c" }, "/d")).toThrow(
+      "SMTP_URL and EMAIL_FROM must be set together"
+    );
+  });
+
+  it("rejects an SMTP_URL that isn't smtp:// or smtps://", () => {
+    expect(() => loadDashboardConfig({ SMTP_URL: "https://mail.example.com", EMAIL_FROM: "a@b.c" }, "/d")).toThrow(
+      "SMTP_URL must start with smtp:// or smtps://"
+    );
   });
 
   it("defaults the GitHub base URL", () => {

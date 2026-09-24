@@ -8,6 +8,7 @@ import fastifyStatic from "@fastify/static";
 import type { SignupMode } from "./accounts";
 import type { GithubConfig } from "./config";
 import type { Database } from "./db/client";
+import type { Mailer } from "./email";
 import { csrfGuard } from "./auth/http";
 import type { ApiContext } from "./routes/context";
 import { registerAuthRoutes } from "./routes/auth";
@@ -39,6 +40,8 @@ export interface AppOptions {
   trustProxy?: boolean;
   /** Built dashboard to serve at /. Not served when unset or missing. */
   dashboardDir?: string;
+  /** Sends email. Password reset is enabled only when set. */
+  mailer?: Mailer;
   /** Per-IP login and signup attempts per minute. Default 10. */
   authRateLimitMax?: number;
   /** Called for every registered route; the tenant-isolation test enumerates routes with it. */
@@ -163,6 +166,7 @@ export async function buildApp(db: Database, options: AppOptions = {}): Promise<
     github: options.github,
     githubFetch: options.githubFetch ?? fetch,
     authRateLimitMax: options.authRateLimitMax ?? 10,
+    mailer: options.mailer,
   };
   registerAuthRoutes(app, ctx);
   registerMeRoutes(app, ctx);
