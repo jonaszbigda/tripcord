@@ -145,8 +145,15 @@ All three use the per-IP auth rate limit from `routes/auth.ts`.
 transaction.
 
 A reset link is bound to the address it was sent to: `password_resets` gains a
-not-null `email` column (migration 0006 fills it from `users` for existing rows),
-and `resetPassword` refuses a link whose address no longer matches the user's.
+not-null `email` column, and `resetPassword` refuses a link whose address no
+longer matches the user's. Migration 0006 drops unverified users' pending links
+and fills the column from `users` for the rest.
+
+`changeUnverifiedEmail` writes the new address only while the row is still
+unverified (`UPDATE … WHERE email_verified_at IS NULL`), and answers
+`already_verified` otherwise. The request's user was read before the change, so
+a link used in parallel could otherwise verify the old address and then have the
+new one swapped in.
 Changing an unverified address also deletes pending reset links. Without the
 binding, a reset requested at the same moment as an address change could be
 stored after the change and then verify an address its sender never proved.

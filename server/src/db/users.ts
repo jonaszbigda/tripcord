@@ -51,8 +51,16 @@ export async function setGithubId(ex: Executor, userId: string, githubId: string
   await ex.update(users).set({ githubId }).where(eq(users.id, userId));
 }
 
-export async function setEmail(ex: Executor, userId: string, email: string): Promise<void> {
-  await ex.update(users).set({ email: normalizeEmail(email) }).where(eq(users.id, userId));
+// Conditional, so a verification committed after the caller read the user
+// wins: Postgres re-checks the WHERE against the latest row.
+/** Changes an unverified user's address. False (and no change) once they're verified. */
+export async function setUnverifiedEmail(ex: Executor, userId: string, email: string): Promise<boolean> {
+  const rows = await ex
+    .update(users)
+    .set({ email: normalizeEmail(email) })
+    .where(and(eq(users.id, userId), isNull(users.emailVerifiedAt)))
+    .returning({ id: users.id });
+  return rows.length > 0;
 }
 
 /** Records the first verification; later calls keep the original time. */

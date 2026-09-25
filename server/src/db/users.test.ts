@@ -11,7 +11,7 @@ import {
   listUnverifiedUserIds,
   markEmailVerified,
   normalizeEmail,
-  setEmail,
+  setUnverifiedEmail,
   setGithubId,
   setPasswordHash,
 } from "./users";
@@ -86,11 +86,16 @@ describe("users", () => {
     expect((await findUserById(db, user.id))?.emailVerifiedAt).toEqual(first);
   });
 
-  it("setEmail stores the normalized address", async () => {
+  it("setUnverifiedEmail stores the normalized address, but never a verified user's", async () => {
     const db = getTestDb();
-    const user = await createTestUser(db);
-    await setEmail(db, user.id, " New@Example.com ");
-    expect((await findUserById(db, user.id))?.email).toBe("new@example.com");
+    const unverified = await createTestUser(db, { emailVerified: false });
+    const verified = await createTestUser(db);
+
+    expect(await setUnverifiedEmail(db, unverified.id, " New@Example.com ")).toBe(true);
+    expect(await setUnverifiedEmail(db, verified.id, "other@example.com")).toBe(false);
+
+    expect((await findUserById(db, unverified.id))?.email).toBe("new@example.com");
+    expect((await findUserById(db, verified.id))?.email).toBe(verified.email);
   });
 
   it("lists unverified users created before a cutoff", async () => {

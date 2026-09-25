@@ -9,7 +9,7 @@ import {
   revokeEmailVerifications,
 } from "./db/email-verifications";
 import { deleteUnusedPasswordResets } from "./db/password-resets";
-import { findUserByEmail, findUserById, listUnverifiedUserIds, markEmailVerified, normalizeEmail, setEmail } from "./db/users";
+import { findUserByEmail, findUserById, listUnverifiedUserIds, markEmailVerified, normalizeEmail, setUnverifiedEmail } from "./db/users";
 import { deleteUser } from "./deletion";
 import { verifyEmailMail, type Mailer } from "./email";
 
@@ -122,12 +122,20 @@ export async function changeUnverifiedEmail(
   if (wait > 0) {
     return { status: "throttled", retryAfterSeconds: wait };
   }
-  await db.transaction(async (tx) => {
-    await setEmail(tx, user.id, normalized);
+  const changed = await db.transaction(async (tx) => {
+    // `user` was read at the start of the request; a link may have verified
+    // the account since, and a verified address must not change.
+    if (!(await setUnverifiedEmail(tx, user.id, normalized))) {
+      return false;
+    }
     await revokeEmailVerifications(tx, user.id, now);
     // A reset link sent to the old address would otherwise verify the new one.
     await deleteUnusedPasswordResets(tx, user.id);
+    return true;
   });
+  if (!changed) {
+    return { status: "already_verified" };
+  }
   return sendVerification(db, mailer, publicUrl, { ...user, email: normalized }, now);
 }
 

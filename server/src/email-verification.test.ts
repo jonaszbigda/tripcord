@@ -6,7 +6,7 @@ import { deleteStaleEmailVerifications } from "./db/email-verifications";
 import { createPasswordReset } from "./db/password-resets";
 import { createOrgWithOwner, addMember } from "./db/orgs";
 import { emailVerifications, users } from "./db/schema";
-import { findUserById } from "./db/users";
+import { findUserById, markEmailVerified } from "./db/users";
 import {
   changeUnverifiedEmail,
   deleteUnverifiedAccounts,
@@ -165,6 +165,20 @@ describe("changeUnverifiedEmail", () => {
 
     expect(await resetPassword(getTestDb(), resetToken, "hash")).toBe(false);
     expect((await reload(user.id)).emailVerifiedAt).toBeNull();
+  });
+
+  it("won't move a just-verified account to a new address (stale session user)", async () => {
+    // The request loaded the user before a link verified them in parallel.
+    const stale = await createTestUser(getTestDb(), { email: "attacker@example.com", emailVerified: false });
+    await markEmailVerified(getTestDb(), stale.id);
+    const mailer = new FakeMailer();
+
+    expect(await changeUnverifiedEmail(getTestDb(), mailer, PUBLIC_URL, stale, "victim@example.com")).toEqual({
+      status: "already_verified",
+    });
+
+    expect((await reload(stale.id)).email).toBe("attacker@example.com");
+    expect(mailer.sent).toEqual([]);
   });
 
   it("refuses an address another account has", async () => {

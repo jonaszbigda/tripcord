@@ -6,7 +6,7 @@ import { hashPassword, verifyPassword } from "./auth/password";
 import { createPasswordReset, deleteStalePasswordResets } from "./db/password-resets";
 import { passwordResets } from "./db/schema";
 import { createSession, findSessionUser } from "./db/sessions";
-import { findUserById, setEmail } from "./db/users";
+import { findUserById, setUnverifiedEmail } from "./db/users";
 import { requestPasswordReset, resetPassword } from "./password-reset";
 
 const PUBLIC_URL = "https://app.tripcord.dev";
@@ -90,7 +90,7 @@ describe("resetPassword", () => {
     // after the change cleared pending links. It proves the old inbox, not the new one.
     const user = await createTestUser(getTestDb(), { email: "attacker@example.com", password: "old-password", emailVerified: false });
     const token = await createPasswordReset(getTestDb(), user.id, "attacker@example.com");
-    await setEmail(getTestDb(), user.id, "victim@example.com");
+    await setUnverifiedEmail(getTestDb(), user.id, "victim@example.com");
 
     expect(await resetPassword(getTestDb(), token, await hashPassword("new-password"))).toBe(false);
 
