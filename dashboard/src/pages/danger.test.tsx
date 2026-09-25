@@ -45,9 +45,15 @@ describe("project settings", () => {
 
 describe("org settings", () => {
   it("an owner deletes the org after typing its name and leaves it", async () => {
+    // Like the server, "me" stops listing the org once it's deleted, so a
+    // refetch after deleting can't bring it back.
+    let deleted = false;
     const calls = mockApi({
-      "GET /api/me": { body: ME },
-      [`DELETE /api/orgs/${ORG_ID}`]: { status: 204 },
+      "GET /api/me": () => ({ body: deleted ? { ...ME, orgs: [] } : ME }),
+      [`DELETE /api/orgs/${ORG_ID}`]: () => {
+        deleted = true;
+        return { status: 204 };
+      },
     });
     const user = userEvent.setup();
     renderApp(`/orgs/${ORG_ID}/settings`);
