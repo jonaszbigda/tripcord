@@ -12,5 +12,9 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],
+    // Node 25+ ships its own global localStorage, which is unusable without
+    // --localstorage-file. Vitest won't overwrite a global that already exists,
+    // so jsdom's localStorage would never be installed. Turn Node's off.
+    poolOptions: { forks: { execArgv: ["--no-experimental-webstorage"] } },
   },
 });
