@@ -157,7 +157,7 @@ describe("changeUnverifiedEmail", () => {
 
   it("kills reset links sent to the old address, so they can't verify the new one", async () => {
     const user = await createTestUser(getTestDb(), { email: "attacker@example.com", emailVerified: false });
-    const resetToken = await createPasswordReset(getTestDb(), user.id);
+    const resetToken = await createPasswordReset(getTestDb(), user.id, user.email);
 
     expect(await changeUnverifiedEmail(getTestDb(), new FakeMailer(), PUBLIC_URL, user, "victim@example.com")).toEqual({
       status: "sent",

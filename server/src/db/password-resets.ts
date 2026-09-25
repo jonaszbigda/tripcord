@@ -5,13 +5,14 @@ import { generateToken, hashToken } from "../auth/tokens";
 
 export const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000;
 
-/** A new reset token for the user. Their earlier unused tokens stop working. */
-export async function createPasswordReset(ex: Executor, userId: string, now = new Date()): Promise<string> {
+/** A new reset token for the user, mailed to `email`. Their earlier unused tokens stop working. */
+export async function createPasswordReset(ex: Executor, userId: string, email: string, now = new Date()): Promise<string> {
   const { token, hash } = generateToken("tpr_");
   await deleteUnusedPasswordResets(ex, userId);
   await ex.insert(passwordResets).values({
     tokenHash: hash,
     userId,
+    email,
     createdAt: now,
     expiresAt: new Date(now.getTime() + PASSWORD_RESET_TTL_MS),
   });
@@ -35,16 +36,19 @@ export async function latestPasswordResetAt(ex: Executor, userId: string): Promi
 
 // Conditional update, like consumeInvite: of two concurrent uses of one token,
 // only the first finds used_at NULL.
-/** The token's user id, marking it used; undefined for an unknown, expired or used token. */
-export async function consumePasswordReset(ex: Executor, token: string): Promise<string | undefined> {
+/** The token's user and address, marking it used; undefined for an unknown, expired or used token. */
+export async function consumePasswordReset(
+  ex: Executor,
+  token: string
+): Promise<{ userId: string; email: string } | undefined> {
   const [row] = await ex
     .update(passwordResets)
     .set({ usedAt: new Date() })
     .where(
       and(eq(passwordResets.tokenHash, hashToken(token)), isNull(passwordResets.usedAt), gt(passwordResets.expiresAt, new Date()))
     )
-    .returning({ userId: passwordResets.userId });
-  return row?.userId;
+    .returning({ userId: passwordResets.userId, email: passwordResets.email });
+  return row;
 }
 
 export async function deleteStalePasswordResets(ex: Executor): Promise<number> {

@@ -93,6 +93,9 @@ export const passwordResets = pgTable(
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id),
+    // The address the link went to: a link only works while the account still
+    // has that address, so it can't vouch for one the user changed to since.
+    email: text("email").notNull(),
     // Set from the server's clock (not defaultNow) so the 2-minute cooldown
     // compares like with like.
     createdAt: timestamp("created_at").notNull(),

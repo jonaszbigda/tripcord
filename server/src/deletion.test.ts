@@ -85,7 +85,7 @@ describe("deleteUser", () => {
     const joined = await createOrgWithOwner(db, bob.id, "Joined");
     await addMember(db, joined.id, ana.id, "member");
     await createSession(db, ana.id);
-    await createPasswordReset(db, ana.id);
+    await createPasswordReset(db, ana.id, ana.email);
 
     expect(await deleteUser(db, ana.id)).toEqual({ ok: true, deletedOrgs: [{ id: solo.id, name: "Solo" }] });
 

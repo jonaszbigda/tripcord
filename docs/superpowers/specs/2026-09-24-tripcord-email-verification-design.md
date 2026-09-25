@@ -144,6 +144,13 @@ All three use the per-IP auth rate limit from `routes/auth.ts`.
 `resetPassword` also sets `email_verified_at = now()` when it's null, in the same
 transaction.
 
+A reset link is bound to the address it was sent to: `password_resets` gains a
+not-null `email` column (migration 0006 fills it from `users` for existing rows),
+and `resetPassword` refuses a link whose address no longer matches the user's.
+Changing an unverified address also deletes pending reset links. Without the
+binding, a reset requested at the same moment as an address change could be
+stored after the change and then verify an address its sender never proved.
+
 ### Retention
 
 The daily job in `retention.ts` gains two steps:

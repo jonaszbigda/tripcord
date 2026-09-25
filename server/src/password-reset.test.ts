@@ -6,7 +6,7 @@ import { hashPassword, verifyPassword } from "./auth/password";
 import { createPasswordReset, deleteStalePasswordResets } from "./db/password-resets";
 import { passwordResets } from "./db/schema";
 import { createSession, findSessionUser } from "./db/sessions";
-import { findUserById } from "./db/users";
+import { findUserById, setEmail } from "./db/users";
 import { requestPasswordReset, resetPassword } from "./password-reset";
 
 const PUBLIC_URL = "https://app.tripcord.dev";
@@ -32,6 +32,7 @@ describe("requestPasswordReset", () => {
     expect(mailer.sent[0].to).toBe("ana@example.com");
     const [row] = await getTestDb().select().from(passwordResets).where(eq(passwordResets.userId, user.id));
     expect(row.expiresAt.getTime() - row.createdAt.getTime()).toBe(60 * 60 * 1000);
+    expect(row.email).toBe("ana@example.com");
     expect(tokenFrom(mailer)).toMatch(/^tpr_[A-Za-z0-9_-]{43}$/);
   });
 
@@ -66,7 +67,7 @@ describe("resetPassword", () => {
   it("sets the password, ends every session, and works once", async () => {
     const user = await createTestUser(getTestDb(), { password: "old-password" });
     const { token: session } = await createSession(getTestDb(), user.id);
-    const token = await createPasswordReset(getTestDb(), user.id);
+    const token = await createPasswordReset(getTestDb(), user.id, user.email);
 
     expect(await resetPassword(getTestDb(), token, await hashPassword("new-password"))).toBe(true);
 
@@ -78,15 +79,29 @@ describe("resetPassword", () => {
 
   it("refuses an expired or unknown token", async () => {
     const user = await createTestUser(getTestDb());
-    const token = await createPasswordReset(getTestDb(), user.id, new Date(Date.now() - 2 * 60 * 60 * 1000));
+    const token = await createPasswordReset(getTestDb(), user.id, user.email, new Date(Date.now() - 2 * 60 * 60 * 1000));
 
     expect(await resetPassword(getTestDb(), token, "hash")).toBe(false);
     expect(await resetPassword(getTestDb(), "tpr_nope", "hash")).toBe(false);
   });
 
+  it("refuses a link sent to an address the account no longer has", async () => {
+    // A reset requested at the same moment as an address change can be stored
+    // after the change cleared pending links. It proves the old inbox, not the new one.
+    const user = await createTestUser(getTestDb(), { email: "attacker@example.com", password: "old-password", emailVerified: false });
+    const token = await createPasswordReset(getTestDb(), user.id, "attacker@example.com");
+    await setEmail(getTestDb(), user.id, "victim@example.com");
+
+    expect(await resetPassword(getTestDb(), token, await hashPassword("new-password"))).toBe(false);
+
+    const updated = await findUserById(getTestDb(), user.id);
+    expect(updated?.emailVerifiedAt).toBeNull();
+    expect(await verifyPassword("old-password", updated!.passwordHash!)).toBe(true);
+  });
+
   it("verifies the email: the link proves the inbox is theirs", async () => {
     const user = await createTestUser(getTestDb(), { emailVerified: false });
-    const token = await createPasswordReset(getTestDb(), user.id);
+    const token = await createPasswordReset(getTestDb(), user.id, user.email);
 
     expect(await resetPassword(getTestDb(), token, "hash")).toBe(true);
 
@@ -95,7 +110,7 @@ describe("resetPassword", () => {
 
   it("unlinks GitHub from an unverified user: a link made before the reset is untrusted", async () => {
     const user = await createTestUser(getTestDb(), { emailVerified: false, githubId: "42" });
-    const token = await createPasswordReset(getTestDb(), user.id);
+    const token = await createPasswordReset(getTestDb(), user.id, user.email);
 
     expect(await resetPassword(getTestDb(), token, "hash")).toBe(true);
 
@@ -106,7 +121,7 @@ describe("resetPassword", () => {
 
   it("keeps a verified user's GitHub link", async () => {
     const user = await createTestUser(getTestDb(), { githubId: "42" });
-    const token = await createPasswordReset(getTestDb(), user.id);
+    const token = await createPasswordReset(getTestDb(), user.id, user.email);
 
     expect(await resetPassword(getTestDb(), token, "hash")).toBe(true);
 
@@ -121,9 +136,9 @@ describe("deleteStalePasswordResets", () => {
 
   it("deletes tokens that expired more than a day ago and keeps the rest", async () => {
     const user = await createTestUser(getTestDb());
-    await createPasswordReset(getTestDb(), user.id, new Date(Date.now() - 3 * 24 * 60 * 60 * 1000));
+    await createPasswordReset(getTestDb(), user.id, user.email, new Date(Date.now() - 3 * 24 * 60 * 60 * 1000));
     const other = await createTestUser(getTestDb());
-    await createPasswordReset(getTestDb(), other.id);
+    await createPasswordReset(getTestDb(), other.id, other.email);
 
     expect(await deleteStalePasswordResets(getTestDb())).toBe(1);
     const left = await getTestDb().select().from(passwordResets);
