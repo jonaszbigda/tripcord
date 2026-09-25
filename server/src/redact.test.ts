@@ -6,6 +6,7 @@ describe("redactTokens", () => {
     expect(redactTokens("/api/invites/tpi_abc-DEF_123/accept")).toBe("/api/invites/tpi_[redacted]/accept");
     expect(redactTokens("/reset-password/tpr_abc")).toBe("/reset-password/tpr_[redacted]");
     expect(redactTokens("/x?key=tpk_abc&y=1")).toBe("/x?key=tpk_[redacted]&y=1");
+    expect(redactTokens("/verify-email/tpv_abc")).toBe("/verify-email/tpv_[redacted]");
   });
 
   it("leaves other URLs alone", () => {

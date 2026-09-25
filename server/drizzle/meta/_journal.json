@@ -36,6 +36,20 @@
       "when": 1790246789032,
       "tag": "0004_hosted_beta",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790281524389,
+      "tag": "0005_email_verification",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790318770441,
+      "tag": "0006_password_reset_email",
+      "breakpoints": true
     }
   ]
 }

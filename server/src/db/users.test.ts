@@ -1,12 +1,17 @@
 import { describe, it, expect, beforeEach } from "vitest";
+import { eq } from "drizzle-orm";
 import { createTestUser, getTestDb, resetDb } from "../../test/db";
+import { users } from "./schema";
 import {
   countUsers,
   findUserByEmail,
   findUserByGithubId,
   findUserById,
   insertUser,
+  listUnverifiedUserIds,
+  markEmailVerified,
   normalizeEmail,
+  setUnverifiedEmail,
   setGithubId,
   setPasswordHash,
 } from "./users";
@@ -61,5 +66,55 @@ describe("users", () => {
     const user = await createTestUser(db);
     await setPasswordHash(db, user.id, "scrypt$fake");
     expect((await findUserById(db, user.id))?.passwordHash).toBe("scrypt$fake");
+  });
+
+  it("stores emailVerifiedAt when given, and NULL by default", async () => {
+    const db = getTestDb();
+    const at = new Date("2026-09-24T10:00:00Z");
+    const verified = await insertUser(db, { email: "v@example.com", name: "V", passwordHash: null, githubId: null, emailVerifiedAt: at });
+    const plain = await insertUser(db, { email: "p@example.com", name: "P", passwordHash: null, githubId: null });
+    expect(verified.emailVerifiedAt).toEqual(at);
+    expect(plain.emailVerifiedAt).toBeNull();
+  });
+
+  it("markEmailVerified sets the time once and never moves it", async () => {
+    const db = getTestDb();
+    const user = await createTestUser(db, { emailVerified: false });
+    const first = new Date("2026-09-24T10:00:00Z");
+    await markEmailVerified(db, user.id, user.email, first);
+    await markEmailVerified(db, user.id, user.email, new Date("2026-09-25T10:00:00Z"));
+    expect((await findUserById(db, user.id))?.emailVerifiedAt).toEqual(first);
+  });
+
+  it("markEmailVerified only verifies the address that was proven", async () => {
+    const db = getTestDb();
+    const user = await createTestUser(db, { email: "new@example.com", emailVerified: false });
+    await markEmailVerified(db, user.id, "old@example.com");
+    expect((await findUserById(db, user.id))?.emailVerifiedAt).toBeNull();
+  });
+
+  it("setUnverifiedEmail stores the normalized address, but never a verified user's", async () => {
+    const db = getTestDb();
+    const unverified = await createTestUser(db, { emailVerified: false });
+    const verified = await createTestUser(db);
+
+    expect(await setUnverifiedEmail(db, unverified.id, " New@Example.com ")).toBe(true);
+    expect(await setUnverifiedEmail(db, verified.id, "other@example.com")).toBe(false);
+
+    expect((await findUserById(db, unverified.id))?.email).toBe("new@example.com");
+    expect((await findUserById(db, verified.id))?.email).toBe(verified.email);
+  });
+
+  it("lists unverified users created before a cutoff", async () => {
+    const db = getTestDb();
+    const old = await createTestUser(db, { emailVerified: false });
+    const recent = await createTestUser(db, { emailVerified: false });
+    await createTestUser(db); // verified
+    await db.update(users).set({ createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000) }).where(eq(users.id, old.id));
+
+    const ids = await listUnverifiedUserIds(db, new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
+
+    expect(ids).toEqual([old.id]);
+    expect(ids).not.toContain(recent.id);
   });
 });

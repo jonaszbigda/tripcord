@@ -16,4 +16,6 @@ export interface ApiContext {
   authRateLimitMax: number;
   /** Password reset (and the email it sends) is enabled only when set. */
   mailer?: Mailer;
+  /** SIGNUP=open with SMTP: password signups must verify their email. */
+  emailVerification: boolean;
 }

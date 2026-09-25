@@ -37,12 +37,12 @@ function membershipError(result: Extract<MembershipChange, { ok: false }>) {
 
 export function registerOrgRoutes(app: FastifyInstance, ctx: ApiContext): void {
   const { db } = ctx;
-  const asMember = [requireUser(db), requireMembership(db, "member")];
-  const asOwner = [requireUser(db), requireMembership(db, "owner")];
+  const asMember = [requireUser(db, ctx.emailVerification), requireMembership(db, "member")];
+  const asOwner = [requireUser(db, ctx.emailVerification), requireMembership(db, "owner")];
 
   app.post<{ Body: { name: string } }>(
     "/api/orgs",
-    { preValidation: requireUser(db), schema: { body: nameBodySchema } },
+    { preValidation: requireUser(db, ctx.emailVerification), schema: { body: nameBodySchema } },
     async (request, reply) => {
       const name = requireName(request.body.name, "Org name");
       const org = await createOrgWithOwner(db, currentUser(request).id, name);

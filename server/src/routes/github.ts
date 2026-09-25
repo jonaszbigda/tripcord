@@ -77,6 +77,11 @@ export function registerGithubRoutes(app: FastifyInstance, ctx: ApiContext): voi
     if (!user) {
       return reply.redirect("/login?error=not_logged_in");
     }
+    // A link made before the address is proven could outlive the owner reclaiming
+    // the account. The dashboard shows the check-your-inbox page at "/".
+    if (ctx.emailVerification && user.emailVerifiedAt === null) {
+      return reply.redirect("/");
+    }
     const linked = await findUserByGithubId(db, profile.id);
     if (linked && linked.id !== user.id) {
       return reply.redirect("/settings?error=github_taken");
@@ -107,6 +112,7 @@ export function registerGithubRoutes(app: FastifyInstance, ctx: ApiContext): voi
       githubId: profile.id,
       inviteToken: invite,
       mode: ctx.signup,
+      emailVerified: true,
     });
     if (!result.ok) {
       return reply.redirect(SIGNUP_REDIRECTS[result.reason]);

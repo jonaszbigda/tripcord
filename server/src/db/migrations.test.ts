@@ -137,3 +137,56 @@ describe("hosted beta migration (0004)", () => {
     });
   });
 });
+
+describe("email verification migration (0005)", () => {
+  it("marks every existing user verified at their signup time", async () => {
+    await withFreshDatabase(async (pool) => {
+      const db = drizzle(pool);
+      const before = migrationsBefore(5);
+      try {
+        await migrate(db, { migrationsFolder: before });
+      } finally {
+        rmSync(before, { recursive: true, force: true });
+      }
+      await pool.query(
+        `INSERT INTO users (email, name, created_at) VALUES ('a@example.com', 'A', '2026-09-01 10:00:00'), ('b@example.com', 'B', '2026-09-02 11:00:00')`
+      );
+
+      await migrate(db, { migrationsFolder: MIGRATIONS });
+
+      const rows = await pool.query<{ same: boolean }>(`SELECT email_verified_at = created_at AS same FROM users`);
+      expect(rows.rows).toEqual([{ same: true }, { same: true }]);
+    });
+  });
+});
+
+describe("password reset email migration (0006)", () => {
+  it("fills in the address of verified users' links and drops unverified users' pending ones", async () => {
+    await withFreshDatabase(async (pool) => {
+      const db = drizzle(pool);
+      const before = migrationsBefore(6);
+      try {
+        await migrate(db, { migrationsFolder: before });
+      } finally {
+        rmSync(before, { recursive: true, force: true });
+      }
+      const users = await pool.query<{ id: string }>(
+        `INSERT INTO users (email, name, email_verified_at) VALUES ('ana@example.com', 'Ana', now()), ('new@example.com', 'New', NULL) RETURNING id`
+      );
+      const [ana, unverified] = users.rows.map((row) => row.id);
+      await pool.query(
+        `INSERT INTO password_resets (token_hash, user_id, created_at, expires_at) VALUES ('ana', $1, now(), now() + interval '1 hour'), ('new', $2, now(), now() + interval '1 hour')`,
+        [ana, unverified]
+      );
+
+      await migrate(db, { migrationsFolder: MIGRATIONS });
+
+      const rows = await pool.query<{ token_hash: string; email: string }>(`SELECT token_hash, email FROM password_resets`);
+      expect(rows.rows).toEqual([{ token_hash: "ana", email: "ana@example.com" }]);
+      const column = await pool.query<{ is_nullable: string }>(
+        `SELECT is_nullable FROM information_schema.columns WHERE table_name = 'password_resets' AND column_name = 'email'`
+      );
+      expect(column.rows[0].is_nullable).toBe("NO");
+    });
+  });
+});

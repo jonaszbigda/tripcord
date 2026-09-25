@@ -18,6 +18,8 @@ export interface SignUpInput {
   githubId: string | null;
   inviteToken?: string;
   mode: SignupMode;
+  /** True when the address is already proven (GitHub) or doesn't need to be. Default false. */
+  emailVerified?: boolean;
 }
 
 type SignUpFailure = "signup_closed" | "invite_invalid" | "email_taken" | "github_taken";
@@ -61,6 +63,7 @@ export async function signUp(db: Database, input: SignUpInput): Promise<SignUpRe
         name: input.name,
         passwordHash: input.passwordHash,
         githubId: input.githubId,
+        emailVerifiedAt: input.emailVerified ? new Date() : null,
       });
 
       if (invite) {

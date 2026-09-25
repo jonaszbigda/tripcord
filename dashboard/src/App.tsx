@@ -19,6 +19,7 @@ import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 import { SignupPage } from "./pages/SignupPage";
 import { TimelinePage } from "./pages/TimelinePage";
 import { UserSettingsPage } from "./pages/UserSettingsPage";
+import { VerifyEmailPage } from "./pages/VerifyEmailPage";
 
 export function AppRoutes() {
   return (
@@ -26,6 +27,7 @@ export function AppRoutes() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/reset-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+      <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/invite/:token" element={<InvitePage />} />
       <Route element={<RequireAuth />}>

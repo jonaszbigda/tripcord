@@ -31,7 +31,7 @@ export function registerInviteRoutes(app: FastifyInstance, ctx: ApiContext): voi
 
   app.post<{ Params: TokenParams }>(
     "/api/invites/:token/accept",
-    { preValidation: requireUser(db) },
+    { preValidation: requireUser(db, ctx.emailVerification) },
     async (request) => {
       const result = await acceptInvite(db, request.params.token, currentUser(request).id);
       if (!result.ok) {

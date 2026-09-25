@@ -1,3 +1,4 @@
+import { StrictMode } from "react";
 import { render } from "@testing-library/react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, useLocation } from "react-router";
@@ -58,15 +59,14 @@ function LocationProbe() {
 }
 
 /** Renders the whole app at `path`, plus a data-testid="location" probe. */
-export function renderApp(path: string) {
+export function renderApp(path: string, options: { strict?: boolean } = {}) {
   const client = createQueryClient();
-  render(
-    <QueryClientProvider client={client}>
-      <MemoryRouter initialEntries={[path]}>
-        <AppRoutes />
-        <LocationProbe />
-      </MemoryRouter>
-    </QueryClientProvider>
+  const routes = (
+    <MemoryRouter initialEntries={[path]}>
+      <AppRoutes />
+      <LocationProbe />
+    </MemoryRouter>
   );
+  render(<QueryClientProvider client={client}>{options.strict ? <StrictMode>{routes}</StrictMode> : routes}</QueryClientProvider>);
   return { client };
 }

@@ -13,6 +13,9 @@ export const users = pgTable("users", {
   passwordHash: text("password_hash"),
   // GitHub's numeric user id, as text.
   githubId: text("github_id").unique(),
+  // NULL until the owner opens a verification link. Only enforced while
+  // verification is active (SIGNUP=open with SMTP); see email-verification.ts.
+  emailVerifiedAt: timestamp("email_verified_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -90,6 +93,9 @@ export const passwordResets = pgTable(
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id),
+    // The address the link went to: a link only works while the account still
+    // has that address, so it can't vouch for one the user changed to since.
+    email: text("email").notNull(),
     // Set from the server's clock (not defaultNow) so the 2-minute cooldown
     // compares like with like.
     createdAt: timestamp("created_at").notNull(),
@@ -98,6 +104,30 @@ export const passwordResets = pgTable(
   },
   (table) => ({
     userIdx: index("password_resets_user_idx").on(table.userId),
+  })
+);
+
+export const emailVerifications = pgTable(
+  "email_verifications",
+  {
+    // SHA-256 of the tpv_ token. The token itself only ever travels in the email.
+    tokenHash: text("token_hash").primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id),
+    // The address the link went to: a link only verifies that address.
+    email: text("email").notNull(),
+    // Set from the server's clock (not defaultNow), as in password_resets, so the
+    // cooldown and daily limit compare like with like.
+    createdAt: timestamp("created_at").notNull(),
+    expiresAt: timestamp("expires_at").notNull(),
+    // Set when the link is used, or when a newer link or an address change
+    // replaces it. Rows stay until the daily cleanup, so they count toward the
+    // daily send limit.
+    usedAt: timestamp("used_at"),
+  },
+  (table) => ({
+    userIdx: index("email_verifications_user_idx").on(table.userId),
   })
 );
 
@@ -166,6 +196,7 @@ export type Org = typeof orgs.$inferSelect;
 export type Membership = typeof memberships.$inferSelect;
 export type Invite = typeof invites.$inferSelect;
 export type PasswordReset = typeof passwordResets.$inferSelect;
+export type EmailVerification = typeof emailVerifications.$inferSelect;
 export type Project = typeof projects.$inferSelect;
 export type ApiKey = typeof apiKeys.$inferSelect;
 export type Timeline = typeof timelines.$inferSelect;

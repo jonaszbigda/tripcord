@@ -1,6 +1,17 @@
 import { and, asc, count, eq, inArray } from "drizzle-orm";
 import type { Database, Executor } from "./db/client";
-import { apiKeys, invites, memberships, orgs, passwordResets, projects, sessions, timelines, users } from "./db/schema";
+import {
+  apiKeys,
+  emailVerifications,
+  invites,
+  memberships,
+  orgs,
+  passwordResets,
+  projects,
+  sessions,
+  timelines,
+  users,
+} from "./db/schema";
 
 // Hard deletes, children first, each in one transaction. The foreign keys have
 // no ON DELETE actions on purpose: a dependency added later and forgotten here
@@ -97,6 +108,7 @@ export async function deleteUser(db: Database, userId: string): Promise<DeleteUs
     await tx.delete(memberships).where(eq(memberships.userId, userId));
     await tx.delete(sessions).where(eq(sessions.userId, userId));
     await tx.delete(passwordResets).where(eq(passwordResets.userId, userId));
+    await tx.delete(emailVerifications).where(eq(emailVerifications.userId, userId));
     // Invites in orgs that live on keep their history, without a name.
     await tx.update(invites).set({ createdBy: null }).where(eq(invites.createdBy, userId));
     await tx.update(invites).set({ acceptedBy: null }).where(eq(invites.acceptedBy, userId));

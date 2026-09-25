@@ -5,7 +5,7 @@ import { createInvite, listPendingInvites } from "./db/invites";
 import { addMember, createOrgWithOwner, findOrg, listUserOrgs } from "./db/orgs";
 import { createPasswordReset } from "./db/password-resets";
 import { findProjectByApiKey, listProjects } from "./db/projects";
-import { apiKeys, passwordResets, sessions, timelines } from "./db/schema";
+import { apiKeys, emailVerifications, passwordResets, sessions, timelines } from "./db/schema";
 import { createSession } from "./db/sessions";
 import { findUserById } from "./db/users";
 import { deleteOrg, deleteProject, deleteUser, orgDeletionSummary, planUserDeletion } from "./deletion";
@@ -85,7 +85,7 @@ describe("deleteUser", () => {
     const joined = await createOrgWithOwner(db, bob.id, "Joined");
     await addMember(db, joined.id, ana.id, "member");
     await createSession(db, ana.id);
-    await createPasswordReset(db, ana.id);
+    await createPasswordReset(db, ana.id, ana.email);
 
     expect(await deleteUser(db, ana.id)).toEqual({ ok: true, deletedOrgs: [{ id: solo.id, name: "Solo" }] });
 
@@ -124,5 +124,22 @@ describe("deleteUser", () => {
     expect((await deleteUser(db, ana.id)).ok).toBe(true);
 
     expect(await listPendingInvites(db, org.id)).toEqual([{ ...invite, createdByName: null }]);
+  });
+
+  it("removes the user's email verification links", async () => {
+    const db = getTestDb();
+    const user = await createTestUser(db, { emailVerified: false });
+    const now = new Date();
+    await db.insert(emailVerifications).values({
+      tokenHash: "hash",
+      userId: user.id,
+      email: user.email,
+      createdAt: now,
+      expiresAt: new Date(now.getTime() + 60_000),
+    });
+
+    expect((await deleteUser(db, user.id)).ok).toBe(true);
+
+    expect(await db.select().from(emailVerifications).where(eq(emailVerifications.userId, user.id))).toEqual([]);
   });
 });

@@ -18,6 +18,7 @@ describe("GET /api/auth/config", () => {
       bootstrapped: false,
       github: false,
       passwordReset: false,
+      emailVerification: false,
     });
 
     await createTestUser(getTestDb());
@@ -30,6 +31,7 @@ describe("GET /api/auth/config", () => {
       bootstrapped: true,
       github: true,
       passwordReset: false,
+      emailVerification: false,
     });
   });
 

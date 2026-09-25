@@ -5,6 +5,7 @@ import { buildApp } from "./app";
 import { loadDashboardConfig } from "./config";
 import { createSmtpMailer } from "./email";
 import { scheduleCleanup } from "./retention";
+import { emailVerificationWarning, isEmailVerificationActive } from "./email-verification";
 
 async function main(): Promise<void> {
   const databaseUrl = process.env.DATABASE_URL;
@@ -31,8 +32,14 @@ async function main(): Promise<void> {
     mailer: dashboard.email ? createSmtpMailer(dashboard.email) : undefined,
   });
 
+  const hasMailer = dashboard.email !== undefined;
+  const warning = emailVerificationWarning(dashboard.signup, hasMailer);
+  if (warning) {
+    app.log.warn(warning);
+  }
+
   const retentionDays = process.env.RETENTION_DAYS ? Number(process.env.RETENTION_DAYS) : 30;
-  scheduleCleanup(db, retentionDays);
+  scheduleCleanup(db, retentionDays, isEmailVerificationActive(dashboard.signup, hasMailer));
 
   const port = process.env.PORT ? Number(process.env.PORT) : 3000;
   await app.listen({ port, host: "0.0.0.0" });

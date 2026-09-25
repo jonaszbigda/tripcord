@@ -1,4 +1,4 @@
-import { count, eq } from "drizzle-orm";
+import { and, count, eq, isNull, lt } from "drizzle-orm";
 import type { Executor } from "./client";
 import { users, type User } from "./schema";
 
@@ -11,6 +11,8 @@ export interface NewUser {
   name: string;
   passwordHash: string | null;
   githubId: string | null;
+  /** NULL (the default) until the owner proves the address. */
+  emailVerifiedAt?: Date | null;
 }
 
 export async function insertUser(ex: Executor, input: NewUser): Promise<User> {
@@ -47,4 +49,35 @@ export async function setPasswordHash(ex: Executor, userId: string, passwordHash
 
 export async function setGithubId(ex: Executor, userId: string, githubId: string | null): Promise<void> {
   await ex.update(users).set({ githubId }).where(eq(users.id, userId));
+}
+
+// Conditional, so a verification committed after the caller read the user
+// wins: Postgres re-checks the WHERE against the latest row.
+/** Changes an unverified user's address. False (and no change) once they're verified. */
+export async function setUnverifiedEmail(ex: Executor, userId: string, email: string): Promise<boolean> {
+  const rows = await ex
+    .update(users)
+    .set({ email: normalizeEmail(email) })
+    .where(and(eq(users.id, userId), isNull(users.emailVerifiedAt)))
+    .returning({ id: users.id });
+  return rows.length > 0;
+}
+
+// Conditional on the address, like setUnverifiedEmail on verification: an
+// address change committed in parallel wins, so a link can only ever verify
+// the inbox it reached.
+/** Records the first verification of `email`; later calls keep the original time. */
+export async function markEmailVerified(ex: Executor, userId: string, email: string, now = new Date()): Promise<void> {
+  await ex
+    .update(users)
+    .set({ emailVerifiedAt: now })
+    .where(and(eq(users.id, userId), eq(users.email, email), isNull(users.emailVerifiedAt)));
+}
+
+export async function listUnverifiedUserIds(ex: Executor, createdBefore: Date): Promise<string[]> {
+  const rows = await ex
+    .select({ id: users.id })
+    .from(users)
+    .where(and(isNull(users.emailVerifiedAt), lt(users.createdAt, createdBefore)));
+  return rows.map((row) => row.id);
 }
