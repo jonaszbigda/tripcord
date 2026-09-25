@@ -81,9 +81,16 @@ describe("users", () => {
     const db = getTestDb();
     const user = await createTestUser(db, { emailVerified: false });
     const first = new Date("2026-09-24T10:00:00Z");
-    await markEmailVerified(db, user.id, first);
-    await markEmailVerified(db, user.id, new Date("2026-09-25T10:00:00Z"));
+    await markEmailVerified(db, user.id, user.email, first);
+    await markEmailVerified(db, user.id, user.email, new Date("2026-09-25T10:00:00Z"));
     expect((await findUserById(db, user.id))?.emailVerifiedAt).toEqual(first);
+  });
+
+  it("markEmailVerified only verifies the address that was proven", async () => {
+    const db = getTestDb();
+    const user = await createTestUser(db, { email: "new@example.com", emailVerified: false });
+    await markEmailVerified(db, user.id, "old@example.com");
+    expect((await findUserById(db, user.id))?.emailVerifiedAt).toBeNull();
   });
 
   it("setUnverifiedEmail stores the normalized address, but never a verified user's", async () => {

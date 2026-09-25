@@ -170,7 +170,7 @@ describe("changeUnverifiedEmail", () => {
   it("won't move a just-verified account to a new address (stale session user)", async () => {
     // The request loaded the user before a link verified them in parallel.
     const stale = await createTestUser(getTestDb(), { email: "attacker@example.com", emailVerified: false });
-    await markEmailVerified(getTestDb(), stale.id);
+    await markEmailVerified(getTestDb(), stale.id, stale.email);
     const mailer = new FakeMailer();
 
     expect(await changeUnverifiedEmail(getTestDb(), mailer, PUBLIC_URL, stale, "victim@example.com")).toEqual({

@@ -63,12 +63,15 @@ export async function setUnverifiedEmail(ex: Executor, userId: string, email: st
   return rows.length > 0;
 }
 
-/** Records the first verification; later calls keep the original time. */
-export async function markEmailVerified(ex: Executor, userId: string, now = new Date()): Promise<void> {
+// Conditional on the address, like setUnverifiedEmail on verification: an
+// address change committed in parallel wins, so a link can only ever verify
+// the inbox it reached.
+/** Records the first verification of `email`; later calls keep the original time. */
+export async function markEmailVerified(ex: Executor, userId: string, email: string, now = new Date()): Promise<void> {
   await ex
     .update(users)
     .set({ emailVerifiedAt: now })
-    .where(and(eq(users.id, userId), isNull(users.emailVerifiedAt)));
+    .where(and(eq(users.id, userId), eq(users.email, email), isNull(users.emailVerifiedAt)));
 }
 
 export async function listUnverifiedUserIds(ex: Executor, createdBefore: Date): Promise<string[]> {

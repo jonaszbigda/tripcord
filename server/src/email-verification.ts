@@ -92,7 +92,7 @@ export async function verifyEmail(db: Database, token: string): Promise<boolean>
     if (!user || user.email !== consumed.email) {
       return false;
     }
-    await markEmailVerified(tx, user.id);
+    await markEmailVerified(tx, user.id, consumed.email);
     return true;
   });
 }

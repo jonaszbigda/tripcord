@@ -53,7 +53,7 @@ export async function resetPassword(db: Database, token: string, passwordHash: s
       await setGithubId(tx, userId, null);
     }
     // The reset link reached this inbox, which is what verification proves.
-    await markEmailVerified(tx, userId);
+    await markEmailVerified(tx, userId, consumed.email);
     await deleteUserSessions(tx, userId);
     return true;
   });
