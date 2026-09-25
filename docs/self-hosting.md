@@ -29,7 +29,7 @@ Then start it and check it's alive:
 ```bash
 docker compose up -d
 curl -s localhost:3000/health
-# {"status":"ok","version":"0.1.0"}
+# {"status":"ok","version":"0.3.0"}
 ```
 
 The server listens on `127.0.0.1:3000` only. Set up [HTTPS](#https) to reach it
@@ -130,7 +130,7 @@ the window. Both are described in
 
 ## Upgrading
 
-`TRIPCORD_VERSION` pins a minor version (`0.1`), so pulling picks up patch releases
+`TRIPCORD_VERSION` pins a minor version (`0.3`), so pulling picks up patch releases
 and nothing more:
 
 ```bash

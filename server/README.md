@@ -26,7 +26,7 @@ Check it's alive:
 
 ```bash
 curl http://localhost:3000/health
-# {"status":"ok","version":"0.1.0"}
+# {"status":"ok","version":"0.3.0"}
 ```
 
 Tear it down (including the Postgres volume) with:

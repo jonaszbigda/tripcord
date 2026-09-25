@@ -22,7 +22,7 @@ services:
         max-file: "5"
 
   server:
-    image: ghcr.io/jonaszbigda/tripcord:${TRIPCORD_VERSION:-0.1}
+    image: ghcr.io/jonaszbigda/tripcord:${TRIPCORD_VERSION:-0.3}
     restart: unless-stopped
     environment:
       DATABASE_URL: postgres://tripcord:${POSTGRES_PASSWORD}@postgres:5432/tripcord
