@@ -67,21 +67,23 @@ export async function bakeCapture(db: Database, projectId: string, input: BakeCa
       .values({ projectId, sessionId: input.sessionId })
       .onConflictDoNothing();
 
-    // The UPDATE both locks the row and drains the buffer in one step: a
-    // concurrent stage waits here and lands in the buffer for the next bake.
-    const [row] = await tx
-      .update(timelineSessions)
-      .set({ pendingEvents: sql`'[]'::jsonb`, updatedAt: sql`now()` })
+    // Lock and read the current events first: Postgres `UPDATE ... RETURNING`
+    // returns the *new* row, so draining in the same statement would hand back
+    // the empty buffer, not what was staged. The row lock holds a concurrent
+    // stage until the update below, so its event lands for the next bake.
+    const [current] = await tx
+      .select({ pendingEvents: timelineSessions.pendingEvents, events: timelineSessions.events })
+      .from(timelineSessions)
       .where(and(eq(timelineSessions.projectId, projectId), eq(timelineSessions.sessionId, input.sessionId)))
-      .returning({ pendingEvents: timelineSessions.pendingEvents, events: timelineSessions.events });
+      .for("update");
 
     const merged = mergeEvents(
-      [row.events as TimelineEvent[], row.pendingEvents as TimelineEvent[], input.events],
+      [current.events as TimelineEvent[], current.pendingEvents as TimelineEvent[], input.events],
       MAX_SESSION_EVENTS
     );
     await tx
       .update(timelineSessions)
-      .set({ events: merged })
+      .set({ pendingEvents: sql`'[]'::jsonb`, events: merged, updatedAt: sql`now()` })
       .where(and(eq(timelineSessions.projectId, projectId), eq(timelineSessions.sessionId, input.sessionId)));
 
     const [capture] = await tx

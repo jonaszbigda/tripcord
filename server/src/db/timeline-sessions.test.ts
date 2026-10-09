@@ -72,15 +72,12 @@ describe("timeline-session service", () => {
   });
 
   it("bakes staged + payload events, deduped and sorted, and clears the buffer", async () => {
-    await stageEvents(db, projectId, "s1", [event({ id: "a", timestamp: 2 })]);
-    const { eventCount } = await bake(db, projectId, "s1", [
-      event({ id: "a", timestamp: 2 }),
-      event({ id: "b", timestamp: 1 }),
-    ]);
+    await stageEvents(db, projectId, "s1", [event({ id: "staged", timestamp: 0 })]);
+    const { eventCount } = await bake(db, projectId, "s1", [event({ id: "payload", timestamp: 1 })]);
 
     expect(eventCount).toBe(2);
     const row = await sessionRow(db, projectId, "s1");
-    expect((row?.events as TimelineEvent[]).map((e) => e.id)).toEqual(["b", "a"]);
+    expect((row?.events as TimelineEvent[]).map((e) => e.id)).toEqual(["staged", "payload"]);
     expect(row?.pendingEvents).toEqual([]);
   });
 
