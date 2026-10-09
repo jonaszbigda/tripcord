@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm";
 import { createDb, type Database } from "../src/db/client";
 import {
   apiKeys,
+  captures,
   emailVerifications,
   invites,
   memberships,
@@ -11,6 +12,7 @@ import {
   projects,
   sessions,
   timelines,
+  timelineSessions,
   users,
   type Org,
   type User,
@@ -32,6 +34,8 @@ export function getTestDb(): Database {
 
 // Deletes in foreign-key order: children before the rows they reference.
 export async function resetDb(db: Database): Promise<void> {
+  await db.delete(captures);
+  await db.delete(timelineSessions);
   await db.delete(timelines);
   await db.delete(apiKeys);
   await db.delete(projects);
