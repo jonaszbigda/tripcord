@@ -81,20 +81,19 @@ export interface InvitePreview {
 export type ReasonType = "error" | "unhandledrejection" | "manual";
 export type Range = "24h" | "7d" | "30d";
 
-export interface TimelineRow {
-  id: string;
-  receivedAt: string;
+export interface SessionRow {
   sessionId: string;
-  reasonType: ReasonType;
-  reasonName: string | null;
-  reasonMessage: string | null;
+  firstSeenAt: string;
+  lastSeenAt: string;
+  reasonTypes: ReasonType[];
   url: string | null;
   tags: string[];
   eventCount: number;
+  captureCount: number;
 }
 
-export interface TimelinePage {
-  timelines: TimelineRow[];
+export interface SessionPage {
+  sessions: SessionRow[];
   nextCursor: string | null;
 }
 
@@ -127,21 +126,32 @@ export interface TagCount {
 }
 
 export interface TimelineEvent {
+  id?: string;
+  source?: string;
   timestamp: number;
   type: "custom" | "error" | "unhandledrejection" | "trace";
   name: string;
   data?: Record<string, unknown>;
 }
 
-export interface TimelineDetail {
-  timeline: {
-    id: string;
-    receivedAt: string;
+export interface SessionCapture {
+  id: string;
+  receivedAt: string;
+  occurredAt: string;
+  reasonType: ReasonType;
+  reason: { type: ReasonType; name?: string; message?: string; data?: Record<string, unknown> };
+  meta: { url: string; userAgent: string; capturedAt: number };
+  tags: string[];
+}
+
+export interface SessionDetail {
+  session: {
     sessionId: string;
+    firstSeenAt: string;
+    lastSeenAt: string;
+    url: string | null;
     tags: string[];
-    reason: { type: ReasonType; name?: string; message?: string; data?: Record<string, unknown> };
     events: TimelineEvent[];
-    meta: { url: string; userAgent: string; capturedAt: number };
   };
-  siblings: { id: string; receivedAt: string; reasonType: ReasonType; reasonName: string | null }[];
+  captures: SessionCapture[];
 }

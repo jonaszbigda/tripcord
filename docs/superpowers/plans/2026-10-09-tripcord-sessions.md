@@ -599,14 +599,19 @@ it("flush() awaits in-flight sends; a failed send warns and never throws", async
 ### Task 9: Dashboard — session list and merged detail
 
 **Files:**
-- Modify: `dashboard/src/api.ts`, `queries.ts`, `types.ts`, `timelineFilters.ts`
+- Modify: `dashboard/src/queries.ts` (`useSessions`/`useSession`), `types.ts`
+  (`SessionRow`/`SessionPage`/`SessionDetail`, `TimelineEvent.id`/`source`),
+  `App.tsx` (`:sessionId`), `theme.css` (`--color-source-browser`/`--color-source-server`).
 - Modify: `dashboard/src/pages/TimelinesPage.tsx`, `TimelinePage.tsx`
-- Modify: `dashboard/src/components/timelines/*`
-- Modify: `dashboard/src/index.css` (source color tokens)
+  (merged timeline with source chips and capture markers).
+- Modify: `dashboard/src/components/timelines/TimelineList.tsx`.
 - Test: `dashboard/src/pages/timelines.test.tsx`, `timeline.test.tsx`
 
 **Interfaces:**
 - The list consumes `{ sessions: [...] }`; the route param becomes `sessionId`.
+- The detail merges `session.events` and `captures` into one stream ordered by
+  time, offsets relative to the last row. `chart`/`summary`/`tags`/filters are
+  unchanged (the summary still counts captures).
 
 - [ ] **Step 1: Failing tests** — the list shows `captureCount`/`eventCount` and
   reason chips; the detail renders `session.events` ordered with a **source

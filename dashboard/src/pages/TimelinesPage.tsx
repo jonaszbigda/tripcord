@@ -6,7 +6,7 @@ import { FilterBar } from "../components/timelines/FilterBar";
 import { TimelineList } from "../components/timelines/TimelineList";
 import { TopReasons } from "../components/timelines/TopReasons";
 import { Button, Card, ErrorText } from "../components/ui";
-import { useTimelineSummary, useTimelineTags, useTimelines } from "../queries";
+import { useTimelineSummary, useTimelineTags, useSessions } from "../queries";
 import { useTimelineFilters } from "../timelineFilters";
 import type { Range } from "../types";
 
@@ -17,7 +17,7 @@ export function TimelinesPage() {
   const [filters, setFilters] = useTimelineFilters();
   const summary = useTimelineSummary(orgId, projectId, filters);
   const tags = useTimelineTags(orgId, projectId, filters.range);
-  const list = useTimelines(orgId, projectId, filters);
+  const list = useSessions(orgId, projectId, filters);
 
   if (summary.data && !summary.data.projectHasTimelines) {
     return <EmptyState orgId={orgId} projectId={projectId} />;
@@ -26,7 +26,7 @@ export function TimelinesPage() {
   // Colors follow the reason type, so hiding one never repaints the others.
   const series = SERIES.filter((s) => filters.reasonTypes.length === 0 || filters.reasonTypes.includes(s.key));
   const topReasons = summary.data?.topReasons ?? [];
-  const timelines = list.data?.pages.flatMap((page) => page.timelines) ?? [];
+  const sessions = list.data?.pages.flatMap((page) => page.sessions) ?? [];
   const total = summary.data?.buckets.reduce((sum, b) => sum + series.reduce((n, s) => n + b[s.key], 0), 0);
 
   return (
@@ -62,7 +62,7 @@ export function TimelinesPage() {
       <Card className="space-y-3">
         <h2 className="font-medium">Timelines</h2>
         <ErrorText error={list.error} />
-        {list.data && <TimelineList orgId={orgId} projectId={projectId} timelines={timelines} />}
+        {list.data && <TimelineList orgId={orgId} projectId={projectId} sessions={sessions} />}
         {list.hasNextPage && (
           <Button variant="secondary" onClick={() => void list.fetchNextPage()} disabled={list.isFetchingNextPage}>
             {list.isFetchingNextPage ? "Loading…" : "Load more"}

@@ -43,7 +43,7 @@ export function AppRoutes() {
               <Route path="keys" element={<ProjectKeysPage />} />
               <Route path="settings" element={<ProjectSettingsPage />} />
             </Route>
-            <Route path="projects/:projectId/timelines/:timelineId" element={<TimelinePage />} />
+            <Route path="projects/:projectId/timelines/:sessionId" element={<TimelinePage />} />
             <Route path="members" element={<MembersPage />} />
             <Route path="settings" element={<OrgSettingsPage />} />
           </Route>
