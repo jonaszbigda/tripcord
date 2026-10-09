@@ -1,4 +1,8 @@
 export interface TimelineEvent {
+  /** Stable dedupe key. Set by the client; optional so older senders still work. */
+  id?: string;
+  /** Where the event came from, e.g. "browser" or "server". */
+  source?: string;
   timestamp: number;
   type: "custom" | "error" | "unhandledrejection" | "trace";
   name: string;
