@@ -48,7 +48,9 @@ grow without bound.
 ## Data model (Postgres, via Drizzle)
 
 ```ts
-export const sessions = pgTable("sessions", {
+// Named timeline_sessions, not sessions: `sessions` is already the table of
+// cookie login sessions (auth/sessions).
+export const timelineSessions = pgTable("timeline_sessions", {
   id: uuid("id").primaryKey().defaultRandom(),
   projectId: uuid("project_id").notNull().references(() => projects.id),
   sessionId: text("session_id").notNull(),
@@ -61,7 +63,7 @@ export const sessions = pgTable("sessions", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => ({
   projectSessionUq: unique().on(table.projectId, table.sessionId),
-  projectUpdatedIdx: index("sessions_project_updated_idx").on(table.projectId, table.updatedAt),
+  projectUpdatedIdx: index("timeline_sessions_project_updated_idx").on(table.projectId, table.updatedAt),
 }));
 
 export const captures = pgTable("captures", {
@@ -86,10 +88,10 @@ export const captures = pgTable("captures", {
 Notes:
 
 - **Events live on the session, not on the capture.** A capture is a marker; the
-  timeline it belongs to is `sessions.events`. This is what makes "all events in
+  timeline it belongs to is `timeline_sessions.events`. This is what makes "all events in
   one session are one timeline" true, and it means two captures in a session
   never duplicate events — they dedupe on bake.
-- **`sessions` are pruned, `captures` are not (until retention).** A capture's
+- **`timeline_sessions` are pruned, `captures` are not (until retention).** A capture's
   `session_id` is text, not a foreign key, so pruning the session row never
   orphans a capture. The dashboard can still group captures by `session_id` even
   for a session row that has been pruned.
@@ -138,7 +140,7 @@ Request:
 ```
 
 - Upserts the session (`INSERT … ON CONFLICT (project_id, session_id) DO UPDATE
-  SET pending_events = sessions.pending_events || $events, updated_at = now()`).
+  SET pending_events = timeline_sessions.pending_events || $events, updated_at = now()`).
 - `source` is optional; the endpoint defaults a missing `source` to `"server"`.
 - **Not visible.** Nothing is baked.
 - Response: `202 { sessionId, staged: <n> }`.
@@ -203,7 +205,7 @@ Baked events live on the session row, so they are governed by the **same**
 `STAGING_TTL` sweep, not `RETENTION_DAYS`. That is deliberate: once a session has
 been pruned, its baked timeline is gone, but its `captures` markers remain for
 `RETENTION_DAYS` and the dashboard can still list and filter them. (If we later
-want baked timelines to outlive the staging TTL, `sessions.updated_at` can be set
+want baked timelines to outlive the staging TTL, `timeline_sessions.updated_at` can be set
 to the bake time and the sweep split in two — out of scope now.)
 
 ## Client: browser (`@tripcord/js`)
@@ -295,10 +297,10 @@ isolation test's `CASES` table is updated for every touched route.
 
 One drizzle migration:
 
-1. Create `sessions` and `captures`.
+1. Create `timeline_sessions` and `captures`.
 2. For each `timelines` row, in `received_at, id` order: upsert the session and
    merge its `events` (stamped `source: "browser"`, id derived from content)
-   into `sessions.events`, deduping across rows of the same session; insert a
+   into `timeline_sessions.events`, deduping across rows of the same session; insert a
    `captures` row from the reason/meta/tags.
 3. Drop `timelines` (and its indexes).
 

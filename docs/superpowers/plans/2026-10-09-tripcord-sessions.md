@@ -75,7 +75,7 @@ From the repo root, once: `npm install`. Docker must be running for server and
 dashboard tests.
 
 Commands:
-- Server: `npm test -w server -- src/db/sessions.test.ts`
+- Server: `npm test -w server -- src/db/timeline-sessions.test.ts`
 - Client: `npm test -w packages/js`
 - Dashboard: `npm test -w dashboard`
 - Whole repo: `npm run build && npm run typecheck && npm run lint && npm test`
@@ -86,8 +86,8 @@ Commands:
 | --- | --- | --- |
 | `server/src/db/schema.ts` | modify | add `sessions`, `captures`; remove `timelines` |
 | `server/drizzle/0007_sessions.sql` + `meta/*` | generate | create tables, migrate rows, drop `timelines` |
-| `server/src/db/sessions.ts` | create | `stageEvents`, `bakeCapture`, `createSession`, `pruneSessions` |
-| `server/src/db/sessions.test.ts` | create | DB-level staging/baking/dedupe/prune |
+| `server/src/db/timeline-sessions.ts` | create | `stageEvents`, `bakeCapture`, `ensureTimelineSession`, `pruneTimelineSessions` |
+| `server/src/db/timeline-sessions.test.ts` | create | DB-level staging/baking/dedupe/prune |
 | `server/src/db/event-hash.ts` | create | `eventDedupeKey`, `mergeEvents` (pure, unit-tested) |
 | `server/src/routes/events.ts` | create | `POST /v1/events`, `POST /v1/sessions` |
 | `server/src/routes/timeline.ts` | modify | `POST /v1/timeline` bakes; shared key auth |
@@ -204,23 +204,33 @@ export function mergeEvents(lists: TimelineEvent[][], cap = Number.POSITIVE_INFI
 
 ---
 
-### Task 2: `sessions` data access (stage, bake, prune)
+### Task 2: timeline-session data access (stage, bake, prune)
 
 **Files:**
-- Create: `server/src/db/sessions.ts`
-- Test: `server/src/db/sessions.test.ts`
-- Modify: `server/src/db/schema.ts` (add `sessions`, `captures`; keep `timelines`
-  until Task 6's migration lands, so the build stays green)
+- Create: `server/src/db/timeline-sessions.ts`
+- Test: `server/src/db/timeline-sessions.test.ts`
+- Modify: `server/src/db/schema.ts` (add `timelineSessions`, `captures`; keep
+  `timelines` until Task 6's migration lands, so the build stays green)
+- Modify: `server/test/db.ts` (`resetDb` deletes `captures`, `timelineSessions`
+  before `projects`)
+- Generate: `server/drizzle/0007_timeline_sessions.sql` + `meta/*` via
+  `npx drizzle-kit generate --name timeline_sessions`
+
+> Naming: `sessions` / `db/sessions.ts` already belong to **auth** login
+> sessions. The tracing entity is `timelineSessions` (table `timeline_sessions`),
+> in `db/timeline-sessions.ts`.
 
 **Interfaces:**
 - Produces:
   - `stageEvents(db, projectId, sessionId, events): Promise<number>`
-  - `createSession(db, projectId, sessionId): Promise<void>`
-  - `bakeCapture(db, projectId, input: { sessionId; reason; events; meta; tags; occurredAt }): Promise<{ id: string; eventCount: number }>`
-  - `pruneSessions(db, stagingTtlMs): Promise<number>`
+  - `ensureTimelineSession(db, projectId, sessionId): Promise<void>`
+  - `bakeCapture(db, projectId, input: BakeCaptureInput): Promise<{ id: string; eventCount: number }>`
+  - `pruneTimelineSessions(db, stagingTtlMs): Promise<number>`
+  - `BakeCaptureInput = { sessionId; reason; events; meta; tags; occurredAt }`
 
-- [ ] **Step 1: Write the failing test** (`src/db/sessions.test.ts`, using the
-  existing testcontainers fixture/`resetDb` — see `src/db/timelines.test.ts`)
+- [ ] **Step 1: Write the failing test** (`src/db/timeline-sessions.test.ts`,
+  using the existing testcontainers fixture/`resetDb` — see
+  `src/db/timelines.test.ts`)
 
 Key cases (pinned to Review Focus 1 & 2):
 
@@ -255,8 +265,8 @@ it("caps a session at MAX_SESSION_EVENTS", async () => { /* 3 events, cap 2 → 
 
 it("prunes idle sessions but not captures", async () => {
   await bakeCapture(db, project.id, { sessionId: "s1", reason: { type: "manual" }, events: [], meta: meta(), tags: [], occurredAt: new Date() });
-  await db.update(sessions).set({ updatedAt: new Date(Date.now() - 2 * 3600_000) }).where(eq(sessions.sessionId, "s1"));
-  await pruneSessions(db, 3600_000);
+  await db.update(timelineSessions).set({ updatedAt: new Date(Date.now() - 2 * 3600_000) }).where(eq(timelineSessions.sessionId, "s1"));
+  await pruneTimelineSessions(db, 3600_000);
   expect(await sessionRow(db, project.id, "s1")).toBeUndefined();
   expect(await db.select().from(captures).where(eq(captures.sessionId, "s1"))).toHaveLength(1);
 });
@@ -264,12 +274,12 @@ it("prunes idle sessions but not captures", async () => {
 
 - [ ] **Step 2: Run it, expect FAIL**
 
-- [ ] **Step 3: Implement `sessions.ts`**
+- [ ] **Step 3: Implement `timeline-sessions.ts`**
 
 ```ts
 import { and, eq, lt, sql } from "drizzle-orm";
 import type { Database } from "./client";
-import { captures, sessions } from "./schema";
+import { captures, timelineSessions } from "./schema";
 import { mergeEvents } from "./event-hash";
 import type { TimelineEvent, TimelineReason, TimelineMeta } from "@tripcord/js";
 
@@ -278,33 +288,52 @@ const MAX_SESSION_EVENTS = 500;
 export async function stageEvents(db: Database, projectId: string, sessionId: string, events: TimelineEvent[]): Promise<number> {
   const incoming = events.map((e) => ({ ...e, source: e.source ?? "server" }));
   await db
-    .insert(sessions)
+    .insert(timelineSessions)
     .values({ projectId, sessionId, pendingEvents: incoming })
     .onConflictDoUpdate({
-      target: [sessions.projectId, sessions.sessionId],
+      target: [timelineSessions.projectId, timelineSessions.sessionId],
       set: {
-        pendingEvents: sql`${sessions.pendingEvents} || ${JSON.stringify(incoming)}::jsonb`,
+        pendingEvents: sql`${timelineSessions.pendingEvents} || ${JSON.stringify(incoming)}::jsonb`,
         updatedAt: sql`now()`,
       },
     });
   return incoming.length;
 }
 
+export async function ensureTimelineSession(db: Database, projectId: string, sessionId: string): Promise<void> {
+  await db.insert(timelineSessions).values({ projectId, sessionId }).onConflictDoNothing();
+}
+
+export interface BakeCaptureInput {
+  sessionId: string;
+  reason: TimelineReason;
+  events: TimelineEvent[];
+  meta: TimelineMeta;
+  tags: string[];
+  occurredAt: Date;
+}
+
 // bake: the lock + drain + merge + write happen in one transaction.
-export async function bakeCapture(db, projectId, input): Promise<{ id: string; eventCount: number }> {
+export async function bakeCapture(db: Database, projectId: string, input: BakeCaptureInput): Promise<{ id: string; eventCount: number }> {
   return db.transaction(async (tx) => {
-    await tx.insert(sessions).values({ projectId, sessionId: input.sessionId }).onConflictDoNothing();
+    await tx
+      .insert(timelineSessions)
+      .values({ projectId, sessionId: input.sessionId })
+      .onConflictDoNothing();
     const [row] = await tx
-      .update(sessions)
+      .update(timelineSessions)
       .set({ pendingEvents: sql`'[]'::jsonb`, updatedAt: sql`now()` })
-      .where(and(eq(sessions.projectId, projectId), eq(sessions.sessionId, input.sessionId)))
-      .returning({ pendingEvents: sessions.pendingEvents, events: sessions.events });
+      .where(and(eq(timelineSessions.projectId, projectId), eq(timelineSessions.sessionId, input.sessionId)))
+      .returning({ pendingEvents: timelineSessions.pendingEvents, events: timelineSessions.events });
 
     const merged = mergeEvents(
       [row.events as TimelineEvent[], row.pendingEvents as TimelineEvent[], input.events],
       MAX_SESSION_EVENTS
     );
-    await tx.update(sessions).set({ events: merged }).where(and(eq(sessions.projectId, projectId), eq(sessions.sessionId, input.sessionId)));
+    await tx
+      .update(timelineSessions)
+      .set({ events: merged })
+      .where(and(eq(timelineSessions.projectId, projectId), eq(timelineSessions.sessionId, input.sessionId)));
 
     const [capture] = await tx.insert(captures).values({
       projectId, sessionId: input.sessionId,
@@ -315,9 +344,9 @@ export async function bakeCapture(db, projectId, input): Promise<{ id: string; e
   });
 }
 
-export async function pruneSessions(db: Database, stagingTtlMs: number): Promise<number> {
+export async function pruneTimelineSessions(db: Database, stagingTtlMs: number): Promise<number> {
   const cutoff = new Date(Date.now() - stagingTtlMs);
-  const deleted = await db.delete(sessions).where(lt(sessions.updatedAt, cutoff)).returning({ id: sessions.id });
+  const deleted = await db.delete(timelineSessions).where(lt(timelineSessions.updatedAt, cutoff)).returning({ id: timelineSessions.id });
   return deleted.length;
 }
 ```
@@ -327,7 +356,7 @@ export async function pruneSessions(db: Database, stagingTtlMs: number): Promise
 > bake. That's Review Focus 2.
 
 - [ ] **Step 4: Run it, expect PASS**
-- [ ] **Step 5: Commit** — `feat(server): session staging and bake`
+- [ ] **Step 5: Commit** — `feat(server): timeline-session staging and bake`
 
 ---
 
@@ -341,7 +370,7 @@ export async function pruneSessions(db: Database, stagingTtlMs: number): Promise
 - Modify: `server/src/app.ts` (register the new routes in the `/v1` plugin)
 
 **Interfaces:**
-- Consumes: `stageEvents`, `bakeCapture`, `createSession` (Task 2).
+- Consumes: `stageEvents`, `bakeCapture`, `ensureTimelineSession` (Task 2).
 - Produces: `resolveProject(request, reply, db, invalidKeys): Promise<boolean>`
   — reads `X-Tripcord-Key` or `Authorization: Bearer`, applies the invalid-key
   limiter, sets `request.project`.
@@ -400,13 +429,13 @@ shared helper both routes use, so the "invalid key" limiter is one instance.
 - Config gains `stagingTtlMs: number` (from `STAGING_TTL`, default 24h;
   `parseDuration` reused if present, else add one).
 - `runCleanup(db, retentionDays, emailVerification, stagingTtlMs)`.
-- Remove `cleanupOldTimelines`; add `pruneSessions`.
+- Remove `cleanupOldTimelines`; add `pruneTimelineSessions`.
 
 - [ ] **Step 1: Failing test** — a session idle past the TTL is deleted; one
   updated now survives; captures in both are untouched. Config: `STAGING_TTL=1h`
   parses; a bad value fails startup.
 - [ ] **Step 2: Run, expect FAIL**
-- [ ] **Step 3: Implement** — swap the timelines step for `pruneSessions`;
+- [ ] **Step 3: Implement** — swap the timelines step for `pruneTimelineSessions`;
   thread `stagingTtlMs` through `scheduleCleanup`.
 - [ ] **Step 4: Run, expect PASS**
 - [ ] **Step 5: Commit** — `feat(server): prune idle sessions`
@@ -447,7 +476,8 @@ shared helper both routes use, so the "invalid key" limiter is one instance.
 ### Task 6: Migration — create tables, convert `timelines`, drop it
 
 **Files:**
-- Generate: `server/drizzle/0007_sessions.sql` + `meta/*` via `drizzle-kit`.
+- Generate: `server/drizzle/0008_convert_timelines.sql` + `meta/*` (the data
+  conversion; `0007` already created the tables in Task 2).
 - Modify: `server/src/db/schema.ts` (delete `timelines`).
 - Test: `server/src/db/migrate.test.ts`
 
