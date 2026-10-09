@@ -3,6 +3,9 @@
 @import "@fontsource-variable/jetbrains-mono";
 @import "../../dashboard/src/theme.css";
 
+/* The page background (top glows plus an ember wash) comes from theme.css and
+   is shared with the dashboard. */
+
 /* The hero's timeline: a cord that runs through each step a user took and
    trips at the last one. It draws once on load; with reduced motion it's
    simply there. */

@@ -3,7 +3,8 @@ import { Link, useNavigate, useSearchParams } from "react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ApiError, api } from "../api";
 import { SETTINGS_ERRORS, githubHref } from "../auth";
-import { Alert, Button, Card, ErrorText, PageHeader, TextField } from "../components/ui";
+import { LinkIcon, LockIcon, MailIcon, TrashIcon, UserIcon } from "../components/icons";
+import { Alert, Button, Card, CardTitle, ErrorText, PageHeader, TextField } from "../components/ui";
 import { queryKeys, useAuthConfig, useMe } from "../queries";
 
 export function UserSettingsPage() {
@@ -50,7 +51,7 @@ export function UserSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Your account" />
+      <PageHeader title="Your account" icon={<UserIcon className="size-6" />} />
       {errorCode && <Alert>{SETTINGS_ERRORS[errorCode] ?? "Something went wrong. Please try again."}</Alert>}
 
       <Card className="space-y-1 text-sm">
@@ -59,7 +60,7 @@ export function UserSettingsPage() {
       </Card>
 
       <Card className="space-y-4">
-        <h2 className="font-medium">{me.user.hasPassword ? "Change password" : "Set a password"}</h2>
+        <CardTitle icon={<LockIcon />}>{me.user.hasPassword ? "Change password" : "Set a password"}</CardTitle>
         <form
           className="space-y-4"
           onSubmit={(event) => {
@@ -75,6 +76,7 @@ export function UserSettingsPage() {
               value={currentPassword}
               onChange={setCurrentPassword}
               required
+              icon={<LockIcon />}
             />
           )}
           <TextField
@@ -86,6 +88,7 @@ export function UserSettingsPage() {
             required
             minLength={8}
             maxLength={256}
+            icon={<LockIcon />}
           />
           <ErrorText error={changePassword.error} />
           {changePassword.isSuccess && <p className="text-sm text-muted">Password updated.</p>}
@@ -96,7 +99,7 @@ export function UserSettingsPage() {
       </Card>
 
       <Card className="space-y-3">
-        <h2 className="font-medium">GitHub</h2>
+        <CardTitle icon={<LinkIcon />}>GitHub</CardTitle>
         {me.user.githubConnected ? (
           <>
             <p className="text-sm text-muted">Connected. You can log in with GitHub.</p>
@@ -125,7 +128,9 @@ export function UserSettingsPage() {
       </Card>
 
       <Card className="space-y-3">
-        <h2 className="font-medium text-danger">Delete account</h2>
+        <CardTitle className="text-danger" icon={<TrashIcon />}>
+          Delete account
+        </CardTitle>
         <p className="text-sm text-muted">
           Deletes your account and every organization where you're the only member, with their projects and
           timelines. This can't be undone.
@@ -145,6 +150,7 @@ export function UserSettingsPage() {
               autoComplete="current-password"
               value={confirmation}
               onChange={setConfirmation}
+              icon={<LockIcon />}
             />
           ) : (
             <TextField
@@ -153,6 +159,7 @@ export function UserSettingsPage() {
               value={confirmation}
               onChange={setConfirmation}
               autoComplete="off"
+              icon={<MailIcon />}
             />
           )}
           <Button type="submit" variant="danger" disabled={deleteAccount.isPending || !confirmed}>

@@ -2,7 +2,8 @@ import { Link, useParams } from "react-router";
 import { ApiError } from "../api";
 import { SERIES_COLORS } from "../components/charts/series";
 import { TagChips } from "../components/timelines/TagChips";
-import { Card, ErrorText, Swatch } from "../components/ui";
+import { ActivityIcon, AlertIcon, ListIcon } from "../components/icons";
+import { Card, CardTitle, ErrorText, Swatch } from "../components/ui";
 import { REASON_LABELS, formatDateTime, formatOffset, formatRelative, safeHref } from "../format";
 import { useSession } from "../queries";
 import type { SessionCapture, TimelineEvent } from "../types";
@@ -106,7 +107,7 @@ export function TimelinePage() {
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
         <Card className="space-y-4">
-          <h2 className="font-medium">Timeline</h2>
+          <CardTitle icon={<ActivityIcon />}>Timeline</CardTitle>
           {rows.length === 0 && <p className="text-sm text-muted">No events were recorded in this session.</p>}
           <ol
             aria-label="Events"
@@ -131,7 +132,7 @@ export function TimelinePage() {
               ) : (
                 <li
                   key={`c${row.capture.id}`}
-                  className="relative rounded-lg border border-accent/40 bg-accent/10 px-3 py-2 text-sm before:absolute before:top-3.5 before:-left-[1.625rem] before:size-3.5 before:rounded-full before:bg-cord before:shadow-[0_0_0_4px_rgb(255_122_26/0.2),0_0_18px_rgb(255_150_60/0.8)]"
+                  className="relative rounded-lg border border-accent/40 bg-accent/10 px-3 py-2 text-sm before:absolute before:top-3.5 before:-left-[1.625rem] before:size-3.5 before:rounded-full before:bg-cord before:shadow-[0_0_0_4px_rgb(255_122_26/0.2),0_0_16px_rgb(255_150_60/0.7)]"
                 >
                   <p className="flex flex-wrap items-baseline gap-x-3">
                     <span className="w-16 shrink-0 font-mono text-xs tabular-nums text-muted">
@@ -153,7 +154,7 @@ export function TimelinePage() {
 
         <aside className="space-y-6">
           <Card className="space-y-3">
-            <h2 className="font-medium">Details</h2>
+            <CardTitle icon={<ListIcon />}>Details</CardTitle>
             <dl className="space-y-2 text-sm">
               <div>
                 <dt className="text-muted">URL</dt>
@@ -183,7 +184,7 @@ export function TimelinePage() {
           </Card>
 
           <Card className="space-y-3">
-            <h2 className="font-medium">Captures</h2>
+            <CardTitle icon={<AlertIcon />}>Captures</CardTitle>
             {captures.length === 0 ? (
               <p className="text-sm text-muted">This session has no captures.</p>
             ) : (

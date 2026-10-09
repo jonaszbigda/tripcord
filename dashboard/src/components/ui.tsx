@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from "react";
+import { CheckIcon, CopyIcon } from "./icons";
 
 type Variant = "primary" | "secondary" | "danger";
 
 const VARIANTS: Record<Variant, string> = {
   primary:
-    "bg-cord font-semibold text-accent-fg shadow-[0_0_0_1px_rgb(255_150_60/0.4),0_8px_24px_-8px_rgb(255_106_26/0.6)] hover:brightness-110",
+    "bg-cord font-semibold text-accent-fg shadow-[0_0_0_1px_rgb(255_150_60/0.28),0_6px_18px_-8px_rgb(255_106_26/0.5)] hover:brightness-110",
   secondary: "border border-border bg-raised text-fg hover:border-muted/50",
   danger: "border border-danger/60 text-danger hover:bg-danger hover:text-accent-fg",
 };
@@ -14,14 +15,19 @@ export function Button({
   variant = "primary",
   className = "",
   type = "button",
+  icon,
+  children,
   ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant }) {
+}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; icon?: ReactNode }) {
   return (
     <button
       type={type}
-      className={`inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3.5 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${VARIANTS[variant]} ${className}`}
+      className={`inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3.5 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${VARIANTS[variant]} ${className}`}
       {...props}
-    />
+    >
+      {icon}
+      {children}
+    </button>
   );
 }
 
@@ -29,24 +35,48 @@ type TextFieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, "onChange" | "
   label: string;
   value: string;
   onChange: (value: string) => void;
+  icon?: ReactNode;
 };
 
-export function TextField({ label, value, onChange, className = "", ...props }: TextFieldProps) {
+export function TextField({ label, value, onChange, className = "", icon, ...props }: TextFieldProps) {
   return (
     <label className={`block text-sm ${className}`}>
       <span className="mb-1.5 block font-medium text-muted">{label}</span>
-      <input
-        className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-fg outline-none transition placeholder:text-muted/60 focus:border-accent focus:shadow-[0_0_0_3px_rgb(255_122_26/0.18)]"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        {...props}
-      />
+      <span className="relative block">
+        {icon && (
+          <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted/70">{icon}</span>
+        )}
+        <input
+          className={`w-full rounded-lg border border-border bg-bg py-2 text-fg outline-none transition placeholder:text-muted/60 focus:border-accent focus:shadow-[0_0_0_3px_rgb(255_122_26/0.18)] ${icon ? "pr-3 pl-9" : "px-3"}`}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          {...props}
+        />
+      </span>
     </label>
   );
 }
 
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <section className={`panel rounded-2xl p-6 ${className}`}>{children}</section>;
+  return <section className={`panel rounded-2xl p-4 ${className}`}>{children}</section>;
+}
+
+/** A section heading inside a Card, optionally with a leading icon. */
+export function CardTitle({
+  icon,
+  children,
+  className = "",
+}: {
+  icon?: ReactNode;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <h2 className={`flex items-center gap-2 font-medium ${className}`}>
+      {icon && <span className="text-muted">{icon}</span>}
+      {children}
+    </h2>
+  );
 }
 
 export function Alert({ children }: { children: ReactNode }) {
@@ -65,10 +95,21 @@ export function ErrorText({ error }: { error: Error | null | undefined }) {
   ) : null;
 }
 
-export function PageHeader({ title, children }: { title: string; children?: ReactNode }) {
+export function PageHeader({
+  title,
+  icon,
+  children,
+}: {
+  title: string;
+  icon?: ReactNode;
+  children?: ReactNode;
+}) {
   return (
     <div className="flex items-center justify-between gap-4">
-      <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+      <h1 className="flex items-center gap-2.5 text-2xl font-semibold tracking-tight">
+        {icon && <span className="text-muted">{icon}</span>}
+        {title}
+      </h1>
       {children}
     </div>
   );
@@ -80,16 +121,20 @@ export function FullPageMessage({ children }: { children: ReactNode }) {
 
 /** The logo: a cord that ends in a knot, then the name. */
 export function Wordmark({ className = "" }: { className?: string }) {
+  // A unique gradient id per instance: several wordmarks can be on a page at
+  // once (sidebar, mobile bar, auth cards), and duplicate ids would leave the
+  // cord un-painted.
+  const cordId = `wordmark-cord-${useId().replace(/:/g, "")}`;
   return (
     <span className={`inline-flex items-center gap-2 font-semibold tracking-tight ${className}`}>
       <svg viewBox="0 0 28 16" aria-hidden="true" className="h-[0.8em] w-auto">
         <defs>
-          <linearGradient id="wordmark-cord" x1="0" x2="1">
+          <linearGradient id={cordId} x1="0" x2="1">
             <stop offset="0" stopColor="var(--color-accent)" />
             <stop offset="1" stopColor="var(--color-amber)" />
           </linearGradient>
         </defs>
-        <path d="M1 12 C7 12 8 4 14 4 S20 12 22 12" fill="none" stroke="url(#wordmark-cord)" strokeWidth="2.5" strokeLinecap="round" />
+        <path d="M1 12 C7 12 8 4 14 4 S20 12 22 12" fill="none" stroke={`url(#${cordId})`} strokeWidth="2.5" strokeLinecap="round" />
         <circle cx="24.5" cy="12" r="3" fill="var(--color-ok)" />
       </svg>
       Tripcord
@@ -116,16 +161,18 @@ export function ConfirmButton({
   confirmLabel,
   onConfirm,
   disabled = false,
+  className = "",
 }: {
   label: string;
   confirmLabel: string;
   onConfirm: () => void;
   disabled?: boolean;
+  className?: string;
 }) {
   const [confirming, setConfirming] = useState(false);
   if (!confirming) {
     return (
-      <Button variant="secondary" disabled={disabled} onClick={() => setConfirming(true)}>
+      <Button variant="secondary" className={className} disabled={disabled} onClick={() => setConfirming(true)}>
         {label}
       </Button>
     );
@@ -134,6 +181,7 @@ export function ConfirmButton({
     <span className="inline-flex gap-2">
       <Button
         variant="danger"
+        className={className}
         disabled={disabled}
         onClick={() => {
           setConfirming(false);
@@ -142,7 +190,7 @@ export function ConfirmButton({
       >
         {confirmLabel}
       </Button>
-      <Button variant="secondary" onClick={() => setConfirming(false)}>
+      <Button variant="secondary" className={className} onClick={() => setConfirming(false)}>
         Cancel
       </Button>
     </span>
@@ -202,6 +250,7 @@ export function CopyButton({ value }: { value: string }) {
     <Button
       variant="secondary"
       className={copied ? "border-ok/50 text-ok" : ""}
+      icon={copied ? <CheckIcon /> : <CopyIcon />}
       onClick={async () => {
         await navigator.clipboard?.writeText(value);
         setCopied(true);

@@ -34,10 +34,11 @@ export function useMe() {
   return useQuery({ queryKey: queryKeys.me, queryFn: () => api<Me>("GET", "/api/me") });
 }
 
-export function useProjects(orgId: string) {
+export function useProjects(orgId: string, enabled = true) {
   return useQuery({
     queryKey: queryKeys.projects(orgId),
     queryFn: async () => (await api<{ projects: Project[] }>("GET", `/api/orgs/${orgId}/projects`)).projects,
+    enabled,
   });
 }
 

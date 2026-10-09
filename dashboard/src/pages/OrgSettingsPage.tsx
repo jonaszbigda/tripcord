@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api";
-import { Button, Card, ErrorText, PageHeader, TextField, TypeToConfirm } from "../components/ui";
+import { BuildingIcon, CheckIcon, SettingsIcon, TrashIcon } from "../components/icons";
+import { Button, Card, CardTitle, ErrorText, PageHeader, TextField, TypeToConfirm } from "../components/ui";
 import { queryKeys, useMe } from "../queries";
 import type { Me } from "../types";
 
@@ -39,7 +40,7 @@ export function OrgSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Settings" />
+      <PageHeader title="Settings" icon={<SettingsIcon className="size-6" />} />
       <Card>
         <form
           className="flex items-end gap-3"
@@ -48,15 +49,17 @@ export function OrgSettingsPage() {
             rename.mutate();
           }}
         >
-          <TextField className="flex-1" label="Organization name" value={name} onChange={setName} required maxLength={100} />
-          <Button type="submit" disabled={rename.isPending}>
+          <TextField className="flex-1" label="Organization name" value={name} onChange={setName} required maxLength={100} icon={<BuildingIcon />} />
+          <Button type="submit" disabled={rename.isPending} icon={<CheckIcon />}>
             Save
           </Button>
         </form>
         <ErrorText error={rename.error} />
       </Card>
       <Card className="space-y-3">
-        <h2 className="font-medium text-danger">Delete organization</h2>
+        <CardTitle className="text-danger" icon={<TrashIcon />}>
+          Delete organization
+        </CardTitle>
         <p className="text-sm text-muted">
           Deletes the organization with all its projects, API keys and timelines, and removes every member. Members
           keep their accounts. This can't be undone.

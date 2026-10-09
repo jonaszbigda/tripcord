@@ -4,7 +4,7 @@ import { Button, CopyButton } from "./ui";
 // state, so it disappears on dismiss or navigation. The server can't show it again.
 export function OnceSecret({ label, value, onDismiss }: { label: string; value: string; onDismiss: () => void }) {
   return (
-    <div role="status" className="rounded-2xl border border-accent/40 bg-accent/10 p-4 shadow-[0_0_40px_-12px_rgb(255_106_26/0.45)]">
+    <div role="status" className="rounded-xl border border-accent/40 bg-accent/10 p-4 shadow-[0_0_32px_-14px_rgb(255_106_26/0.4)]">
       <p className="text-sm font-medium">{label}</p>
       <p className="mb-3 text-sm text-muted">Copy it now. It won't be shown again.</p>
       <div className="flex items-center gap-2">
