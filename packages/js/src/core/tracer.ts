@@ -25,6 +25,10 @@ export interface Tracer {
   traceElement(label: string): void;
   setTags(tags: string[]): void;
   clearTags(): void;
+  /** The buffer's current contents, oldest first. */
+  getEvents(): TimelineEvent[];
+  /** The active scope tags, normalized. */
+  getTags(): string[];
 }
 
 export function createTracer(config: TracerConfig): Tracer {
@@ -76,6 +80,12 @@ export function createTracer(config: TracerConfig): Tracer {
     },
     clearTags() {
       scopeTags = [];
+    },
+    getEvents() {
+      return buffer.getAll();
+    },
+    getTags() {
+      return scopeTags;
     },
   };
 }

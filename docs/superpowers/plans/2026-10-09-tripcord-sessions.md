@@ -555,16 +555,21 @@ shared helper both routes use, so the "invalid key" limiter is one instance.
 ### Task 8: `@tripcord/js/node`
 
 **Files:**
-- Create: `packages/js/src/node/transport.ts`, `session.ts`, `createTracer.ts`,
-  `index.ts`, `createTracer.test.ts`
-- Create: `packages/js/src/node.ts` (entry re-export)
-- Modify: `packages/js/package.json` (add `./node` export), `packages/js/tsup.config.ts`
-  (add `node` entry)
-- Test: `packages/js/src/dist-smoke.test.ts` (extend for `./node`)
+- Create: `packages/js/src/node/{transport,createTracer,index}.ts`,
+  `packages/js/src/node/createTracer.test.ts`.
+- Modify: `packages/js/src/core/tracer.ts` (add `getEvents()`/`getTags()` to the
+  `Tracer` interface), `packages/js/src/browser/hooks.test.ts` (mock the two new
+  methods), `packages/js/package.json` (add the `./node` export),
+  `packages/js/tsup.config.ts` (add the `node` entry), `dist-smoke.test.ts`.
+- The Node adapter is standalone (buffer + payload + ids + tags from `core/`),
+  rather than reusing `core/createTracer`, because `capture()` must ship an empty
+  event list when staging — `core`'s flush always sends the buffer.
+- `eventsEndpoint` is derived from `endpoint` by replacing a trailing
+  `/timeline` with `/events`; the constructor throws if it can't and none is given.
 
 **Interfaces:**
 - `createTracer(config: NodeTracerConfig): NodeTracer`
-  - `NodeTracerConfig`: `{ endpoint; apiKey; sessionId?; stageEvents?; maxEvents?; seedEvents?; meta? }`.
+  - `NodeTracerConfig`: `{ endpoint; eventsEndpoint?; apiKey; sessionId?; stageEvents?; maxEvents?; seedEvents?; meta? }`.
   - `NodeTracer`: `track`, `capture`, `setTags`, `clearTags`, `getSessionId`,
     `getEvents`, `flush`.
 - `createSessionId(): string` (reuses `core/ids.ts`).

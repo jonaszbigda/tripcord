@@ -33,6 +33,10 @@
     "./react": {
       "import": { "types": "./dist/react.d.ts", "default": "./dist/react.js" },
       "require": { "types": "./dist/react.d.cts", "default": "./dist/react.cjs" }
+    },
+    "./node": {
+      "import": { "types": "./dist/node.d.ts", "default": "./dist/node.js" },
+      "require": { "types": "./dist/node.d.cts", "default": "./dist/node.cjs" }
     }
   },
   "sideEffects": false,

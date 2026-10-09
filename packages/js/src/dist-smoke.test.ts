@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import * as pkg from "../dist/index.js";
 import * as reactPkg from "../dist/react.js";
+import * as nodePkg from "../dist/node.js";
 
 describe("built package exports", () => {
   it("exposes the public API from the built entry point", () => {
@@ -15,5 +16,10 @@ describe("built package exports", () => {
 
   it("exposes ErrorBoundary from the built react entry point", () => {
     expect(typeof reactPkg.ErrorBoundary).toBe("function");
+  });
+
+  it("exposes the Node tracer from the built node entry point", () => {
+    expect(typeof nodePkg.createTracer).toBe("function");
+    expect(typeof nodePkg.createSessionId).toBe("function");
   });
 });

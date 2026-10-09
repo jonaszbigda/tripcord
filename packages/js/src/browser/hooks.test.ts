@@ -12,6 +12,8 @@ function fakeTracer(): Tracer {
     traceElement: vi.fn(),
     setTags: vi.fn(),
     clearTags: vi.fn(),
+    getEvents: vi.fn(() => []),
+    getTags: vi.fn(() => []),
   };
 }
 
