@@ -117,8 +117,8 @@ Commands:
 **Interfaces:**
 - Produces:
   - `eventDedupeKey(event: TimelineEvent): string`
-  - `mergeEvents(...lists: TimelineEvent[][], cap: number): TimelineEvent[]` —
-    dedupes, sorts ascending by `timestamp`, keeps the newest `cap`.
+  - `mergeEvents(lists: TimelineEvent[][], cap?): TimelineEvent[]` — dedupes,
+    sorts ascending by `timestamp`, keeps the newest `cap` (default: no limit).
 
 - [ ] **Step 1: Write the failing test**
 
@@ -145,15 +145,15 @@ describe("eventDedupeKey", () => {
 
 describe("mergeEvents", () => {
   it("dedupes by id across lists and sorts by timestamp", () => {
-    const merged = mergeEvents(
+    const merged = mergeEvents([
       [ev({ id: "a", timestamp: 2 }), ev({ id: "b", timestamp: 1 })],
-      [ev({ id: "a", timestamp: 2 }), ev({ id: "c", timestamp: 3 })]
-    );
+      [ev({ id: "a", timestamp: 2 }), ev({ id: "c", timestamp: 3 })],
+    ]);
     expect(merged.map((e) => e.id)).toEqual(["b", "a", "c"]);
   });
   it("drops the oldest past cap", () => {
     const list = [1, 2, 3, 4].map((timestamp) => ev({ id: `e${timestamp}`, timestamp }));
-    expect(mergeEvents(list, [], 3).map((e) => e.id)).toEqual(["e2", "e3", "e4"]);
+    expect(mergeEvents([list], 3).map((e) => e.id)).toEqual(["e2", "e3", "e4"]);
   });
 });
 ```
@@ -166,30 +166,38 @@ describe("mergeEvents", () => {
 import { createHash } from "node:crypto";
 import type { TimelineEvent } from "@tripcord/js";
 
+/** Canonical JSON: object keys sorted at every level. */
+function stableStringify(value: unknown): string {
+  if (value === null || typeof value !== "object") return JSON.stringify(value) ?? "null";
+  if (Array.isArray(value)) return `[${value.map(stableStringify).join(",")}]`;
+  const entries = Object.keys(value as Record<string, unknown>)
+    .sort()
+    .map((key) => `${JSON.stringify(key)}:${stableStringify((value as Record<string, unknown>)[key])}`);
+  return `{${entries.join(",")}}`;
+}
+
 export function eventDedupeKey(event: TimelineEvent): string {
   if (event.id) return event.id;
-  const canonical = JSON.stringify([event.timestamp, event.type, event.name, event.data ?? null]);
+  const canonical = stableStringify([event.timestamp, event.type, event.name, event.data ?? null]);
   return createHash("sha256").update(canonical).digest("hex");
 }
 
-export function mergeEvents(...args: [...lists: TimelineEvent[][], cap: number]): TimelineEvent[] {
-  const cap = args.pop() as number;
+export function mergeEvents(lists: TimelineEvent[][], cap = Number.POSITIVE_INFINITY): TimelineEvent[] {
   const byKey = new Map<string, TimelineEvent>();
-  for (const list of args) {
+  for (const list of lists) {
     for (const event of list) {
       const key = eventDedupeKey(event);
       if (!byKey.has(key)) byKey.set(key, event);
     }
   }
-  return [...byKey.values()]
-    .sort((a, b) => a.timestamp - b.timestamp)
-    .slice(-cap);
+  const sorted = [...byKey.values()].sort((a, b) => a.timestamp - b.timestamp);
+  return cap === Number.POSITIVE_INFINITY ? sorted : sorted.slice(-cap);
 }
 ```
 
-> Note: `JSON.stringify` key order isn't stable in general; the test pins an
-> object literal where it is. If order-stability ever bites, sort keys in
-> `eventDedupeKey` — the test above is the guard.
+> Note: the content hash sorts object keys at every level (a plain
+> `JSON.stringify` does not), so `{a:1,b:2}` and `{b:2,a:1}` dedupe. This is why
+> the pure module is written first — Tasks 2 and 6 both depend on it.
 
 - [ ] **Step 4: Run it, expect PASS**
 - [ ] **Step 5: Commit** — `feat(server): event merge primitives`
@@ -293,9 +301,7 @@ export async function bakeCapture(db, projectId, input): Promise<{ id: string; e
       .returning({ pendingEvents: sessions.pendingEvents, events: sessions.events });
 
     const merged = mergeEvents(
-      row.events as TimelineEvent[],
-      row.pendingEvents as TimelineEvent[],
-      input.events,
+      [row.events as TimelineEvent[], row.pendingEvents as TimelineEvent[], input.events],
       MAX_SESSION_EVENTS
     );
     await tx.update(sessions).set({ events: merged }).where(and(eq(sessions.projectId, projectId), eq(sessions.sessionId, input.sessionId)));
