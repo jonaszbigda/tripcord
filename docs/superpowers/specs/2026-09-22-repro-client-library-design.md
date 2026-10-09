@@ -12,6 +12,11 @@ sub-project with their own future spec.
 > Superseded (2026-09-24): the product was renamed from repro to Tripcord, and the
 > package from `@repro/js` to `@tripcord/js`. See the release spec.
 
+> Extended (2026-10-09): the SSR/Node adapter this spec reserved is now built, as the
+> `@tripcord/js/node` subpath, and a session is the unit of a timeline — browser and
+> server events merge into one session that a capture bakes. See
+> `2026-10-09-tripcord-sessions-design.md`.
+
 ## Problem & concept
 
 Existing tools (Sentry, LogRocket, Highlight.io, etc.) capture bugs either as bare stack

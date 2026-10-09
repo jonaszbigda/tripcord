@@ -26,7 +26,7 @@ Check it's alive:
 
 ```bash
 curl http://localhost:3000/health
-# {"status":"ok","version":"0.3.0"}
+# {"status":"ok","version":"0.4.0"}
 ```
 
 Tear it down (including the Postgres volume) with:
@@ -143,7 +143,8 @@ After upgrading, for each existing project:
 | -------------------- | -------- | -------------- | -------------------------------------------------------------------------- |
 | `DATABASE_URL`        | yes      | —              | Postgres connection string.                                              |
 | `PORT`                | no       | `3000`         | Port the HTTP server listens on.                                          |
-| `RETENTION_DAYS`      | no       | `30`           | Timelines older than this many days are deleted by the retention job.     |
+| `RETENTION_DAYS`      | no       | `30`           | Captures older than this many days are deleted by the retention job.      |
+| `STAGING_TTL`         | no       | `24h`          | How long staged (not-yet-baked) events and idle sessions are kept before the retention job prunes them. Accepts `s`/`m`/`h`/`d`, e.g. `1h`, `7d`. |
 | `RATE_LIMIT_MAX`      | no       | `100`          | Max `POST /v1/timeline` requests per project per `RATE_LIMIT_WINDOW`.     |
 | `RATE_LIMIT_WINDOW`   | no       | `1 minute`     | Rate-limit window, as a string `@fastify/rate-limit` understands.         |
 | `BODY_LIMIT_BYTES`    | no       | `262144` (256 KiB) | Max accepted request body size, in bytes.                            |
@@ -160,10 +161,24 @@ After upgrading, for each existing project:
 
 ## API
 
-`POST /v1/timeline` — accepts a timeline payload (see `@tripcord/js`'s `TimelinePayload`
-type), authenticated via the `X-Tripcord-Key` header. Returns `201 { id }` on success.
-It accepts an optional `tags` array (at most 10 tags, each matching
-`^[a-z0-9][a-z0-9_.:-]{0,49}$`).
+`POST /v1/timeline` — records a capture and **bakes** the session: it merges the
+session's staged events with the ones in the payload, deduped by event `id` (or a
+content hash) and ordered by time, then stores a capture marker. Accepts the
+`TimelinePayload` shape (see `@tripcord/js`), authenticated via `X-Tripcord-Key`
+or `Authorization: Bearer`. Returns `201 { id, sessionId, eventCount }`. The
+payload's `events` may be empty; it accepts an optional `tags` array (at most 10
+tags, each matching `^[a-z0-9][a-z0-9_.:-]{0,49}$`).
+
+`POST /v1/events` — stages events for a session without making them visible.
+Body: `{ sessionId, events: [{ id?, source?, timestamp, type, name, data? }] }`;
+`source` defaults to `"server"`. Returns `202 { sessionId, staged }`. Staged
+events are baked by the next capture and pruned after `STAGING_TTL` if none comes.
+
+`POST /v1/sessions` — mints a session id: `201 { sessionId }`. Useful for a
+backend that wants to create the id and hand it to the browser.
+
+The three ingest routes authenticate with `X-Tripcord-Key` or
+`Authorization: Bearer`, and share one per-IP invalid-key limit.
 
 `GET /health` — liveness check, always `200 { status: "ok", version }`, where
 `version` is the running server's version.
@@ -171,10 +186,12 @@ It accepts an optional `tags` array (at most 10 tags, each matching
 `/api/*` holds the dashboard's JSON API. It's cookie-authenticated, same-origin only,
 and has no CORS. See `docs/superpowers/specs/2026-09-23-repro-dashboard-accounts-design.md`.
 
-The timeline viewer reads through `GET /api/orgs/:orgId/projects/:projectId/timelines`
-(filtered, keyset-paginated list), `…/timelines/summary` (volume buckets and top
-reasons), `…/timelines/tags` and `…/timelines/:timelineId`. Any member of the org
-can call them. See `docs/superpowers/specs/2026-09-23-repro-dashboard-timelines-design.md`.
+The session viewer reads through `GET /api/orgs/:orgId/projects/:projectId/timelines`
+(a filtered, keyset-paginated list of sessions that have a capture),
+`…/timelines/summary` (volume buckets and top reasons, counting captures),
+`…/timelines/tags` and `…/timelines/:sessionId` (the session's merged timeline and
+its capture markers). Any member of the org can call them. See
+`docs/superpowers/specs/2026-10-09-tripcord-sessions-design.md`.
 
 Hosted-beta additions (see `docs/superpowers/specs/2026-09-24-tripcord-hosted-beta-design.md`):
 

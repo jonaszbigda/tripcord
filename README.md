@@ -113,16 +113,20 @@ controlling which page URLs are sent.
 Tripcord is early, and the idea is still being tested on real apps. What exists
 today:
 
-- **`@tripcord/js`**: the browser client, with a framework-agnostic core and a React
-  error boundary. TypeScript, ESM and CommonJS.
+- **`@tripcord/js`**: the browser client (a framework-agnostic core and a React
+  error boundary) and a Node client at `@tripcord/js/node`. Both stamp every
+  event with an id and a `source`, so browser and server breadcrumbs land in one
+  session. TypeScript, ESM and CommonJS.
 - **The server**: the ingest API, with API keys per project and rate limits, and
-  a dashboard with accounts, orgs, invites, GitHub login and a timeline viewer:
-  a volume chart, top errors and captures, tag filters, and per-timeline detail.
-  Released as a Docker image for amd64 and arm64.
+  a dashboard with accounts, orgs, invites, GitHub login and a session viewer:
+  a volume chart, top errors and captures, tag filters, and per-session detail
+  that merges browser and server events. Events are **staged** until a capture
+  **bakes** them, and staged events that never get baked are pruned. Released as
+  a Docker image for amd64 and arm64.
 
-Not yet: a hosted version, clients for platforms other than the browser,
-server-side (SSR) tracing, alerts, grouping similar errors, and analytics across
-timelines, such as funnels or the most common paths to a moment.
+Not yet: a hosted version, clients for platforms other than the browser and Node,
+alerts, grouping similar errors, and analytics across sessions, such as funnels
+or the most common paths to a moment.
 
 ## Repository
 
