@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { eq } from "drizzle-orm";
-import { createTestProject, createTestUser, getTestDb, insertTestTimeline, resetDb, sessionCookie } from "../../test/db";
+import { createTestProject, createTestUser, getTestDb, insertTestCapture, resetDb, sessionCookie } from "../../test/db";
 import { buildTestApp, call } from "../../test/http";
 import { createInvite, listPendingInvites } from "../db/invites";
 import { addMember, createOrgWithOwner, getMembership } from "../db/orgs";
@@ -15,7 +15,7 @@ interface Fixture {
   projectId: string;
   keyId: string;
   inviteId: string;
-  timelineId: string;
+  sessionId: string;
 }
 
 interface RouteCase {
@@ -65,8 +65,8 @@ const CASES: RouteCase[] = [
     url: (f) => `/api/orgs/${f.orgId}/projects/${f.projectId}/timelines/tags`,
   },
   {
-    route: "GET /api/orgs/:orgId/projects/:projectId/timelines/:timelineId",
-    url: (f) => `/api/orgs/${f.orgId}/projects/${f.projectId}/timelines/${f.timelineId}`,
+    route: "GET /api/orgs/:orgId/projects/:projectId/timelines/:sessionId",
+    url: (f) => `/api/orgs/${f.orgId}/projects/${f.projectId}/timelines/${f.sessionId}`,
   },
   {
     route: "GET /api/orgs/:orgId/projects/:projectId/export",
@@ -92,13 +92,14 @@ async function setup() {
   await addMember(db, org.id, member.id, "member");
   const { project } = await createTestProject(db, "web", org.id);
   const [key] = await listApiKeys(db, project.id);
-  const timelineId = await insertTestTimeline(db, project.id);
+  const sessionId = "session-1";
+  await insertTestCapture(db, project.id, { sessionId });
   const { invite } = await createInvite(db, { orgId: org.id, role: "member", createdBy: owner.id });
 
   const outsider = await createTestUser(db);
   const outsiderOrg = await createOrgWithOwner(db, outsider.id, "Attacker");
 
-  const victim: Fixture = { orgId: org.id, memberId: member.id, projectId: project.id, keyId: key.id, inviteId: invite.id, timelineId };
+  const victim: Fixture = { orgId: org.id, memberId: member.id, projectId: project.id, keyId: key.id, inviteId: invite.id, sessionId };
   return {
     db,
     victim,

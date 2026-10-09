@@ -128,6 +128,49 @@ export async function insertTestTimeline(db: Database, projectId: string, option
   return row.id;
 }
 
+export interface TestCaptureOptions {
+  sessionId?: string;
+  reason?: { type: "error" | "unhandledrejection" | "manual"; name?: string; message?: string };
+  tags?: string[];
+  events?: unknown[];
+  url?: string;
+  /** UTC timestamp text as Postgres prints `timestamp`, e.g. from pgTimestampAgo(). Default: now. */
+  receivedAt?: string;
+}
+
+/**
+ * Bakes a capture into a session's timeline directly (bypassing ingest) and
+ * returns the capture id. The session's events are replaced with `events`, so
+ * the last write for a session wins — enough for read-side tests.
+ */
+export async function insertTestCapture(db: Database, projectId: string, options: TestCaptureOptions = {}): Promise<string> {
+  const sessionId = options.sessionId ?? "session-1";
+  const reason = options.reason ?? { type: "error", name: "TypeError", message: "boom" };
+  const events = options.events ?? [{ timestamp: 1, type: "custom", name: "step" }];
+  await db
+    .insert(timelineSessions)
+    .values({ projectId, sessionId, events })
+    .onConflictDoUpdate({
+      target: [timelineSessions.projectId, timelineSessions.sessionId],
+      set: { events },
+    });
+  const timestamp = options.receivedAt === undefined ? sql`now()` : sql`${options.receivedAt}::timestamp`;
+  const [row] = await db
+    .insert(captures)
+    .values({
+      projectId,
+      sessionId,
+      reasonType: reason.type,
+      reason,
+      meta: { url: options.url ?? "https://shop.example.com/checkout", userAgent: "test-agent", capturedAt: 1 },
+      tags: options.tags ?? [],
+      occurredAt: timestamp,
+      receivedAt: timestamp,
+    })
+    .returning({ id: captures.id });
+  return row.id;
+}
+
 /** UTC wall-clock text for `ms` milliseconds ago, millisecond precision: "2026-09-23 10:15:02.123". */
 export function pgTimestampAgo(ms: number): string {
   return new Date(Date.now() - ms).toISOString().replace("T", " ").replace("Z", "");

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { createTestProject, getTestDb, insertTestTimeline, pgTimestampAgo, resetDb } from "../../test/db";
-import { exportTimelines } from "./timelines";
+import { createTestProject, getTestDb, insertTestCapture, pgTimestampAgo, resetDb } from "../../test/db";
+import { exportCaptures } from "./session-reads";
 
 async function collect<T>(rows: AsyncIterable<T>): Promise<T[]> {
   const all: T[] = [];
@@ -8,26 +8,26 @@ async function collect<T>(rows: AsyncIterable<T>): Promise<T[]> {
   return all;
 }
 
-describe("exportTimelines", () => {
+describe("exportCaptures", () => {
   beforeEach(async () => {
     await resetDb(getTestDb());
   });
 
-  it("yields every timeline once, oldest first, across batches and equal timestamps", async () => {
+  it("yields every capture once, oldest first, across batches and equal timestamps", async () => {
     const db = getTestDb();
     const { project } = await createTestProject(db);
     const other = await createTestProject(db, "other", project.orgId);
     const same = pgTimestampAgo(60_000);
     const ids = [
-      await insertTestTimeline(db, project.id, { receivedAt: pgTimestampAgo(120_000) }),
-      await insertTestTimeline(db, project.id, { receivedAt: same }),
-      await insertTestTimeline(db, project.id, { receivedAt: same }),
-      await insertTestTimeline(db, project.id, { receivedAt: same }),
-      await insertTestTimeline(db, project.id, { receivedAt: pgTimestampAgo(1_000) }),
+      await insertTestCapture(db, project.id, { sessionId: "a", receivedAt: pgTimestampAgo(120_000) }),
+      await insertTestCapture(db, project.id, { sessionId: "b", receivedAt: same }),
+      await insertTestCapture(db, project.id, { sessionId: "c", receivedAt: same }),
+      await insertTestCapture(db, project.id, { sessionId: "d", receivedAt: same }),
+      await insertTestCapture(db, project.id, { sessionId: "e", receivedAt: pgTimestampAgo(1_000) }),
     ];
-    await insertTestTimeline(db, other.project.id);
+    await insertTestCapture(db, other.project.id, { sessionId: "x" });
 
-    const rows = await collect(exportTimelines(db, project.id, 2));
+    const rows = await collect(exportCaptures(db, project.id, 2));
 
     expect(rows).toHaveLength(5);
     expect(new Set(rows.map((r) => r.id))).toEqual(new Set(ids));
@@ -36,7 +36,7 @@ describe("exportTimelines", () => {
     expect(rows[0]).toEqual({
       id: ids[0],
       receivedAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$/),
-      sessionId: "session-1",
+      sessionId: "a",
       reasonType: "error",
       reason: { type: "error", name: "TypeError", message: "boom" },
       events: [{ timestamp: 1, type: "custom", name: "step" }],
@@ -45,8 +45,8 @@ describe("exportTimelines", () => {
     });
   });
 
-  it("yields nothing for a project without timelines", async () => {
+  it("yields nothing for a project without captures", async () => {
     const { project } = await createTestProject(getTestDb());
-    expect(await collect(exportTimelines(getTestDb(), project.id))).toEqual([]);
+    expect(await collect(exportCaptures(getTestDb(), project.id))).toEqual([]);
   });
 });
