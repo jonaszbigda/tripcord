@@ -458,11 +458,23 @@ shared helper both routes use, so the "invalid key" limiter is one instance.
 ### Task 5: Read API — session list, detail, summary, tags
 
 **Files:**
-- Rename: `server/src/db/timelines.ts` → `server/src/db/session-reads.ts`
-  (or keep the filename and change internals; pick one and update imports)
-- Modify: `server/src/routes/timelines.ts`
-- Test: `server/src/db/session-reads.test.ts`, `server/src/routes/timelines.test.ts`,
-  `server/src/routes/isolation.test.ts`
+- Create: `server/src/db/session-reads.ts`; delete `server/src/db/timelines.ts`.
+- Rename tests: `timelines.test.ts` → `session-reads.test.ts`,
+  `timelines-export.test.ts` → `session-reads-export.test.ts`.
+- Modify: `server/src/routes/timelines.ts` (detail param `:sessionId`;
+  export uses `exportCaptures`)
+- Modify: `server/src/deletion.ts` (delete `captures`/`timelineSessions` for a
+  project; `orgDeletionSummary` counts captures), and its tests plus `admin.test.ts`
+  to use `insertTestCapture`.
+- Create: `server/test/db.ts` helper `insertTestCapture`.
+- Test: `session-reads.test.ts`, `session-reads-export.test.ts`,
+  `routes/timelines.test.ts`, `routes/isolation.test.ts`
+- **Pitfall found while implementing:** `array_agg(captures.tags)` (a `text[]`)
+  fails on an empty array with Postgres' "cannot accumulate empty arrays" — tag
+  unions go through `LEFT JOIN LATERAL unnest(captures.tags)` with
+  `array_agg(DISTINCT tag)`, and `captureCount` becomes `count(DISTINCT id)` so
+  the lateral doesn't inflate it. Also, raw `sql` does not bind a JS array as a
+  Postgres array — use `inArray`/`arrayOverlaps` inside the template.
 
 **Interfaces:**
 - `listSessions(db, projectId, filters, page)` →
@@ -479,7 +491,7 @@ shared helper both routes use, so the "invalid key" limiter is one instance.
   `CASES` gains the two changed routes.
 - [ ] **Step 2: Run, expect FAIL**
 - [ ] **Step 3: Implement** — the session list is a `captures` aggregate joined
-  to `sessions` for `events`/`updated_at`; `lastSeenAt = max(captures.occurred_at)`.
+  to `timeline_sessions` for `events`/`updated_at`; `lastSeenAt = max(received_at)`.
   The `reason` key still hashes `(reason_type, name, message)`.
 - [ ] **Step 4: Run, expect PASS**
 - [ ] **Step 5: Commit** — `feat(server): session read API`
