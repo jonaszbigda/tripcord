@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api";
 import { githubHref } from "../auth";
+import { LockIcon, MailIcon, UserIcon, UserPlusIcon } from "../components/icons";
 import { AuthCard, Button, ErrorText, TextField } from "../components/ui";
 import { queryKeys, useAuthConfig } from "../queries";
 import type { Me } from "../types";
@@ -49,8 +50,8 @@ export function SignupPage() {
           signup.mutate();
         }}
       >
-        <TextField label="Name" autoComplete="name" value={name} onChange={setName} required maxLength={100} />
-        <TextField label="Email" type="email" autoComplete="email" value={email} onChange={setEmail} required />
+        <TextField label="Name" autoComplete="name" value={name} onChange={setName} required maxLength={100} icon={<UserIcon />} />
+        <TextField label="Email" type="email" autoComplete="email" value={email} onChange={setEmail} required icon={<MailIcon />} />
         <TextField
           label="Password"
           type="password"
@@ -60,9 +61,10 @@ export function SignupPage() {
           required
           minLength={8}
           maxLength={256}
+          icon={<LockIcon />}
         />
         <ErrorText error={signup.error} />
-        <Button type="submit" className="w-full" disabled={signup.isPending}>
+        <Button type="submit" className="w-full" disabled={signup.isPending} icon={<UserPlusIcon />}>
           Sign up
         </Button>
       </form>

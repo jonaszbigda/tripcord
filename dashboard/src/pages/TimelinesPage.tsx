@@ -5,7 +5,8 @@ import { EmptyState } from "../components/timelines/EmptyState";
 import { FilterBar } from "../components/timelines/FilterBar";
 import { TimelineList } from "../components/timelines/TimelineList";
 import { TopReasons } from "../components/timelines/TopReasons";
-import { Button, Card, ErrorText } from "../components/ui";
+import { ActivityIcon, BarChartIcon, ListIcon } from "../components/icons";
+import { Button, Card, CardTitle, ErrorText } from "../components/ui";
 import { useTimelineSummary, useTimelineTags, useSessions } from "../queries";
 import { useTimelineFilters } from "../timelineFilters";
 import type { Range } from "../types";
@@ -40,7 +41,7 @@ export function TimelinesPage() {
 
       <Card className="space-y-4">
         <div className="flex items-baseline justify-between gap-4">
-          <h2 className="font-medium">Volume</h2>
+          <CardTitle icon={<BarChartIcon />}>Volume</CardTitle>
           {total !== undefined && (
             <p className="text-sm text-muted">
               <span className="text-cord text-2xl font-semibold tabular-nums">{total.toLocaleString()}</span>{" "}
@@ -53,14 +54,14 @@ export function TimelinesPage() {
       </Card>
 
       <Card className="space-y-3">
-        <h2 className="font-medium">Top reasons</h2>
+        <CardTitle icon={<ListIcon />}>Top reasons</CardTitle>
         {summary.data && (
           <TopReasons reasons={topReasons} selected={filters.reason} onSelect={(reason) => setFilters({ reason })} />
         )}
       </Card>
 
       <Card className="space-y-3">
-        <h2 className="font-medium">Timelines</h2>
+        <CardTitle icon={<ActivityIcon />}>Timelines</CardTitle>
         <ErrorText error={list.error} />
         {list.data && <TimelineList orgId={orgId} projectId={projectId} sessions={sessions} />}
         {list.hasNextPage && (

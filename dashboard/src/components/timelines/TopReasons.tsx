@@ -22,7 +22,7 @@ export function TopReasons({
   const most = Math.max(...reasons.map((r) => r.count));
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[36rem] table-fixed text-sm">
+      <table className="w-full min-w-[36rem] table-fixed text-[13px]">
         <thead>
           <tr className="text-left text-muted">
             <th className="w-44 py-2 font-medium">Type</th>

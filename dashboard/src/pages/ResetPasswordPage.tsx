@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { useMutation } from "@tanstack/react-query";
 import { api } from "../api";
+import { LockIcon } from "../components/icons";
 import { AuthCard, Button, ErrorText, TextField } from "../components/ui";
 
 // Doesn't log the user in: the server ends every session, and a leaked link
@@ -35,6 +36,7 @@ export function ResetPasswordPage() {
           required
           minLength={8}
           maxLength={256}
+          icon={<LockIcon />}
         />
         <TextField
           label="Repeat new password"
@@ -43,10 +45,11 @@ export function ResetPasswordPage() {
           value={repeat}
           onChange={setRepeat}
           required
+          icon={<LockIcon />}
         />
         {mismatch && <p className="text-sm text-danger">The passwords don't match.</p>}
         <ErrorText error={reset.error} />
-        <Button type="submit" className="w-full" disabled={reset.isPending || mismatch}>
+        <Button type="submit" className="w-full" disabled={reset.isPending || mismatch} icon={<LockIcon />}>
           Set password
         </Button>
       </form>

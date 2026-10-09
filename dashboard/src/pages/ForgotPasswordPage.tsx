@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router";
 import { useMutation } from "@tanstack/react-query";
 import { api } from "../api";
+import { MailIcon } from "../components/icons";
 import { AuthCard, Button, ErrorText, TextField } from "../components/ui";
 
 // The server answers 204 whether or not the address has an account, so this
@@ -32,9 +33,9 @@ export function ForgotPasswordPage() {
           request.mutate();
         }}
       >
-        <TextField label="Email" type="email" autoComplete="email" value={email} onChange={setEmail} required />
+        <TextField label="Email" type="email" autoComplete="email" value={email} onChange={setEmail} required icon={<MailIcon />} />
         <ErrorText error={request.error} />
-        <Button type="submit" className="w-full" disabled={request.isPending}>
+        <Button type="submit" className="w-full" disabled={request.isPending} icon={<MailIcon />}>
           Send reset link
         </Button>
       </form>

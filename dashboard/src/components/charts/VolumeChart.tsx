@@ -157,7 +157,7 @@ export function VolumeChart({ summary, series }: { summary: TimelineSummary; ser
       </div>
 
       {showTable && (
-        <table className="w-full text-sm">
+        <table className="w-full text-[13px]">
           <caption className="sr-only">Timelines per {unit}</caption>
           <thead>
             <tr className="text-left text-muted">

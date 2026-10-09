@@ -1,7 +1,8 @@
 import { useNavigate, useParams } from "react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api";
-import { Card, ErrorText, TypeToConfirm } from "../components/ui";
+import { DownloadIcon, TrashIcon } from "../components/icons";
+import { Card, CardTitle, ErrorText, TypeToConfirm } from "../components/ui";
 import { queryKeys, useOrgRole, useProjects } from "../queries";
 import type { Project } from "../types";
 
@@ -28,20 +29,23 @@ export function ProjectSettingsPage() {
   return (
     <div className="space-y-6">
       <Card className="space-y-3">
-        <h2 className="font-medium">Export</h2>
+        <CardTitle icon={<DownloadIcon />}>Export</CardTitle>
         <p className="text-sm text-muted">
           Download every timeline of this project as NDJSON: one JSON object per line, oldest first.
         </p>
         <a
           href={`/api/orgs/${orgId}/projects/${projectId}/export`}
           download
-          className="inline-flex rounded-lg border border-border bg-raised px-3.5 py-2 text-sm font-medium hover:border-muted/50"
+          className="inline-flex items-center gap-2 rounded-lg border border-border bg-raised px-3.5 py-2 text-sm font-medium hover:border-muted/50"
         >
+          <DownloadIcon />
           Export timelines
         </a>
       </Card>
       <Card className="space-y-3">
-        <h2 className="font-medium text-danger">Delete project</h2>
+        <CardTitle className="text-danger" icon={<TrashIcon />}>
+          Delete project
+        </CardTitle>
         {role === "owner" ? (
           <>
             <p className="text-sm text-muted">

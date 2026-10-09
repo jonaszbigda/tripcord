@@ -3,7 +3,8 @@ import { useNavigate, useParams } from "react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api";
 import { OnceSecret } from "../components/OnceSecret";
-import { Button, Card, ConfirmButton, ErrorText, PageHeader } from "../components/ui";
+import { MailIcon, PlusIcon, UsersIcon } from "../components/icons";
+import { Button, Card, CardTitle, ConfirmButton, ErrorText, PageHeader } from "../components/ui";
 import { formatDate } from "../format";
 import { queryKeys, useInvites, useMe, useMembers, useOrgRole } from "../queries";
 import type { Invite, Me, Role } from "../types";
@@ -60,10 +61,10 @@ export function MembersPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Members" />
+      <PageHeader title="Members" icon={<UsersIcon className="size-6" />} />
       <ErrorText error={changeRole.error ?? remove.error ?? createInvite.error ?? revokeInvite.error ?? members.error} />
       {members.data && (
-        <table className="w-full text-sm">
+        <table className="w-full text-[13px]">
           <thead>
             <tr className="text-left text-muted">
               <th className="py-2 font-medium">Name</th>
@@ -96,12 +97,22 @@ export function MembersPage() {
                       member.role
                     )}
                   </td>
-                  <td className="text-right">
+                  <td className="py-2 pl-4 text-right">
                     {isSelf ? (
-                      <ConfirmButton label="Leave" confirmLabel="Confirm leave" onConfirm={() => remove.mutate(member.userId)} />
+                      <ConfirmButton
+                        label="Leave"
+                        confirmLabel="Confirm leave"
+                        onConfirm={() => remove.mutate(member.userId)}
+                        className="px-2.5 py-1 text-xs"
+                      />
                     ) : (
                       isOwner && (
-                        <ConfirmButton label="Remove" confirmLabel="Confirm remove" onConfirm={() => remove.mutate(member.userId)} />
+                        <ConfirmButton
+                          label="Remove"
+                          confirmLabel="Confirm remove"
+                          onConfirm={() => remove.mutate(member.userId)}
+                          className="px-2.5 py-1 text-xs"
+                        />
                       )
                     )}
                   </td>
@@ -115,7 +126,7 @@ export function MembersPage() {
       {isOwner && (
         <Card className="space-y-4">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="font-medium">Invites</h2>
+            <CardTitle icon={<MailIcon />}>Invites</CardTitle>
             <div className="flex items-center gap-2">
               <select
                 aria-label="Invite role"
@@ -126,7 +137,7 @@ export function MembersPage() {
                 <option value="member">member</option>
                 <option value="owner">owner</option>
               </select>
-              <Button onClick={() => createInvite.mutate()} disabled={createInvite.isPending}>
+              <Button onClick={() => createInvite.mutate()} disabled={createInvite.isPending} icon={<PlusIcon />}>
                 Create invite link
               </Button>
             </div>

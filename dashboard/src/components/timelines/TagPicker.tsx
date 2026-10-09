@@ -1,4 +1,5 @@
 import type { TagCount } from "../../types";
+import { TagIcon } from "../icons";
 
 export function TagPicker({
   tags,
@@ -11,7 +12,8 @@ export function TagPicker({
 }) {
   return (
     <details className="relative">
-      <summary className="cursor-pointer list-none rounded-lg border border-border bg-surface px-3 py-1 text-sm text-muted transition hover:text-fg">
+      <summary className="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-1 text-sm text-muted transition hover:text-fg">
+        <TagIcon />
         {selected.length > 0 ? `Tags (${selected.length})` : "Tags"}
       </summary>
       <div className="absolute z-10 mt-1 max-h-64 w-60 overflow-auto rounded-xl border border-border bg-raised p-2 shadow-[0_16px_40px_-12px_rgb(0_0_0/0.8)]">

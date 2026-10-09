@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api";
 import { LOGIN_ERRORS, githubHref, inviteTokenFromNext, safeNext } from "../auth";
+import { LockIcon, LogInIcon, MailIcon } from "../components/icons";
 import { Alert, AuthCard, Button, ErrorText, TextField } from "../components/ui";
 import { queryKeys, useAuthConfig } from "../queries";
 import type { Me } from "../types";
@@ -40,7 +41,7 @@ export function LoginPage() {
           login.mutate();
         }}
       >
-        <TextField label="Email" type="email" autoComplete="email" value={email} onChange={setEmail} required />
+        <TextField label="Email" type="email" autoComplete="email" value={email} onChange={setEmail} required icon={<MailIcon />} />
         <TextField
           label="Password"
           type="password"
@@ -48,6 +49,7 @@ export function LoginPage() {
           value={password}
           onChange={setPassword}
           required
+          icon={<LockIcon />}
         />
         {config.data?.passwordReset && (
           <Link className="block text-sm text-accent hover:underline" to="/reset-password">
@@ -55,7 +57,7 @@ export function LoginPage() {
           </Link>
         )}
         <ErrorText error={login.error} />
-        <Button type="submit" className="w-full" disabled={login.isPending}>
+        <Button type="submit" className="w-full" disabled={login.isPending} icon={<LogInIcon />}>
           Log in
         </Button>
       </form>

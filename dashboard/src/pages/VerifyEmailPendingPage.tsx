@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ApiError, api } from "../api";
 import { queryKeys } from "../queries";
 import type { Me } from "../types";
+import { LockIcon, LogOutIcon, MailIcon, TrashIcon } from "../components/icons";
 import { AuthCard, Button, ErrorText, TextField } from "../components/ui";
 
 function retryAfter(error: Error | null): number {
@@ -80,9 +81,9 @@ export function VerifyEmailPendingPage({ me }: { me: Me }) {
               change.mutate();
             }}
           >
-            <TextField label="New email" type="email" autoComplete="email" value={newEmail} onChange={setNewEmail} required maxLength={254} />
+            <TextField label="New email" type="email" autoComplete="email" value={newEmail} onChange={setNewEmail} required maxLength={254} icon={<MailIcon />} />
             {change.error && retryAfter(change.error) === 0 && <ErrorText error={change.error} />}
-            <Button type="submit" disabled={change.isPending || wait > 0}>
+            <Button type="submit" disabled={change.isPending || wait > 0} icon={<MailIcon />}>
               Change and resend
             </Button>
           </form>
@@ -93,7 +94,7 @@ export function VerifyEmailPendingPage({ me }: { me: Me }) {
         )}
 
         <div className="flex flex-wrap items-center gap-3 border-t border-border pt-4">
-          <Button variant="secondary" onClick={() => logout.mutate()} disabled={logout.isPending}>
+          <Button variant="secondary" onClick={() => logout.mutate()} disabled={logout.isPending} icon={<LogOutIcon />}>
             Log out
           </Button>
           <button type="button" className="text-danger hover:underline" onClick={() => setDeleting((open) => !open)}>
@@ -109,9 +110,9 @@ export function VerifyEmailPendingPage({ me }: { me: Me }) {
               deleteAccount.mutate();
             }}
           >
-            <TextField label="Password" type="password" autoComplete="current-password" value={password} onChange={setPassword} required />
+            <TextField label="Password" type="password" autoComplete="current-password" value={password} onChange={setPassword} required icon={<LockIcon />} />
             <ErrorText error={deleteAccount.error} />
-            <Button type="submit" variant="danger" disabled={deleteAccount.isPending || password === ""}>
+            <Button type="submit" variant="danger" disabled={deleteAccount.isPending || password === ""} icon={<TrashIcon />}>
               Delete my account
             </Button>
           </form>

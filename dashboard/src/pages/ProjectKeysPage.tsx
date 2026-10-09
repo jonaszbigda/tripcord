@@ -3,7 +3,8 @@ import { useParams } from "react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api";
 import { OnceSecret } from "../components/OnceSecret";
-import { Button, Card, ConfirmButton, ErrorText } from "../components/ui";
+import { KeyIcon, PlugIcon, PlusIcon } from "../components/icons";
+import { Button, Card, CardTitle, ConfirmButton, ErrorText } from "../components/ui";
 import { formatDate } from "../format";
 import { queryKeys, useKeys } from "../queries";
 import type { CreatedApiKey } from "../types";
@@ -36,7 +37,7 @@ export function ProjectKeysPage() {
   return (
     <div className="space-y-6">
       <Card className="space-y-2">
-        <h2 className="font-medium">Ingest endpoint</h2>
+        <CardTitle icon={<PlugIcon />}>Ingest endpoint</CardTitle>
         <p className="text-sm text-muted">
           Point <code className="font-mono">@tripcord/js</code> at this URL and pass one of the keys below as{" "}
           <code className="font-mono">apiKey</code>.
@@ -46,15 +47,15 @@ export function ProjectKeysPage() {
 
       <Card className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="font-medium">API keys</h2>
-          <Button onClick={() => createKey.mutate()} disabled={createKey.isPending}>
+          <CardTitle icon={<KeyIcon />}>API keys</CardTitle>
+          <Button onClick={() => createKey.mutate()} disabled={createKey.isPending} icon={<PlusIcon />}>
             Create key
           </Button>
         </div>
         {newKey && <OnceSecret label="New API key" value={newKey} onDismiss={() => setNewKey(null)} />}
         <ErrorText error={createKey.error ?? revoke.error ?? keys.error} />
         {keys.data && (
-          <table className="w-full text-sm">
+          <table className="w-full text-[13px]">
             <thead>
               <tr className="text-left text-muted">
                 <th className="py-2 font-medium">Key</th>

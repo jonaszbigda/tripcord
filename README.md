@@ -6,7 +6,7 @@
 [![npm](https://img.shields.io/npm/v/@tripcord/js)](https://www.npmjs.com/package/@tripcord/js)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-![The Tripcord dashboard: timeline volume over the last 7 days by reason type, and the top reasons](docs/dashboard.png)
+![The Tripcord dashboard: timeline volume over the last 7 days by reason type, the top reasons, and the sessions behind them](docs/dashboard.png)
 
 Tripcord is a self-hosted timeline tool for web apps. You decide which steps are
 worth recording — in the browser and on your server. The browser keeps the most
