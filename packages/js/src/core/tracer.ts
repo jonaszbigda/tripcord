@@ -85,7 +85,7 @@ export function createTracer(config: TracerConfig): Tracer {
       return buffer.getAll();
     },
     getTags() {
-      return scopeTags;
+      return [...scopeTags];
     },
   };
 }

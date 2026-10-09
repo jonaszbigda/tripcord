@@ -18,7 +18,20 @@ export async function stageEvents(
   sessionId: string,
   events: TimelineEvent[]
 ): Promise<number> {
-  const incoming = events.map((event) => ({ ...event, source: event.source ?? "server" }));
+  const incoming = events.map((event) => ({ ...event, source: event.source ?? "server" })).slice(-MAX_SESSION_EVENTS);
+  // The combined buffer is trimmed to the newest MAX_SESSION_EVENTS in the same
+  // statement, so a client that stages without ever capturing can't grow a
+  // session's jsonb without bound (the cap isn't only applied at bake).
+  const combined = sql`(${timelineSessions.pendingEvents} || ${JSON.stringify(incoming)}::jsonb)`;
+  const trimmed = sql`(
+    SELECT coalesce(jsonb_agg(elem ORDER BY ord), '[]'::jsonb)
+    FROM (
+      SELECT elem, ord
+      FROM jsonb_array_elements(${combined}) WITH ORDINALITY AS t(elem, ord)
+      ORDER BY ord DESC
+      LIMIT ${MAX_SESSION_EVENTS}
+    ) newest
+  )`;
   await db
     .insert(timelineSessions)
     .values({ projectId, sessionId, pendingEvents: incoming })
@@ -27,7 +40,7 @@ export async function stageEvents(
       set: {
         // `||` concatenates the arrays; one statement, so a concurrent stage
         // can't read-modify-write the buffer and lose the other's event.
-        pendingEvents: sql`${timelineSessions.pendingEvents} || ${JSON.stringify(incoming)}::jsonb`,
+        pendingEvents: trimmed,
         updatedAt: sql`now()`,
       },
     });
@@ -71,11 +84,14 @@ export async function bakeCapture(db: Database, projectId: string, input: BakeCa
     // returns the *new* row, so draining in the same statement would hand back
     // the empty buffer, not what was staged. The row lock holds a concurrent
     // stage until the update below, so its event lands for the next bake.
-    const [current] = await tx
+    const [row] = await tx
       .select({ pendingEvents: timelineSessions.pendingEvents, events: timelineSessions.events })
       .from(timelineSessions)
       .where(and(eq(timelineSessions.projectId, projectId), eq(timelineSessions.sessionId, input.sessionId)))
       .for("update");
+    // The row can vanish between the INSERT and the lock (concurrent project
+    // deletion, or the staging sweep). Treat it as an empty session.
+    const current = row ?? { pendingEvents: [] as TimelineEvent[], events: [] as TimelineEvent[] };
 
     const merged = mergeEvents(
       [current.events as TimelineEvent[], current.pendingEvents as TimelineEvent[], input.events],

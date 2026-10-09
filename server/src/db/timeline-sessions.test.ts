@@ -160,4 +160,29 @@ describe("timeline-session service", () => {
     expect(rows).toHaveLength(1);
     expect(rows[0].events).toEqual([]);
   });
+
+  it("bounds the staging buffer to MAX_SESSION_EVENTS, keeping the newest", async () => {
+    const full = Array.from({ length: MAX_SESSION_EVENTS }, (_, i) => event({ id: `a${i}`, timestamp: i }));
+    await stageEvents(db, projectId, "s1", full);
+    await stageEvents(db, projectId, "s1", [event({ id: "newest", timestamp: 10_000 })]);
+
+    const pending = (await sessionRow(db, projectId, "s1"))?.pendingEvents as TimelineEvent[];
+    expect(pending).toHaveLength(MAX_SESSION_EVENTS);
+    expect(pending[pending.length - 1].id).toBe("newest");
+    expect(pending.some((e) => e.id === "a0")).toBe(false);
+  });
+
+  it("loses no staged event when a stage races a bake", async () => {
+    await stageEvents(db, projectId, "s1", [event({ id: "a", timestamp: 1 })]);
+
+    await Promise.all([
+      bake(db, projectId, "s1", [event({ id: "b", timestamp: 2 })]),
+      stageEvents(db, projectId, "s1", [event({ id: "c", timestamp: 3 })]),
+    ]);
+    // Drain whatever the race left staged, then assert the union with no dupes.
+    await bake(db, projectId, "s1");
+
+    const ids = ((await sessionRow(db, projectId, "s1"))?.events as TimelineEvent[]).map((e) => e.id).sort();
+    expect(ids).toEqual(["a", "b", "c"]);
+  });
 });

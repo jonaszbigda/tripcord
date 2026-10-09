@@ -182,10 +182,12 @@ Every `/v1/*` route accepts the key as either:
 - `X-Tripcord-Key: tpk_…` (existing, what `@tripcord/js` sends), or
 - `Authorization: Bearer tpk_…` (ergonomic for `curl`/Postman/other languages).
 
-Both resolve through the same hashed lookup (`db/projects.ts`). A request with
-neither header, or an unknown/revoked key, is `401 { error: "Invalid API key" }`,
-after the existing per-IP invalid-key limiter. No `?key=` query parameter: query
-strings leak into access logs and proxies.
+Both resolve through the same hashed lookup (`db/projects.ts`). A request with an
+unknown or revoked key is `401 { error: "Invalid API key" }`; a request with
+neither header is `401 { error: "Missing API key" }` (a distinct, more helpful
+message that reveals nothing). Both run after the existing per-IP invalid-key
+limiter. No `?key=` query parameter: query strings leak into access logs and
+proxies.
 
 ## Pruning & retention
 
@@ -321,7 +323,7 @@ One drizzle migration:
 - Client-supplied strings stay rendered as text; `meta.url` links only for
   `http:`/`https:` (unchanged rule).
 
-New color tokens in `dashboard/src/index.css`, following the existing `@theme`
+New color tokens in `dashboard/src/theme.css`, following the existing `@theme`
 and `prefers-color-scheme` pattern, checked with the dataviz validator against
 the dashboard surfaces.
 

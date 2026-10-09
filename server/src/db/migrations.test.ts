@@ -21,11 +21,15 @@ function migrationsBefore(idx: number): string {
 
 // Runs `fn` against a brand-new database in the shared test container, so the
 // migrations can be applied from scratch without disturbing other tests.
-async function withFreshDatabase(fn: (pool: Pool) => Promise<void>): Promise<void> {
+async function withFreshDatabase(fn: (pool: Pool) => Promise<void>, options: { timeZone?: string } = {}): Promise<void> {
   const adminUrl = inject("databaseUrl");
   const name = `migration_test_${Date.now()}`;
   const admin = new Pool({ connectionString: adminUrl });
   await admin.query(`CREATE DATABASE ${name}`);
+  if (options.timeZone !== undefined) {
+    // Per-database, so every pooled connection migrating this DB inherits it.
+    await admin.query(`ALTER DATABASE ${name} SET timezone = '${options.timeZone}'`);
+  }
   const url = new URL(adminUrl);
   url.pathname = `/${name}`;
   const pool = new Pool({ connectionString: url.toString() });
@@ -223,8 +227,15 @@ describe("sessions migration (0008)", () => {
       const captures = await pool.query(`SELECT 1 FROM captures`);
       expect(captures.rows).toHaveLength(2);
 
+      // capturedAt is epoch ms; the wall clock must be UTC regardless of the
+      // database's timezone (this DB runs in Europe/Warsaw).
+      const occurred = await pool.query<{ at: string }>(
+        `SELECT to_char(occurred_at, 'YYYY-MM-DD"T"HH24:MI:SS') AS at FROM captures ORDER BY received_at LIMIT 1`
+      );
+      expect(occurred.rows[0].at).toBe("2023-11-14T22:13:20");
+
       const gone = await pool.query<{ t: string | null }>(`SELECT to_regclass('timelines') AS t`);
       expect(gone.rows[0].t).toBeNull();
-    });
+    }, { timeZone: "Europe/Warsaw" });
   });
 });

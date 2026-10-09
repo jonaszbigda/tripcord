@@ -112,7 +112,7 @@ All commands:
 | `key revoke <keyId>`                    | Revoke a key. Ingest rejects it immediately.                   |
 | `user reset-password <email>`           | Print a new random password once and log the user out everywhere. |
 | `user delete <email> [--yes]`           | Delete a user and the orgs where they're the only member. Without `--yes`, only shows what would be deleted. |
-| `org delete <orgId> [--yes]`            | Delete an org with its projects, keys and timelines. Without `--yes`, only shows what would be deleted. |
+| `org delete <orgId> [--yes]`            | Delete an org with its projects, keys, captures and sessions. Without `--yes`, only shows what would be deleted. |
 | `invite create [--email <address>]`     | Create a signup invite: a new account with its own org, on an `invite-only` instance. Prints the link once; with `--email` (needs SMTP), also emails it. |
 | `invite list`                           | List pending signup invites.                                   |
 | `invite revoke <inviteId>`              | Revoke a pending signup invite.                                |
@@ -145,7 +145,7 @@ After upgrading, for each existing project:
 | `PORT`                | no       | `3000`         | Port the HTTP server listens on.                                          |
 | `RETENTION_DAYS`      | no       | `30`           | Captures older than this many days are deleted by the retention job.      |
 | `STAGING_TTL`         | no       | `24h`          | How long staged (not-yet-baked) events and idle sessions are kept before the retention job prunes them. Accepts `s`/`m`/`h`/`d`, e.g. `1h`, `7d`. |
-| `RATE_LIMIT_MAX`      | no       | `100`          | Max `POST /v1/timeline` requests per project per `RATE_LIMIT_WINDOW`.     |
+| `RATE_LIMIT_MAX`      | no       | `100`          | Max ingest requests (`/v1/timeline`, `/v1/events`, `/v1/sessions`) per project per `RATE_LIMIT_WINDOW`. |
 | `RATE_LIMIT_WINDOW`   | no       | `1 minute`     | Rate-limit window, as a string `@fastify/rate-limit` understands.         |
 | `BODY_LIMIT_BYTES`    | no       | `262144` (256 KiB) | Max accepted request body size, in bytes.                            |
 | `LOG_LEVEL`           | no       | `info`         | Pino log level (`fatal`, `error`, `warn`, `info`, `debug`, `trace`).       |

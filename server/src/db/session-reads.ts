@@ -226,6 +226,30 @@ export async function listSessions(
 }
 
 export async function getSession(db: Database, projectId: string, sessionId: string): Promise<SessionDetail | undefined> {
+  // Metadata comes from an aggregate over every capture, so it's correct even
+  // past the (bounded) list below.
+  const meta = await db.execute<{
+    firstSeenAt: string;
+    lastSeenAt: string;
+    tags: string[];
+    url: string | null;
+    captureCount: number;
+  }>(sql`
+    SELECT
+      ${isoTimestamp(sql`min(${captures.receivedAt})`)} AS "firstSeenAt",
+      ${isoTimestamp(sql`max(${captures.receivedAt})`)} AS "lastSeenAt",
+      ${sql`coalesce(array_agg(DISTINCT t.tag) FILTER (WHERE t.tag IS NOT NULL), '{}'::text[])`} AS "tags",
+      ${sql`(array_agg(${captures.meta}->>'url' ORDER BY ${captures.receivedAt} DESC))[1]`} AS "url",
+      ${sql`count(*)::int`} AS "captureCount"
+    FROM ${captures}
+    LEFT JOIN LATERAL unnest(${captures.tags}) AS t(tag) ON TRUE
+    WHERE ${and(eq(captures.projectId, projectId), eq(captures.sessionId, sessionId))}
+  `);
+  const summary = meta.rows[0];
+  if (!summary || summary.captureCount === 0) {
+    return undefined;
+  }
+
   const captureRows = await db
     .select({
       id: captures.id,
@@ -240,23 +264,19 @@ export async function getSession(db: Database, projectId: string, sessionId: str
     .where(and(eq(captures.projectId, projectId), eq(captures.sessionId, sessionId)))
     .orderBy(asc(captures.receivedAt), asc(captures.id))
     .limit(100);
-  if (captureRows.length === 0) {
-    return undefined;
-  }
 
   const [session] = await db
     .select({ events: timelineSessions.events })
     .from(timelineSessions)
     .where(and(eq(timelineSessions.projectId, projectId), eq(timelineSessions.sessionId, sessionId)));
 
-  const latest = captureRows[captureRows.length - 1];
   return {
     session: {
       sessionId,
-      firstSeenAt: captureRows[0].receivedAt,
-      lastSeenAt: latest.receivedAt,
-      url: ((latest.meta as { url?: string } | null)?.url ?? null),
-      tags: dedupe(captureRows.flatMap((row) => row.tags)),
+      firstSeenAt: summary.firstSeenAt,
+      lastSeenAt: summary.lastSeenAt,
+      url: summary.url,
+      tags: dedupe(summary.tags),
       events: (session?.events as TimelineEvent[] | undefined) ?? [],
     },
     captures: captureRows,

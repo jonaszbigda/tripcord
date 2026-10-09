@@ -176,6 +176,27 @@ describe("session read service", () => {
       const projectId = await newProject();
       expect(await getSession(db, projectId, "missing")).toBeUndefined();
     });
+
+    it("reports metadata from every capture, not just the listed first 100", async () => {
+      const db = getTestDb();
+      const projectId = await newProject();
+      // 105 captures, oldest first; only the newest carries the "late" tag.
+      for (let i = 0; i < 105; i++) {
+        await insertTestCapture(db, projectId, {
+          sessionId: "big",
+          receivedAt: pgTimestampAgo((105 - i) * 60_000),
+          tags: i === 104 ? ["late"] : [],
+        });
+      }
+
+      const found = await getSession(db, projectId, "big");
+
+      expect(found?.captures).toHaveLength(100);
+      // lastSeenAt is the true latest (~1 minute ago), not the 100th oldest (~100 minutes ago).
+      expect(Date.parse(found?.session.lastSeenAt ?? "")).toBeGreaterThan(Date.now() - 5 * 60_000);
+      // A tag only on a capture past the list cap still shows up.
+      expect(found?.session.tags).toEqual(["late"]);
+    });
   });
 
   describe("summarizeTimelines", () => {

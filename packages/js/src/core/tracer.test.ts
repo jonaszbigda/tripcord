@@ -48,6 +48,18 @@ describe("createTracer", () => {
     expect(send.mock.calls[0][0].events[0]).not.toHaveProperty("source");
   });
 
+  it("returns the scope tags as a copy, so callers can't mutate tracer state", () => {
+    const tracer = createTracer({
+      sessionId: "session-1",
+      send: vi.fn(),
+      getMeta: () => ({ url: "https://example.com", userAgent: "test-agent" }),
+    });
+    tracer.setTags(["checkout"]);
+    const tags = tracer.getTags();
+    tags.push("injected");
+    expect(tracer.getTags()).toEqual(["checkout"]);
+  });
+
   it("capture() flushes the buffer with a manual reason", () => {
     const { send, tracer } = setup();
     tracer.track("checkout.step", { step: "shipping" });

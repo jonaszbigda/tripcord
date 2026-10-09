@@ -41,7 +41,7 @@ SELECT
 	reason,
 	meta,
 	coalesce(tags, '{}'::text[]),
-	coalesce(to_timestamp((meta->>'capturedAt')::double precision / 1000)::timestamp, received_at),
+	coalesce((to_timestamp((meta->>'capturedAt')::double precision / 1000) AT TIME ZONE 'UTC'), received_at),
 	received_at
 FROM "timelines";
 --> statement-breakpoint
