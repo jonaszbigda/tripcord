@@ -10,7 +10,6 @@ import {
   passwordResets,
   projects,
   sessions,
-  timelines,
   timelineSessions,
   users,
 } from "./db/schema";
@@ -28,8 +27,6 @@ export async function deleteProject(ex: Executor, projectId: string): Promise<vo
   await ex.transaction(async (tx) => {
     await tx.delete(captures).where(eq(captures.projectId, projectId));
     await tx.delete(timelineSessions).where(eq(timelineSessions.projectId, projectId));
-    // Legacy table, dropped in the sessions migration.
-    await tx.delete(timelines).where(eq(timelines.projectId, projectId));
     await tx.delete(apiKeys).where(eq(apiKeys.projectId, projectId));
     await tx.delete(projects).where(eq(projects.id, projectId));
   });

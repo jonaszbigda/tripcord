@@ -166,32 +166,6 @@ export const apiKeys = pgTable(
   })
 );
 
-export const timelines = pgTable(
-  "timelines",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    projectId: uuid("project_id")
-      .notNull()
-      .references(() => projects.id),
-    sessionId: text("session_id").notNull(),
-    reasonType: text("reason_type").notNull(),
-    reason: jsonb("reason").notNull(),
-    events: jsonb("events").notNull(),
-    meta: jsonb("meta").notNull(),
-    // Where the error happened, set by the client (see server/src/tags.ts).
-    tags: text("tags").array().notNull().default(sql`'{}'::text[]`),
-    receivedAt: timestamp("received_at").notNull().defaultNow(),
-  },
-  (table) => ({
-    projectReceivedIdx: index("timelines_project_received_idx").on(table.projectId, table.receivedAt),
-    projectReasonTypeIdx: index("timelines_project_reason_type_idx").on(table.projectId, table.reasonType),
-    projectSessionIdx: index("timelines_project_session_idx").on(table.projectId, table.sessionId),
-    tagsIdx: index("timelines_tags_idx").using("gin", table.tags),
-  })
-);
-
-// A session's whole timeline, merged from browser and server sources. Named
-// timeline_sessions, not sessions: that name belongs to cookie login sessions.
 export const timelineSessions = pgTable(
   "timeline_sessions",
   {
@@ -250,6 +224,5 @@ export type PasswordReset = typeof passwordResets.$inferSelect;
 export type EmailVerification = typeof emailVerifications.$inferSelect;
 export type Project = typeof projects.$inferSelect;
 export type ApiKey = typeof apiKeys.$inferSelect;
-export type Timeline = typeof timelines.$inferSelect;
 export type TimelineSession = typeof timelineSessions.$inferSelect;
 export type Capture = typeof captures.$inferSelect;

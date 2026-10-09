@@ -11,7 +11,6 @@ import {
   passwordResets,
   projects,
   sessions,
-  timelines,
   timelineSessions,
   users,
   type Org,
@@ -36,7 +35,6 @@ export function getTestDb(): Database {
 export async function resetDb(db: Database): Promise<void> {
   await db.delete(captures);
   await db.delete(timelineSessions);
-  await db.delete(timelines);
   await db.delete(apiKeys);
   await db.delete(projects);
   await db.delete(invites);
@@ -97,35 +95,6 @@ export async function sessionCookie(db: Database, userId: string): Promise<strin
   const { token } = await createSession(db, userId);
   // Must match SESSION_COOKIE in src/auth/http.ts.
   return `tripcord_session=${token}`;
-}
-
-export interface TestTimelineOptions {
-  sessionId?: string;
-  reason?: { type: "error" | "unhandledrejection" | "manual"; name?: string; message?: string };
-  tags?: string[];
-  events?: unknown[];
-  url?: string;
-  /** UTC timestamp text as Postgres prints `timestamp`, e.g. from pgTimestampAgo(). Default: now. */
-  receivedAt?: string;
-}
-
-/** Inserts a timeline directly (bypassing ingest) and returns its id. */
-export async function insertTestTimeline(db: Database, projectId: string, options: TestTimelineOptions = {}): Promise<string> {
-  const reason = options.reason ?? { type: "error", name: "TypeError", message: "boom" };
-  const [row] = await db
-    .insert(timelines)
-    .values({
-      projectId,
-      sessionId: options.sessionId ?? "session-1",
-      reasonType: reason.type,
-      reason,
-      events: options.events ?? [{ timestamp: 1, type: "custom", name: "step" }],
-      meta: { url: options.url ?? "https://shop.example.com/checkout", userAgent: "test-agent", capturedAt: 1 },
-      tags: options.tags ?? [],
-      ...(options.receivedAt === undefined ? {} : { receivedAt: sql`${options.receivedAt}::timestamp` }),
-    })
-    .returning({ id: timelines.id });
-  return row.id;
 }
 
 export interface TestCaptureOptions {

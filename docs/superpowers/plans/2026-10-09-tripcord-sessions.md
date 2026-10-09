@@ -501,24 +501,27 @@ shared helper both routes use, so the "invalid key" limiter is one instance.
 ### Task 6: Migration — create tables, convert `timelines`, drop it
 
 **Files:**
-- Generate: `server/drizzle/0008_convert_timelines.sql` + `meta/*` (the data
-  conversion; `0007` already created the tables in Task 2).
-- Modify: `server/src/db/schema.ts` (delete `timelines`).
-- Test: `server/src/db/migrate.test.ts`
+- Generate: `server/drizzle/0008_sessions_migration.sql` + `meta/*` — the
+  generated file is a bare `DROP TABLE timelines`; the data conversion
+  (`INSERT` into `timeline_sessions` and `captures`) is hand-written ahead of it.
+- Modify: `server/src/db/schema.ts` (delete `timelines`), `server/src/deletion.ts`
+  (drop the `timelines` deletes), `server/test/db.ts` (drop `insertTestTimeline`).
+- Test: `server/src/db/migrations.test.ts`
 
 **Interfaces:**
-- Consumes `mergeEvents` for migration-time dedupe (run in a one-off script or
-  directly in SQL — a data migration in SQL is fine, but a Node step that reads
-  old rows and calls `bakeCapture` is clearer; choose the Node step).
+- The conversion is pure SQL (a Node step can't run inside a drizzle migration).
+  Events are deduped by `coalesce(id, md5(timestamp|type|name|data))` via
+  `DISTINCT ON`, stamped `source: "browser"`, ordered by timestamp. One
+  `captures` row per legacy timeline.
 
 - [ ] **Step 1: Failing test** — seed old `timelines` rows (two sharing a
   `session_id`, with an overlapping event), run the migration, assert one
-  `sessions` row with the deduped event set and two `captures`; `timelines`
-  table is gone.
+  `timeline_sessions` row with the deduped event set and two `captures`;
+  `timelines` table is gone.
 - [ ] **Step 2: Run, expect FAIL**
-- [ ] **Step 3: Implement** — drizzle migration creates `sessions`/`captures`,
-  then runs the row conversion, then drops `timelines`. Update `schema.ts` and
-  remove all `timelines` imports (grep for `timelines` across `src/`).
+- [ ] **Step 3: Implement** — hand-write the conversion into `0008` ahead of the
+  generated `DROP TABLE timelines`. Update `schema.ts` and remove all `timelines`
+  imports (grep for `timelines` across `src/`).
 - [ ] **Step 4: Run, expect PASS** — then `npm run build -w server && npm run typecheck -w server`
 - [ ] **Step 5: Commit** — `feat(server): migrate timelines into sessions and captures`
 

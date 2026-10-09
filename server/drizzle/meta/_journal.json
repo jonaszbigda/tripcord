@@ -57,6 +57,13 @@
       "when": 1791556429724,
       "tag": "0007_timeline_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791557339232,
+      "tag": "0008_sessions_migration",
+      "breakpoints": true
     }
   ]
 }
