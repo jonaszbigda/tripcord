@@ -6,7 +6,7 @@
     <title>Tripcord: no noise, pure signal</title>
     <meta
       name="description"
-      content="Tripcord records the moments you choose in your web app, and sends the timeline that led up to an error or any moment you capture."
+      content="Tripcord records the moments you choose in your web app — in the browser and on your server — and joins them into the one timeline that led to an error, a signup or a checkout."
     />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/src/main.css" />
@@ -27,7 +27,8 @@
         Tripcord
       </a>
       <nav class="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted">
-        <a class="hover:text-fg" href="/beta/">Beta commitments</a>
+        <a class="hover:text-fg" href="#features">Features</a>
+        <a class="hover:text-fg" href="#how">How it works</a>
         <a class="hover:text-fg" href="https://github.com/jonaszbigda/tripcord/blob/main/docs/self-hosting.md">Self-host</a>
         <a class="hover:text-fg" href="https://github.com/jonaszbigda/tripcord">GitHub</a>
         <a
@@ -41,10 +42,16 @@
     <main>
       <section class="mx-auto grid max-w-5xl gap-12 px-4 pt-8 pb-24 [&>*]:min-w-0 lg:grid-cols-[1.15fr_1fr] lg:items-center lg:pt-16">
         <div>
-          <h1 class="text-5xl leading-[1.02] font-semibold tracking-[-0.035em] sm:text-6xl lg:text-7xl">No noise, pure signal.</h1>
+          <p class="inline-flex items-center gap-2 rounded-full border border-border bg-raised px-3 py-1 text-xs text-muted">
+            <span aria-hidden="true" class="size-1.5 rounded-full bg-accent"></span>
+            Browser and server events in one timeline
+          </p>
+          <h1 class="mt-6 text-5xl leading-[1.02] font-semibold tracking-[-0.035em] sm:text-6xl lg:text-7xl">
+            No noise, <span class="text-cord">pure signal.</span>
+          </h1>
           <p class="mt-6 max-w-xl text-lg leading-relaxed text-muted">
-            You choose what goes on the timeline. When something breaks, or a moment you care about happens, Tripcord
-            sends the steps that led there.
+            You choose what goes on the timeline — a click, a signup step, an API call — in the browser and on your
+            server. When something breaks, or a moment you care about happens, Tripcord sends the steps that led there.
           </p>
           <p class="mt-4 max-w-xl text-lg leading-relaxed text-fg">Why did this break? How did people get here? One timeline answers both.</p>
           <div class="mt-8 flex flex-wrap gap-3">
@@ -68,21 +75,36 @@
                 <code class="font-mono text-sm break-words text-fg">track("cart.viewed", &#123; items: 3 &#125;)</code>
                 <span class="font-mono text-xs text-muted">0.0s</span>
               </div>
-              <p class="mt-1 text-sm text-muted">Your code marks a step</p>
+              <p class="mt-1 flex flex-wrap items-center gap-x-2 text-sm text-muted">
+                <span class="inline-flex items-center gap-1.5 text-xs">
+                  <span aria-hidden="true" class="size-2 rounded-full" style="background: var(--color-source-browser)"></span>Browser
+                </span>
+                Your code marks a step
+              </p>
             </li>
             <li>
               <div class="flex items-baseline justify-between gap-4">
                 <code class="font-mono text-sm break-words text-fg">"Checkout button"</code>
                 <span class="font-mono text-xs text-muted">4.2s</span>
               </div>
-              <p class="mt-1 text-sm text-muted">A click on a button marked <code class="font-mono">data-trace="Checkout button"</code></p>
+              <p class="mt-1 flex flex-wrap items-center gap-x-2 text-sm text-muted">
+                <span class="inline-flex items-center gap-1.5 text-xs">
+                  <span aria-hidden="true" class="size-2 rounded-full" style="background: var(--color-source-browser)"></span>Browser
+                </span>
+                A click on <code class="font-mono">data-trace="Checkout button"</code>
+              </p>
             </li>
             <li>
               <div class="flex items-baseline justify-between gap-4">
-                <code class="font-mono text-sm break-words text-fg">track("checkout.step", &#123; step: "shipping" &#125;)</code>
+                <code class="font-mono text-sm break-words text-fg">tracer.track("payment.attempt")</code>
                 <span class="font-mono text-xs text-muted">9.8s</span>
               </div>
-              <p class="mt-1 text-sm text-muted">Another step you chose to record</p>
+              <p class="mt-1 flex flex-wrap items-center gap-x-2 text-sm text-muted">
+                <span class="inline-flex items-center gap-1.5 text-xs">
+                  <span aria-hidden="true" class="size-2 rounded-full" style="background: var(--color-source-server)"></span>Server
+                </span>
+                Your backend adds its own step
+              </p>
             </li>
             <li class="trip">
               <div class="flex items-baseline justify-between gap-4">
@@ -93,9 +115,95 @@
             </li>
           </ol>
           <figcaption class="mt-8 border-t border-border pt-4 text-sm leading-relaxed text-muted">
-            A checkout that broke, as Tripcord records it: only what your app chose to track, then the error.
+            A checkout that broke, as Tripcord records it: browser and server steps side by side, then the error.
           </figcaption>
         </figure>
+      </section>
+
+      <section id="features" class="mx-auto max-w-5xl px-4 pb-24">
+        <h2 class="text-3xl font-semibold tracking-tight">What you get</h2>
+        <p class="mt-4 max-w-2xl text-lg leading-relaxed text-muted">
+          A small client, a server you own, and a dashboard built around one question: what led here?
+        </p>
+        <div class="mt-8 grid gap-4 [&>*]:min-w-0 sm:grid-cols-2 lg:grid-cols-3">
+          <div class="panel rounded-2xl p-5">
+            <span class="grid size-9 place-items-center rounded-lg bg-accent/10 text-accent">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-5 w-5">
+                <path d="m12 2 9 5-9 5-9-5 9-5Z" />
+                <path d="m3 12 9 5 9-5" />
+                <path d="m3 17 9 5 9-5" />
+              </svg>
+            </span>
+            <h3 class="mt-4 font-medium">Browser and server, one timeline</h3>
+            <p class="mt-1.5 text-sm leading-relaxed text-muted">
+              Frontend steps and backend breadcrumbs merge into one session, each tagged with its source.
+            </p>
+          </div>
+
+          <div class="panel rounded-2xl p-5">
+            <span class="grid size-9 place-items-center rounded-lg bg-accent/10 text-accent">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-5 w-5">
+                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                <path d="M12 9v4M12 17h.01" />
+              </svg>
+            </span>
+            <h3 class="mt-4 font-medium">Errors capture themselves</h3>
+            <p class="mt-1.5 text-sm leading-relaxed text-muted">
+              Uncaught errors and unhandled rejections are captured on their own, with the path that led to them.
+            </p>
+          </div>
+
+          <div class="panel rounded-2xl p-5">
+            <span class="grid size-9 place-items-center rounded-lg bg-accent/10 text-accent">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-5 w-5">
+                <path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42Z" />
+                <circle cx="7.5" cy="7.5" r=".5" fill="currentColor" />
+              </svg>
+            </span>
+            <h3 class="mt-4 font-medium">Tags say where</h3>
+            <p class="mt-1.5 text-sm leading-relaxed text-muted">
+              Label the area of your app a moment came from, then filter sessions by it in the dashboard.
+            </p>
+          </div>
+
+          <div class="panel rounded-2xl p-5">
+            <span class="grid size-9 place-items-center rounded-lg bg-accent/10 text-accent">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-5 w-5">
+                <path d="M3 3v16a2 2 0 0 0 2 2h16M8 17v-5M13 17V8M18 17v-8" />
+              </svg>
+            </span>
+            <h3 class="mt-4 font-medium">Ranked reasons</h3>
+            <p class="mt-1.5 text-sm leading-relaxed text-muted">
+              The dashboard counts each moment over time and ranks the ones that come up most.
+            </p>
+          </div>
+
+          <div class="panel rounded-2xl p-5">
+            <span class="grid size-9 place-items-center rounded-lg bg-accent/10 text-accent">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-5 w-5">
+                <rect x="2" y="3" width="20" height="8" rx="2" />
+                <rect x="2" y="13" width="20" height="8" rx="2" />
+                <path d="M6 7h.01M6 17h.01" />
+              </svg>
+            </span>
+            <h3 class="mt-4 font-medium">Self-hosted</h3>
+            <p class="mt-1.5 text-sm leading-relaxed text-muted">
+              One Docker image and Postgres. Your data stays on your server, kept for the retention you configure.
+            </p>
+          </div>
+
+          <div class="panel rounded-2xl p-5">
+            <span class="grid size-9 place-items-center rounded-lg bg-accent/10 text-accent">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-5 w-5">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
+              </svg>
+            </span>
+            <h3 class="mt-4 font-medium">You choose every event</h3>
+            <p class="mt-1.5 text-sm leading-relaxed text-muted">
+              No DOM snapshots, no keystrokes, no network logs. Only the moments your app marks are recorded.
+            </p>
+          </div>
+        </div>
       </section>
 
       <section id="how" class="mx-auto max-w-5xl px-4 pb-24">
@@ -103,27 +211,37 @@
         <div class="mt-8 grid gap-10 lg:grid-cols-[1fr_1.2fr] [&>*]:min-w-0">
           <ol class="space-y-6">
             <li class="flex gap-4">
-              <span class="mt-0.5 font-mono text-sm text-accent">1</span>
+              <span class="grid size-7 shrink-0 place-items-center rounded-full border border-border bg-raised font-mono text-xs text-accent">1</span>
               <div>
                 <p class="font-medium">Install the client</p>
                 <p class="mt-1 text-muted"><code class="font-mono text-sm text-fg">npm i @tripcord/js</code></p>
               </div>
             </li>
             <li class="flex gap-4">
-              <span class="mt-0.5 font-mono text-sm text-accent">2</span>
+              <span class="grid size-7 shrink-0 place-items-center rounded-full border border-border bg-raised font-mono text-xs text-accent">2</span>
               <div>
                 <p class="font-medium">Point it at your project</p>
                 <p class="mt-1 text-muted">Call <code class="font-mono text-sm text-fg">init()</code> with the endpoint and the project's API key.</p>
               </div>
             </li>
             <li class="flex gap-4">
-              <span class="mt-0.5 font-mono text-sm text-accent">3</span>
+              <span class="grid size-7 shrink-0 place-items-center rounded-full border border-border bg-raised font-mono text-xs text-accent">3</span>
               <div>
                 <p class="font-medium">Mark the moments that matter</p>
                 <p class="mt-1 text-muted">
                   <code class="font-mono text-sm text-fg">track()</code> adds a step to the timeline.
                   <code class="font-mono text-sm text-fg">capture()</code> sends the timeline on purpose, for a signup
                   or a checkout. Errors and unhandled rejections are captured on their own.
+                </p>
+              </div>
+            </li>
+            <li class="flex gap-4">
+              <span class="grid size-7 shrink-0 place-items-center rounded-full border border-border bg-raised font-mono text-xs text-accent">4</span>
+              <div>
+                <p class="font-medium">Add server breadcrumbs (optional)</p>
+                <p class="mt-1 text-muted">
+                  Record a step from your backend with <code class="font-mono text-sm text-fg">@tripcord/js/node</code>
+                  or the REST API. Browser and server events land in the same session.
                 </p>
               </div>
             </li>
@@ -152,7 +270,8 @@ capture("checkout.completed");</code></pre>
       <section class="mx-auto max-w-5xl px-4 pb-24">
         <h2 class="text-3xl font-semibold tracking-tight">See what led there</h2>
         <p class="mt-4 max-w-2xl text-lg leading-relaxed text-muted">
-          Captures over time, the reasons that come up most, filters by tag, and every timeline step by step.
+          Sessions over time, the reasons that come up most, filters by tag, and one merged timeline per session — every
+          browser and server step, side by side.
         </p>
         <figure class="panel mt-8 overflow-hidden rounded-2xl p-2">
           <img
@@ -161,7 +280,7 @@ capture("checkout.completed");</code></pre>
             height="2360"
             loading="lazy"
             class="h-auto w-full rounded-xl"
-            alt="The Tripcord dashboard: captures over time, the top reasons, and a list of timelines"
+            alt="The Tripcord dashboard: timeline volume over the last 7 days by reason type, the top reasons, and the sessions behind them"
           />
         </figure>
       </section>
@@ -170,25 +289,47 @@ capture("checkout.completed");</code></pre>
         <h2 class="text-3xl font-semibold tracking-tight">Safe to run in production</h2>
         <dl class="mt-8 grid gap-x-12 gap-y-8 sm:grid-cols-2">
           <div>
-            <dt class="font-medium">Your app comes first</dt>
+            <dt class="flex items-center gap-2 font-medium">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4 text-muted">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+              </svg>
+              Your app comes first
+            </dt>
             <dd class="mt-2 leading-relaxed text-muted">
               The client never throws and never retries. If Tripcord is down, your users don't notice.
             </dd>
           </div>
           <div>
-            <dt class="font-medium">URLs are trimmed</dt>
+            <dt class="flex items-center gap-2 font-medium">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4 text-muted">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+              </svg>
+              URLs are trimmed
+            </dt>
             <dd class="mt-2 leading-relaxed text-muted">
               By default, page URLs keep only the origin and path. Query strings and fragments, where tokens hide, are
               dropped.
             </dd>
           </div>
           <div>
-            <dt class="font-medium">You choose what's recorded</dt>
+            <dt class="flex items-center gap-2 font-medium">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4 text-muted">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
+              </svg>
+              You choose what's recorded
+            </dt>
             <dd class="mt-2 leading-relaxed text-muted">Apart from errors, nothing goes on the timeline unless your code puts it there.</dd>
           </div>
           <div>
-            <dt class="font-medium">Kept for 30 days</dt>
-            <dd class="mt-2 leading-relaxed text-muted">Timelines older than that are deleted automatically.</dd>
+            <dt class="flex items-center gap-2 font-medium">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4 text-muted">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 6v6l4 2" />
+              </svg>
+              Kept for 30 days
+            </dt>
+            <dd class="mt-2 leading-relaxed text-muted">Timelines older than that are deleted automatically, and the window is yours to configure.</dd>
           </div>
         </dl>
       </section>
