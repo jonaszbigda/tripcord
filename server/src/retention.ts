@@ -1,21 +1,30 @@
 import { lt } from "drizzle-orm";
 import type { Database } from "./db/client";
-import { timelines } from "./db/schema";
+import { captures } from "./db/schema";
+import { pruneTimelineSessions } from "./db/timeline-sessions";
 import { deleteStalePasswordResets } from "./db/password-resets";
 import { deleteExpiredSessions } from "./db/sessions";
 import { deleteStaleEmailVerifications } from "./db/email-verifications";
 import { deleteUnverifiedAccounts } from "./email-verification";
 
-export async function cleanupOldTimelines(db: Database, retentionDays: number): Promise<number> {
+export async function cleanupOldCaptures(db: Database, retentionDays: number): Promise<number> {
   const cutoff = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
-  const deleted = await db.delete(timelines).where(lt(timelines.receivedAt, cutoff)).returning({ id: timelines.id });
+  const deleted = await db.delete(captures).where(lt(captures.receivedAt, cutoff)).returning({ id: captures.id });
   return deleted.length;
 }
 
-export async function runCleanup(db: Database, retentionDays: number, emailVerification: boolean): Promise<void> {
+export async function runCleanup(
+  db: Database,
+  retentionDays: number,
+  emailVerification: boolean,
+  stagingTtlMs: number
+): Promise<void> {
   // One failing step doesn't stop the others; the failures are thrown together at the end.
   const results = await Promise.allSettled([
-    cleanupOldTimelines(db, retentionDays),
+    cleanupOldCaptures(db, retentionDays),
+    // Sessions older than the staging window go, along with any events still
+    // staged in them. Their captures were already separated out, so they stay.
+    pruneTimelineSessions(db, stagingTtlMs),
     deleteExpiredSessions(db),
     deleteStalePasswordResets(db),
     deleteStaleEmailVerifications(db),
@@ -42,10 +51,11 @@ export function scheduleCleanup(
   db: Database,
   retentionDays: number,
   emailVerification: boolean,
+  stagingTtlMs: number,
   intervalMs: number = 24 * 60 * 60 * 1000
 ): ReturnType<typeof setInterval> {
   const run = () => {
-    runCleanup(db, retentionDays, emailVerification).catch((error: unknown) => {
+    runCleanup(db, retentionDays, emailVerification, stagingTtlMs).catch((error: unknown) => {
       console.error("[tripcord-server] cleanup job failed:", error);
     });
   };

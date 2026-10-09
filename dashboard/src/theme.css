@@ -26,6 +26,9 @@
   --color-series-error: #e8641a;
   --color-series-rejection: #9278ec;
   --color-series-manual: #1eae64;
+  /* Where a session event came from. Neutral (--color-muted) for anything else. */
+  --color-source-browser: #5ea9ff;
+  --color-source-server: #b98cff;
 }
 
 @layer base {

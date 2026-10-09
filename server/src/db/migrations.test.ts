@@ -21,11 +21,15 @@ function migrationsBefore(idx: number): string {
 
 // Runs `fn` against a brand-new database in the shared test container, so the
 // migrations can be applied from scratch without disturbing other tests.
-async function withFreshDatabase(fn: (pool: Pool) => Promise<void>): Promise<void> {
+async function withFreshDatabase(fn: (pool: Pool) => Promise<void>, options: { timeZone?: string } = {}): Promise<void> {
   const adminUrl = inject("databaseUrl");
   const name = `migration_test_${Date.now()}`;
   const admin = new Pool({ connectionString: adminUrl });
   await admin.query(`CREATE DATABASE ${name}`);
+  if (options.timeZone !== undefined) {
+    // Per-database, so every pooled connection migrating this DB inherits it.
+    await admin.query(`ALTER DATABASE ${name} SET timezone = '${options.timeZone}'`);
+  }
   const url = new URL(adminUrl);
   url.pathname = `/${name}`;
   const pool = new Pool({ connectionString: url.toString() });
@@ -97,7 +101,7 @@ describe("tags migration (0003)", () => {
 
       await migrate(db, { migrationsFolder: MIGRATIONS });
 
-      const rows = await pool.query<{ tags: string[] }>(`SELECT tags FROM timelines`);
+      const rows = await pool.query<{ tags: string[] }>(`SELECT tags FROM captures`);
       expect(rows.rows).toEqual([{ tags: [] }]);
     });
   });
@@ -188,5 +192,50 @@ describe("password reset email migration (0006)", () => {
       );
       expect(column.rows[0].is_nullable).toBe("NO");
     });
+  });
+});
+
+describe("sessions migration (0008)", () => {
+  it("converts timelines into one deduped session and one capture each, and drops timelines", async () => {
+    await withFreshDatabase(async (pool) => {
+      const db = drizzle(pool);
+      const before = migrationsBefore(7);
+      try {
+        await migrate(db, { migrationsFolder: before });
+      } finally {
+        rmSync(before, { recursive: true, force: true });
+      }
+      const org = await pool.query<{ id: string }>(`INSERT INTO orgs (name) VALUES ('o') RETURNING id`);
+      const project = await pool.query<{ id: string }>(
+        `INSERT INTO projects (org_id, name) VALUES ($1, 'p') RETURNING id`,
+        [org.rows[0].id]
+      );
+      await pool.query(
+        `INSERT INTO timelines (project_id, session_id, reason_type, reason, events, meta, tags) VALUES
+          ($1, 's', 'error', '{"type":"error","name":"E"}', '[{"timestamp":1,"type":"custom","name":"a"},{"timestamp":2,"type":"custom","name":"b"}]', '{"url":"https://x","userAgent":"ua","capturedAt":1700000000000}', ARRAY['checkout']),
+          ($1, 's', 'manual', '{"type":"manual","name":"m"}', '[{"timestamp":2,"type":"custom","name":"b"},{"timestamp":3,"type":"custom","name":"c"}]', '{"url":"https://x","userAgent":"ua","capturedAt":1700000000000}', '{}')`,
+        [project.rows[0].id]
+      );
+
+      await migrate(db, { migrationsFolder: MIGRATIONS });
+
+      const sessions = await pool.query<{ events: { name: string; source: string }[] }>(`SELECT events FROM timeline_sessions`);
+      expect(sessions.rows).toHaveLength(1);
+      expect(sessions.rows[0].events.map((e) => e.name)).toEqual(["a", "b", "c"]);
+      expect(sessions.rows[0].events.every((e) => e.source === "browser")).toBe(true);
+
+      const captures = await pool.query(`SELECT 1 FROM captures`);
+      expect(captures.rows).toHaveLength(2);
+
+      // capturedAt is epoch ms; the wall clock must be UTC regardless of the
+      // database's timezone (this DB runs in Europe/Warsaw).
+      const occurred = await pool.query<{ at: string }>(
+        `SELECT to_char(occurred_at, 'YYYY-MM-DD"T"HH24:MI:SS') AS at FROM captures ORDER BY received_at LIMIT 1`
+      );
+      expect(occurred.rows[0].at).toBe("2023-11-14T22:13:20");
+
+      const gone = await pool.query<{ t: string | null }>(`SELECT to_regclass('timelines') AS t`);
+      expect(gone.rows[0].t).toBeNull();
+    }, { timeZone: "Europe/Warsaw" });
   });
 });

@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm";
 import { createDb, type Database } from "../src/db/client";
 import {
   apiKeys,
+  captures,
   emailVerifications,
   invites,
   memberships,
@@ -10,7 +11,7 @@ import {
   passwordResets,
   projects,
   sessions,
-  timelines,
+  timelineSessions,
   users,
   type Org,
   type User,
@@ -32,7 +33,8 @@ export function getTestDb(): Database {
 
 // Deletes in foreign-key order: children before the rows they reference.
 export async function resetDb(db: Database): Promise<void> {
-  await db.delete(timelines);
+  await db.delete(captures);
+  await db.delete(timelineSessions);
   await db.delete(apiKeys);
   await db.delete(projects);
   await db.delete(invites);
@@ -95,7 +97,7 @@ export async function sessionCookie(db: Database, userId: string): Promise<strin
   return `tripcord_session=${token}`;
 }
 
-export interface TestTimelineOptions {
+export interface TestCaptureOptions {
   sessionId?: string;
   reason?: { type: "error" | "unhandledrejection" | "manual"; name?: string; message?: string };
   tags?: string[];
@@ -105,22 +107,36 @@ export interface TestTimelineOptions {
   receivedAt?: string;
 }
 
-/** Inserts a timeline directly (bypassing ingest) and returns its id. */
-export async function insertTestTimeline(db: Database, projectId: string, options: TestTimelineOptions = {}): Promise<string> {
+/**
+ * Bakes a capture into a session's timeline directly (bypassing ingest) and
+ * returns the capture id. The session's events are replaced with `events`, so
+ * the last write for a session wins — enough for read-side tests.
+ */
+export async function insertTestCapture(db: Database, projectId: string, options: TestCaptureOptions = {}): Promise<string> {
+  const sessionId = options.sessionId ?? "session-1";
   const reason = options.reason ?? { type: "error", name: "TypeError", message: "boom" };
+  const events = options.events ?? [{ timestamp: 1, type: "custom", name: "step" }];
+  await db
+    .insert(timelineSessions)
+    .values({ projectId, sessionId, events })
+    .onConflictDoUpdate({
+      target: [timelineSessions.projectId, timelineSessions.sessionId],
+      set: { events },
+    });
+  const timestamp = options.receivedAt === undefined ? sql`now()` : sql`${options.receivedAt}::timestamp`;
   const [row] = await db
-    .insert(timelines)
+    .insert(captures)
     .values({
       projectId,
-      sessionId: options.sessionId ?? "session-1",
+      sessionId,
       reasonType: reason.type,
       reason,
-      events: options.events ?? [{ timestamp: 1, type: "custom", name: "step" }],
       meta: { url: options.url ?? "https://shop.example.com/checkout", userAgent: "test-agent", capturedAt: 1 },
       tags: options.tags ?? [],
-      ...(options.receivedAt === undefined ? {} : { receivedAt: sql`${options.receivedAt}::timestamp` }),
+      occurredAt: timestamp,
+      receivedAt: timestamp,
     })
-    .returning({ id: timelines.id });
+    .returning({ id: captures.id });
   return row.id;
 }
 

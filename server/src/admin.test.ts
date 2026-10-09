@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { createTestOrg, createTestProject, createTestUser, getTestDb, insertTestTimeline, resetDb } from "../test/db";
+import { createTestOrg, createTestProject, createTestUser, getTestDb, insertTestCapture, resetDb } from "../test/db";
 import { FakeMailer } from "../test/mailer";
 import { addMember, createOrgWithOwner, findOrg } from "./db/orgs";
 import { findProjectByApiKey, listApiKeys, listProjects, revokeApiKey } from "./db/projects";
@@ -413,7 +413,7 @@ describe("runCli", () => {
       const owner = await createTestUser(getTestDb());
       const org = await createOrgWithOwner(getTestDb(), owner.id, "Acme");
       const { project } = await createTestProject(getTestDb(), "web", org.id);
-      await insertTestTimeline(getTestDb(), project.id);
+      await insertTestCapture(getTestDb(), project.id, { sessionId: "s1" });
 
       const preview = await run(["org", "delete", org.id]);
       expect(preview.code).toBe(2);

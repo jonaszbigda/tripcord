@@ -3,19 +3,18 @@ import { Readable } from "node:stream";
 import { requireMembership, requireUser } from "../auth/http";
 import {
   decodeCursor,
-  exportTimelines,
-  getTimeline,
+  exportCaptures,
+  getSession,
+  listSessions,
   listTags,
-  listTimelines,
   RANGES,
   REASON_TYPES,
   summarizeTimelines,
   type Range,
   type ReasonType,
   type TimelineFilters,
-} from "../db/timelines";
+} from "../db/session-reads";
 import { MAX_TAGS, tagSchema } from "../tags";
-import { isUuid } from "../uuid";
 import type { ApiContext } from "./context";
 import { httpError } from "./errors";
 import { requireProject, type ProjectParams } from "./projects";
@@ -104,7 +103,7 @@ export function registerTimelineReadRoutes(app: FastifyInstance, ctx: ApiContext
       if (cursor !== undefined && !decoded) {
         throw httpError(400, "Invalid cursor");
       }
-      return listTimelines(db, request.params.projectId, filtersFrom(request.query), { cursor: decoded, limit });
+      return listSessions(db, request.params.projectId, filtersFrom(request.query), { cursor: decoded, limit });
     }
   );
 
@@ -141,17 +140,17 @@ export function registerTimelineReadRoutes(app: FastifyInstance, ctx: ApiContext
       return reply
         .header("Content-Type", "application/x-ndjson; charset=utf-8")
         .header("Content-Disposition", `attachment; filename="${exportFilename(project.name, new Date())}"`)
-        .send(Readable.from(ndjson(exportTimelines(db, project.id))));
+        .send(Readable.from(ndjson(exportCaptures(db, project.id))));
     }
   );
 
-  app.get<{ Params: ProjectParams & { timelineId: string } }>(
-    `${base}/:timelineId`,
+  app.get<{ Params: ProjectParams & { sessionId: string } }>(
+    `${base}/:sessionId`,
     { preValidation: asMember },
     async (request) => {
       await requireProject(db, request.params);
-      const { projectId, timelineId } = request.params;
-      const found = isUuid(timelineId) ? await getTimeline(db, projectId, timelineId) : undefined;
+      const { projectId, sessionId } = request.params;
+      const found = await getSession(db, projectId, sessionId);
       if (!found) {
         throw httpError(404, "Not Found");
       }

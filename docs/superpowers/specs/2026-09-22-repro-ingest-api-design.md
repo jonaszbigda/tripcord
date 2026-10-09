@@ -6,6 +6,11 @@ Scope: the backend ingest API (`server/`) only — receiving, validating, and st
 timelines sent by `@repro/js`. Dashboard, API key issuance UI/flow, self-host packaging
 polish, and hosted SaaS concerns are each their own future sub-project.
 
+> Superseded (2026-10-09): the ingest model is now session-based. `POST /v1/timeline`
+> **bakes** a session, `POST /v1/events` stages server events, and `POST /v1/sessions`
+> mints an id — see `2026-10-09-tripcord-sessions-design.md`. The `timelines` table was
+> replaced by `timeline_sessions` + `captures`.
+
 ## Problem & concept
 
 `@repro/js` (the client library, already built) sends a `TimelinePayload` via

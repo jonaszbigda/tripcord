@@ -20,7 +20,7 @@ import { registerMeRoutes } from "./routes/me";
 import { registerOrgRoutes } from "./routes/orgs";
 import { registerPasswordResetRoutes } from "./routes/password-reset";
 import { registerProjectRoutes } from "./routes/projects";
-import { registerTimelineRoute } from "./routes/timeline";
+import { registerIngestRoutes } from "./routes/ingest";
 import { registerTimelineReadRoutes } from "./routes/timelines";
 import { SERVER_VERSION } from "./version";
 
@@ -160,9 +160,9 @@ export async function buildApp(db: Database, options: AppOptions = {}): Promise<
       await v1.register(cors, {
         origin: true,
         methods: ["GET", "POST", "OPTIONS"],
-        allowedHeaders: ["Content-Type", "X-Tripcord-Key"],
+        allowedHeaders: ["Content-Type", "X-Tripcord-Key", "Authorization"],
       });
-      registerTimelineRoute(v1, db, {
+      registerIngestRoutes(v1, db, {
         rateLimitMax: options.rateLimitMax ?? 100,
         rateLimitWindow: options.rateLimitWindow ?? "1 minute",
         invalidKeyLimitMax: options.invalidKeyLimitMax ?? 30,

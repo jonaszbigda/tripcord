@@ -2,6 +2,7 @@ import { and, asc, count, eq, inArray } from "drizzle-orm";
 import type { Database, Executor } from "./db/client";
 import {
   apiKeys,
+  captures,
   emailVerifications,
   invites,
   memberships,
@@ -9,7 +10,7 @@ import {
   passwordResets,
   projects,
   sessions,
-  timelines,
+  timelineSessions,
   users,
 } from "./db/schema";
 
@@ -24,7 +25,8 @@ export interface OrgRef {
 
 export async function deleteProject(ex: Executor, projectId: string): Promise<void> {
   await ex.transaction(async (tx) => {
-    await tx.delete(timelines).where(eq(timelines.projectId, projectId));
+    await tx.delete(captures).where(eq(captures.projectId, projectId));
+    await tx.delete(timelineSessions).where(eq(timelineSessions.projectId, projectId));
     await tx.delete(apiKeys).where(eq(apiKeys.projectId, projectId));
     await tx.delete(projects).where(eq(projects.id, projectId));
   });
@@ -53,7 +55,7 @@ export async function orgDeletionSummary(
   const orgProjects = await ex.select({ id: projects.id }).from(projects).where(eq(projects.orgId, orgId));
   const ids = orgProjects.map((p) => p.id);
   const [rows] =
-    ids.length === 0 ? [{ n: 0 }] : await ex.select({ n: count() }).from(timelines).where(inArray(timelines.projectId, ids));
+    ids.length === 0 ? [{ n: 0 }] : await ex.select({ n: count() }).from(captures).where(inArray(captures.projectId, ids));
   return { memberCount: members.n, projectCount: ids.length, timelineCount: rows.n };
 }
 

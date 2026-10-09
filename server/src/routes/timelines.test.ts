@@ -3,7 +3,7 @@ import {
   createTestProject,
   createTestUser,
   getTestDb,
-  insertTestTimeline,
+  insertTestCapture,
   resetDb,
   sessionCookie,
 } from "../../test/db";
@@ -30,36 +30,36 @@ async function fixture() {
   };
 }
 
-describe("timeline read routes", () => {
+describe("session read routes", () => {
   beforeEach(async () => {
     await resetDb(getTestDb());
   });
 
-  it("lists timelines, taking repeated and single-valued array params", async () => {
+  it("lists sessions, taking repeated and single-valued array params", async () => {
     const { db, app, project, cookie, base } = await fixture();
-    const tagged = await insertTestTimeline(db, project.id, { tags: ["checkout"] });
-    await insertTestTimeline(db, project.id, { reason: { type: "manual", name: "m" }, tags: ["video_player"] });
+    await insertTestCapture(db, project.id, { sessionId: "s1", tags: ["checkout"] });
+    await insertTestCapture(db, project.id, { sessionId: "s2", reason: { type: "manual", name: "m" }, tags: ["video_player"] });
 
     const both = await call(app, "GET", `${base}?reasonType=error&reasonType=manual&tag=checkout`, { cookie });
     expect(both.statusCode).toBe(200);
-    expect(both.json().timelines.map((t: { id: string }) => t.id)).toEqual([tagged]);
+    expect(both.json().sessions.map((s: { sessionId: string }) => s.sessionId)).toEqual(["s1"]);
 
     const single = await call(app, "GET", `${base}?reasonType=manual`, { cookie });
-    expect(single.json().timelines).toHaveLength(1);
+    expect(single.json().sessions.map((s: { sessionId: string }) => s.sessionId)).toEqual(["s2"]);
   });
 
   it("pages with nextCursor", async () => {
     const { db, app, project, cookie, base } = await fixture();
-    for (let i = 0; i < 3; i++) {
-      await insertTestTimeline(db, project.id);
+    for (const sessionId of ["a", "b", "c"]) {
+      await insertTestCapture(db, project.id, { sessionId });
     }
 
     const first = (await call(app, "GET", `${base}?limit=2`, { cookie })).json();
-    expect(first.timelines).toHaveLength(2);
+    expect(first.sessions).toHaveLength(2);
     expect(first.nextCursor).toEqual(expect.any(String));
 
     const second = (await call(app, "GET", `${base}?limit=2&cursor=${encodeURIComponent(first.nextCursor)}`, { cookie })).json();
-    expect(second.timelines).toHaveLength(1);
+    expect(second.sessions).toHaveLength(1);
     expect(second.nextCursor).toBeNull();
   });
 
@@ -81,7 +81,7 @@ describe("timeline read routes", () => {
 
   it("summarizes in the requested time zone and rejects an unknown one", async () => {
     const { db, app, project, cookie, base } = await fixture();
-    await insertTestTimeline(db, project.id);
+    await insertTestCapture(db, project.id, { sessionId: "s1" });
 
     const bad = await call(app, "GET", `${base}/summary?tz=Not%2FA_Zone`, { cookie });
     expect(bad.statusCode).toBe(400);
@@ -96,7 +96,7 @@ describe("timeline read routes", () => {
 
   it("lists tags, and takes only range", async () => {
     const { db, app, project, cookie, base } = await fixture();
-    await insertTestTimeline(db, project.id, { tags: ["checkout"] });
+    await insertTestCapture(db, project.id, { sessionId: "s1", tags: ["checkout"] });
 
     const response = await call(app, "GET", `${base}/tags?range=24h`, { cookie });
     expect(response.json()).toEqual({ tags: [{ tag: "checkout", count: 1 }] });
@@ -104,17 +104,18 @@ describe("timeline read routes", () => {
     expect((await call(app, "GET", `${base}/tags?reasonType=error`, { cookie })).statusCode).toBe(400);
   });
 
-  it("returns one timeline, and 404 for a malformed id or another project's timeline", async () => {
+  it("returns one session with its captures, and 404 for an unknown or another project's session", async () => {
     const { db, app, project, sibling, cookie, base } = await fixture();
-    const id = await insertTestTimeline(db, project.id);
-    const theirs = await insertTestTimeline(db, sibling.id);
+    await insertTestCapture(db, project.id, { sessionId: "s1", tags: ["checkout"] });
+    await insertTestCapture(db, sibling.id, { sessionId: "elsewhere" });
 
-    const found = await call(app, "GET", `${base}/${id}`, { cookie });
+    const found = await call(app, "GET", `${base}/s1`, { cookie });
     expect(found.statusCode).toBe(200);
-    expect(found.json()).toMatchObject({ timeline: { id }, siblings: [] });
+    expect(found.json().session).toMatchObject({ sessionId: "s1", tags: ["checkout"] });
+    expect(found.json().captures).toHaveLength(1);
 
-    for (const bad of ["not-a-uuid", theirs]) {
-      const response = await call(app, "GET", `${base}/${bad}`, { cookie });
+    for (const sessionId of ["missing", "elsewhere"]) {
+      const response = await call(app, "GET", `${base}/${sessionId}`, { cookie });
       expect(response.statusCode).toBe(404);
       expect(response.json()).toEqual({ error: "Not Found" });
     }
@@ -131,15 +132,15 @@ describe("GET …/export", () => {
     await resetDb(getTestDb());
   });
 
-  it("downloads the project's timelines as NDJSON for any member", async () => {
+  it("downloads the project's captures as NDJSON for any member", async () => {
     const db = getTestDb();
     const owner = await createTestUser(db);
     const member = await createTestUser(db);
     const org = await createOrgWithOwner(db, owner.id, "Acme");
     await addMember(db, org.id, member.id, "member");
     const { project } = await createTestProject(db, "Web Shop!", org.id);
-    await insertTestTimeline(db, project.id);
-    await insertTestTimeline(db, project.id);
+    await insertTestCapture(db, project.id, { sessionId: "a" });
+    await insertTestCapture(db, project.id, { sessionId: "b" });
     const app = await buildTestApp(db);
 
     const response = await call(app, "GET", `/api/orgs/${org.id}/projects/${project.id}/export`, {

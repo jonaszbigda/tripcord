@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { eq } from "drizzle-orm";
-import { createTestProject, createTestUser, getTestDb, insertTestTimeline, resetDb } from "../test/db";
+import { createTestProject, createTestUser, getTestDb, insertTestCapture, resetDb } from "../test/db";
 import { createInvite, listPendingInvites } from "./db/invites";
 import { addMember, createOrgWithOwner, findOrg, listUserOrgs } from "./db/orgs";
 import { createPasswordReset } from "./db/password-resets";
 import { findProjectByApiKey, listProjects } from "./db/projects";
-import { apiKeys, emailVerifications, passwordResets, sessions, timelines } from "./db/schema";
+import { apiKeys, captures, emailVerifications, passwordResets, sessions } from "./db/schema";
 import { createSession } from "./db/sessions";
 import { findUserById } from "./db/users";
 import { deleteOrg, deleteProject, deleteUser, orgDeletionSummary, planUserDeletion } from "./deletion";
@@ -15,19 +15,19 @@ describe("deleteProject", () => {
     await resetDb(getTestDb());
   });
 
-  it("deletes the project with its keys and timelines, and nothing else", async () => {
+  it("deletes the project with its keys and captures, and nothing else", async () => {
     const db = getTestDb();
     const doomed = await createTestProject(db, "doomed");
     const kept = await createTestProject(db, "kept", doomed.project.orgId);
-    await insertTestTimeline(db, doomed.project.id);
-    const keptTimeline = await insertTestTimeline(db, kept.project.id);
+    await insertTestCapture(db, doomed.project.id, { sessionId: "doomed" });
+    const keptCapture = await insertTestCapture(db, kept.project.id, { sessionId: "kept" });
 
     await deleteProject(db, doomed.project.id);
 
     expect((await listProjects(db)).map((p) => p.name)).toEqual(["kept"]);
     expect(await findProjectByApiKey(db, doomed.key)).toBeUndefined();
     expect(await db.select().from(apiKeys).where(eq(apiKeys.projectId, doomed.project.id))).toEqual([]);
-    expect((await db.select({ id: timelines.id }).from(timelines)).map((t) => t.id)).toEqual([keptTimeline]);
+    expect((await db.select({ id: captures.id }).from(captures)).map((c) => c.id)).toEqual([keptCapture]);
   });
 });
 
@@ -43,7 +43,7 @@ describe("deleteOrg", () => {
     const org = await createOrgWithOwner(db, owner.id, "Doomed");
     await addMember(db, org.id, member.id, "member");
     const { project } = await createTestProject(db, "web", org.id);
-    await insertTestTimeline(db, project.id);
+    await insertTestCapture(db, project.id, { sessionId: "s1" });
     await createInvite(db, { orgId: org.id, role: "member", createdBy: owner.id });
     const other = await createOrgWithOwner(db, member.id, "Kept");
     await createTestProject(db, "kept", other.id);
@@ -62,8 +62,8 @@ describe("deleteOrg", () => {
     const owner = await createTestUser(db);
     const org = await createOrgWithOwner(db, owner.id, "Acme");
     const { project } = await createTestProject(db, "web", org.id);
-    await insertTestTimeline(db, project.id);
-    await insertTestTimeline(db, project.id);
+    await insertTestCapture(db, project.id, { sessionId: "s1" });
+    await insertTestCapture(db, project.id, { sessionId: "s2" });
 
     expect(await orgDeletionSummary(db, org.id)).toEqual({ memberCount: 1, projectCount: 1, timelineCount: 2 });
   });

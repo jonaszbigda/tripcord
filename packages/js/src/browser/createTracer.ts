@@ -42,6 +42,7 @@ export function createTracer(config: CreateTracerConfig): BrowserTracer {
     sessionId,
     maxEvents: config.maxEvents,
     seedEvents,
+    source: "browser",
     send: createSend(config.endpoint, config.apiKey),
     getMeta: () => ({ url: pageUrl(location.href, config.sanitizeUrl), userAgent: navigator.userAgent }),
     onBufferChange: writeBuffer,

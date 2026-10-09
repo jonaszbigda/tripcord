@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, uuid, text, timestamp, jsonb, index, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, timestamp, jsonb, index, primaryKey, unique } from "drizzle-orm/pg-core";
 
 export const ROLES = ["owner", "member"] as const;
 export type Role = (typeof ROLES)[number];
@@ -166,27 +166,52 @@ export const apiKeys = pgTable(
   })
 );
 
-export const timelines = pgTable(
-  "timelines",
+export const timelineSessions = pgTable(
+  "timeline_sessions",
   {
     id: uuid("id").primaryKey().defaultRandom(),
     projectId: uuid("project_id")
       .notNull()
       .references(() => projects.id),
     sessionId: text("session_id").notNull(),
+    // Staged, invisible until a capture. Deduped by id on bake.
+    pendingEvents: jsonb("pending_events").notNull().default(sql`'[]'::jsonb`),
+    // Baked, visible. The session's whole timeline, oldest first, deduped by id.
+    events: jsonb("events").notNull().default(sql`'[]'::jsonb`),
+    // Stamped on every write (stage or bake); drives pruning.
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    projectSessionUq: unique("timeline_sessions_project_session_uq").on(table.projectId, table.sessionId),
+    projectUpdatedIdx: index("timeline_sessions_project_updated_idx").on(table.projectId, table.updatedAt),
+  })
+);
+
+// A marked moment on a session — a reason. Events live on the session, not here,
+// so several captures in one session never duplicate the timeline.
+export const captures = pgTable(
+  "captures",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => projects.id),
+    // Plain text, not an FK: pruning the session row must never touch captures.
+    sessionId: text("session_id").notNull(),
     reasonType: text("reason_type").notNull(),
     reason: jsonb("reason").notNull(),
-    events: jsonb("events").notNull(),
     meta: jsonb("meta").notNull(),
-    // Where the error happened, set by the client (see server/src/tags.ts).
     tags: text("tags").array().notNull().default(sql`'{}'::text[]`),
+    // When the moment happened (from the payload), and when we stored it.
+    occurredAt: timestamp("occurred_at").notNull(),
     receivedAt: timestamp("received_at").notNull().defaultNow(),
   },
   (table) => ({
-    projectReceivedIdx: index("timelines_project_received_idx").on(table.projectId, table.receivedAt),
-    projectReasonTypeIdx: index("timelines_project_reason_type_idx").on(table.projectId, table.reasonType),
-    projectSessionIdx: index("timelines_project_session_idx").on(table.projectId, table.sessionId),
-    tagsIdx: index("timelines_tags_idx").using("gin", table.tags),
+    projectReceivedIdx: index("captures_project_received_idx").on(table.projectId, table.receivedAt),
+    projectReasonTypeIdx: index("captures_project_reason_type_idx").on(table.projectId, table.reasonType),
+    projectSessionIdx: index("captures_project_session_idx").on(table.projectId, table.sessionId),
+    tagsIdx: index("captures_tags_idx").using("gin", table.tags),
   })
 );
 
@@ -199,4 +224,5 @@ export type PasswordReset = typeof passwordResets.$inferSelect;
 export type EmailVerification = typeof emailVerifications.$inferSelect;
 export type Project = typeof projects.$inferSelect;
 export type ApiKey = typeof apiKeys.$inferSelect;
-export type Timeline = typeof timelines.$inferSelect;
+export type TimelineSession = typeof timelineSessions.$inferSelect;
+export type Capture = typeof captures.$inferSelect;

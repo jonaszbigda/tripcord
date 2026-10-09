@@ -25,17 +25,17 @@ exists right now versus what's planned:
 **Built, tested, working:**
 - `@tripcord/js` — this browser client library. Framework-agnostic core, a browser
   adapter (DOM error hooks, `data-trace` click capture, `sessionStorage`-backed
-  persistence, `fetch`-based delivery), and a thin React `ErrorBoundary` adapter.
-  TypeScript types, dual ESM/CJS build.
-- A self-hostable server: the ingest API that receives timelines, and a dashboard
-  for browsing them, filtering by tag and managing projects and API keys. It ships as
-  a Docker image for amd64 and arm64.
+  persistence, `fetch`-based delivery), a thin React `ErrorBoundary` adapter, and
+  a Node client at `@tripcord/js/node`. TypeScript types, dual ESM/CJS build.
+- A self-hostable server: the ingest API that receives captures and staged
+  events, bakes each session's timeline, and a dashboard for browsing them,
+  filtering by tag and managing projects and API keys. It ships as a Docker
+  image for amd64 and arm64.
 
 **Not built yet:**
 - A hosted SaaS option. For now you run your own server.
-- An SSR/Node adapter (e.g. tracing Next.js's `getServerSideProps`) — the client
-  library has two small hooks (`sessionId`, `seedEvents`) reserved for this, but the
-  adapter itself doesn't exist yet.
+- Clients for platforms other than the browser and Node. Python, .NET, Go and
+  anything else talk to the same REST API with `curl`-able HTTP.
 
 The full design rationale — why breadcrumbs instead of session replay, why
 `sessionStorage` over `localStorage`, why `fetch({ keepalive: true })` over
@@ -84,6 +84,40 @@ import { ErrorBoundary } from "@tripcord/js/react";
   <App />
 </ErrorBoundary>;
 ```
+
+### Server-side (Node)
+
+`@tripcord/js/node` sends a backend's own breadcrumbs into the same session as
+the browser's, so one timeline holds both. Point it at your server with the same
+API key:
+
+```ts
+import { createTracer } from "@tripcord/js/node";
+
+const tracer = createTracer({
+  endpoint: "https://tripcord.example.com/v1/timeline",
+  apiKey: "tpk_…",
+  sessionId: req.sessionId,                          // any id; createSessionId() if you need one
+  meta: { url: req.url, userAgent: req.headers["user-agent"] },
+});
+
+tracer.track("job.started", { jobId });              // staged to the server immediately
+tracer.capture("job.failed", { reason });            // a moment: bakes the session
+```
+
+- By default (`stageEvents: true`) each `track()` is posted to `/v1/events` at
+  once and held by the server, invisible until a capture bakes it. Set
+  `stageEvents: false` to keep events in memory and ship them with `capture()`
+  instead (the request-scoped style).
+- `getSessionId()` and `getEvents()` let an SSR app serialize
+  `{ sessionId, seedEvents }` into the page; the browser's `init({ sessionId,
+  seedEvents })` then continues the same session. That's a fallback for a server
+  that can't reach Tripcord — normally the server stages its own events and no
+  seeding is needed.
+- `await tracer.flush()` resolves once in-flight sends have settled.
+
+Every event carries an `id` (so a re-sent buffer dedupes) and a `source`
+(`"browser"` or `"server"`), shown as a colored chip in the dashboard.
 
 ### Tags
 
@@ -138,6 +172,7 @@ server version each client feature needs:
 
 | @tripcord/js | Needs server |
 | --- | --- |
+| 0.3.x, with the Node client or `id`/`source` | 0.4.0 or later |
 | 0.2.x, with tags | 0.1.0 or later |
 | 0.2.x, without tags | any |
 

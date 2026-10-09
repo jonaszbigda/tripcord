@@ -10,9 +10,9 @@ import type {
   Project,
   Range,
   Role,
+  SessionDetail,
+  SessionPage,
   TagCount,
-  TimelineDetail,
-  TimelinePage,
   TimelineSummary,
 } from "./types";
 
@@ -23,7 +23,7 @@ export const queryKeys = {
   keys: (orgId: string, projectId: string) => ["orgs", orgId, "projects", projectId, "keys"] as const,
   members: (orgId: string) => ["orgs", orgId, "members"] as const,
   invites: (orgId: string) => ["orgs", orgId, "invites"] as const,
-  timelines: (orgId: string, projectId: string) => ["orgs", orgId, "projects", projectId, "timelines"] as const,
+  timelines: (orgId: string, projectId: string) => ["orgs", orgId, "projects", projectId, "sessions"] as const,
 };
 
 export function useAuthConfig() {
@@ -80,13 +80,13 @@ export function viewerTimeZone(): string {
   return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 }
 
-export function useTimelines(orgId: string, projectId: string, filters: TimelineFilters) {
+export function useSessions(orgId: string, projectId: string, filters: TimelineFilters) {
   return useInfiniteQuery({
     queryKey: [...queryKeys.timelines(orgId, projectId), "list", filters],
     queryFn: ({ pageParam }) => {
       const params = filtersToParams(filters);
       if (pageParam) params.set("cursor", pageParam);
-      return api<TimelinePage>("GET", timelinesPath(orgId, projectId, "", params));
+      return api<SessionPage>("GET", timelinesPath(orgId, projectId, "", params));
     },
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
@@ -115,9 +115,9 @@ export function useTimelineTags(orgId: string, projectId: string, range: Range) 
   });
 }
 
-export function useTimeline(orgId: string, projectId: string, timelineId: string) {
+export function useSession(orgId: string, projectId: string, sessionId: string) {
   return useQuery({
-    queryKey: [...queryKeys.timelines(orgId, projectId), "detail", timelineId],
-    queryFn: () => api<TimelineDetail>("GET", timelinesPath(orgId, projectId, `/${timelineId}`)),
+    queryKey: [...queryKeys.timelines(orgId, projectId), "detail", sessionId],
+    queryFn: () => api<SessionDetail>("GET", timelinesPath(orgId, projectId, `/${encodeURIComponent(sessionId)}`)),
   });
 }

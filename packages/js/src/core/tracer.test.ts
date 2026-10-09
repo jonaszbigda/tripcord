@@ -20,6 +20,46 @@ describe("createTracer", () => {
     expect(send).not.toHaveBeenCalled();
   });
 
+  it("stamps every pushed event with an id and the configured source", () => {
+    const send = vi.fn<(payload: TimelinePayload) => void>();
+    const tracer = createTracer({
+      sessionId: "session-1",
+      source: "browser",
+      send,
+      getMeta: () => ({ url: "https://example.com", userAgent: "test-agent" }),
+    });
+
+    tracer.track("checkout.step");
+    tracer.traceElement("Sign up form submit");
+    tracer.capture();
+
+    const events = send.mock.calls[0][0].events;
+    expect(events).toHaveLength(2);
+    for (const event of events) {
+      expect(event.id).toMatch(/^[0-9a-f-]{36}$/);
+      expect(event.source).toBe("browser");
+    }
+  });
+
+  it("omits source when none is configured", () => {
+    const { send, tracer } = setup();
+    tracer.track("checkout.step");
+    tracer.capture();
+    expect(send.mock.calls[0][0].events[0]).not.toHaveProperty("source");
+  });
+
+  it("returns the scope tags as a copy, so callers can't mutate tracer state", () => {
+    const tracer = createTracer({
+      sessionId: "session-1",
+      send: vi.fn(),
+      getMeta: () => ({ url: "https://example.com", userAgent: "test-agent" }),
+    });
+    tracer.setTags(["checkout"]);
+    const tags = tracer.getTags();
+    tags.push("injected");
+    expect(tracer.getTags()).toEqual(["checkout"]);
+  });
+
   it("capture() flushes the buffer with a manual reason", () => {
     const { send, tracer } = setup();
     tracer.track("checkout.step", { step: "shipping" });

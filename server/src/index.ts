@@ -5,6 +5,7 @@ import { buildApp } from "./app";
 import { loadDashboardConfig } from "./config";
 import { createSmtpMailer } from "./email";
 import { scheduleCleanup } from "./retention";
+import { parseDurationMs } from "./duration";
 import { emailVerificationWarning, isEmailVerificationActive } from "./email-verification";
 
 async function main(): Promise<void> {
@@ -39,7 +40,8 @@ async function main(): Promise<void> {
   }
 
   const retentionDays = process.env.RETENTION_DAYS ? Number(process.env.RETENTION_DAYS) : 30;
-  scheduleCleanup(db, retentionDays, isEmailVerificationActive(dashboard.signup, hasMailer));
+  const stagingTtlMs = parseDurationMs(process.env.STAGING_TTL ?? "24h");
+  scheduleCleanup(db, retentionDays, isEmailVerificationActive(dashboard.signup, hasMailer), stagingTtlMs);
 
   const port = process.env.PORT ? Number(process.env.PORT) : 3000;
   await app.listen({ port, host: "0.0.0.0" });

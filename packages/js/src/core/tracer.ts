@@ -1,6 +1,7 @@
 import { createBuffer } from "./buffer";
 import { buildPayload } from "./payload";
 import { warnOnRiskyKeys } from "./guardrails";
+import { randomId } from "./ids";
 import { normalizeTags } from "./tags";
 import type { CaptureOptions, TimelineEvent, TimelinePayload, TimelineMeta } from "./types";
 
@@ -8,6 +9,8 @@ export interface TracerConfig {
   sessionId: string;
   maxEvents?: number;
   seedEvents?: TimelineEvent[];
+  /** Stamped on every event this tracer pushes, e.g. "browser" or "server". */
+  source?: string;
   send: (payload: TimelinePayload) => void;
   getMeta: () => Omit<TimelineMeta, "capturedAt">;
   onBufferChange?: (events: TimelineEvent[]) => void;
@@ -22,6 +25,10 @@ export interface Tracer {
   traceElement(label: string): void;
   setTags(tags: string[]): void;
   clearTags(): void;
+  /** The buffer's current contents, oldest first. */
+  getEvents(): TimelineEvent[];
+  /** The active scope tags, normalized. */
+  getTags(): string[];
 }
 
 export function createTracer(config: TracerConfig): Tracer {
@@ -30,7 +37,14 @@ export function createTracer(config: TracerConfig): Tracer {
   let scopeTags: string[] = [];
 
   function pushEvent(event: TimelineEvent): void {
-    buffer.push(event);
+    // Every pushed event gets a stable id (so a re-sent buffer dedupes) and the
+    // tracer's source. A caller-supplied id wins; source comes from the config.
+    const stamped: TimelineEvent = {
+      ...event,
+      id: event.id ?? randomId(),
+      ...(config.source === undefined ? {} : { source: config.source }),
+    };
+    buffer.push(stamped);
     config.onBufferChange?.(buffer.getAll());
   }
 
@@ -66,6 +80,12 @@ export function createTracer(config: TracerConfig): Tracer {
     },
     clearTags() {
       scopeTags = [];
+    },
+    getEvents() {
+      return buffer.getAll();
+    },
+    getTags() {
+      return [...scopeTags];
     },
   };
 }

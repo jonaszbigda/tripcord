@@ -9,10 +9,11 @@
 ![The Tripcord dashboard: timeline volume over the last 7 days by reason type, and the top reasons](docs/dashboard.png)
 
 Tripcord is a self-hosted timeline tool for web apps. You decide which steps are
-worth recording. The browser keeps the most recent ones and sends nothing, until
-something happens that you care about. That might be a crash, or it might be a
-checkout, an abandoned form, or a signup. Then Tripcord sends the short timeline
-that led up to it to your server.
+worth recording — in the browser and on your server. The browser keeps the most
+recent ones and sends nothing; your backend can add its own at any time. Neither
+becomes a timeline until something you care about happens: a crash, a checkout,
+an abandoned form, a signup. Then Tripcord joins it all into the one session
+that led there, with browser and server steps side by side.
 
 No noise, only signal: every event on a timeline is one you chose to record.
 
@@ -49,16 +50,18 @@ on /welcome · tagged onboarding
 
 1. **You instrument.** Call `track("checkout.step", { step: "shipping" })`, or add
    `data-trace="Apply coupon"` to an element. Only what you mark is recorded:
-   no DOM snapshots, no keystrokes, no network logs.
-2. **The client waits.** `@tripcord/js` keeps the last 50 events in
-   `sessionStorage`, so the timeline survives page loads within the tab. Nothing
-   leaves the browser.
+   no DOM snapshots, no keystrokes, no network logs. Your backend can record
+   steps too, with `@tripcord/js/node` or the REST API.
+2. **Everything waits.** The browser keeps the last 50 events in
+   `sessionStorage` and sends nothing. Server breadcrumbs are staged on your
+   Tripcord server and stay invisible. Neither is a timeline yet.
 3. **A moment happens.** An uncaught error, an unhandled rejection, a React error
-   boundary, or your own `capture("signup.completed")` sends the timeline to your
-   Tripcord server.
-4. **You read it.** The dashboard charts volume over time, ranks the most common
-   errors and captures, filters by tag, and links timelines from the same session
-   together.
+   boundary, or your own `capture("signup.completed")` — from the browser or the
+   server. Tripcord **bakes** the session: it merges the staged server events
+   with the browser's, deduped and in order, into one timeline.
+4. **You read it.** One session is one timeline, with browser and server events
+   distinguished and each capture marked. The dashboard charts volume over time,
+   ranks the most common errors and captures, and filters by tag.
 
 ## How it compares
 
@@ -108,27 +111,49 @@ Uncaught errors are captured without any code. For React, wrap your tree in
 [client README](packages/js/README.md) covers tags, manual captures and
 controlling which page URLs are sent.
 
+**3. Add server breadcrumbs (optional).** A backend can record its own steps — an
+API call, a background job — into the same session:
+
+```ts
+import { createTracer } from "@tripcord/js/node";
+
+const tracer = createTracer({
+  endpoint: "https://tripcord.example.com/v1/timeline",
+  apiKey: "tpk_…",
+  sessionId,
+});
+tracer.track("job.started", { jobId });
+tracer.capture("job.failed", { reason });
+```
+
+Anything else — Python, Go, .NET — can POST to the same REST API; see the
+[server README](server/README.md).
+
 ## Status
 
 Tripcord is early, and the idea is still being tested on real apps. What exists
 today:
 
-- **`@tripcord/js`**: the browser client, with a framework-agnostic core and a React
-  error boundary. TypeScript, ESM and CommonJS.
+- **`@tripcord/js`**: the browser client (a framework-agnostic core and a React
+  error boundary) and a Node client at `@tripcord/js/node`. Both stamp every
+  event with an id and a `source`, so browser and server breadcrumbs land in one
+  session. TypeScript, ESM and CommonJS.
 - **The server**: the ingest API, with API keys per project and rate limits, and
-  a dashboard with accounts, orgs, invites, GitHub login and a timeline viewer:
-  a volume chart, top errors and captures, tag filters, and per-timeline detail.
-  Released as a Docker image for amd64 and arm64.
+  a dashboard with accounts, orgs, invites, GitHub login and a session viewer:
+  a volume chart, top errors and captures, tag filters, and per-session detail
+  that merges browser and server events. Events are **staged** until a capture
+  **bakes** them, and staged events that never get baked are pruned. Released as
+  a Docker image for amd64 and arm64.
 
-Not yet: a hosted version, clients for platforms other than the browser,
-server-side (SSR) tracing, alerts, grouping similar errors, and analytics across
-timelines, such as funnels or the most common paths to a moment.
+Not yet: a hosted version, clients for platforms other than the browser and Node,
+alerts, grouping similar errors, and analytics across sessions, such as funnels
+or the most common paths to a moment.
 
 ## Repository
 
 | Path | What it is |
 | --- | --- |
-| [`packages/js`](packages/js) | `@tripcord/js`, the browser client, published to npm |
+| [`packages/js`](packages/js) | `@tripcord/js`, the browser and Node clients, published to npm |
 | [`server`](server) | The ingest API and dashboard backend (Fastify, Postgres). Its README covers configuration and running from source. |
 | [`dashboard`](dashboard) | The dashboard (React SPA), built into and served by the server |
 | [`deploy`](deploy) | The Compose file for running a released image |
