@@ -92,7 +92,8 @@ Commands:
 | `server/src/routes/events.ts` | create | `POST /v1/events`, `POST /v1/sessions` |
 | `server/src/routes/timeline.ts` | modify | `POST /v1/timeline` bakes; shared key auth |
 | `server/src/routes/ingest-auth.ts` | create | `resolveProject` (header or Bearer) shared by both routes |
-| `server/src/retention.ts` | modify | prune sessions; drop timelines cleanup |
+| `server/src/duration.ts` | create | `parseDurationMs` for `STAGING_TTL` |
+| `server/src/retention.ts` | modify | prune sessions; capture cleanup replaces timelines |
 | `server/src/config.ts` | modify | `STAGING_TTL`, `MAX_SESSION_EVENTS` |
 | `server/src/db/timelines.ts` → `server/src/db/session-reads.ts` | rename/modify | session list/detail/summary/tags |
 | `server/src/routes/timelines.ts` | modify | session list/detail routes |
@@ -430,18 +431,22 @@ shared helper both routes use, so the "invalid key" limiter is one instance.
 ### Task 4: Retention, config, and the pruning job
 
 **Files:**
-- Modify: `server/src/config.ts`, `server/src/retention.ts`, `server/src/index.ts`
-- Test: `server/src/retention.test.ts`, `server/src/config.test.ts`
+- Create: `server/src/duration.ts` + `server/src/duration.test.ts` —
+  `parseDurationMs("24h")`.
+- Modify: `server/src/retention.ts` (`cleanupOldTimelines` → `cleanupOldCaptures`;
+  add the `pruneTimelineSessions` step; thread `stagingTtlMs` through
+  `runCleanup`/`scheduleCleanup`), `server/src/index.ts`
+- Test: `server/src/retention.test.ts`
 
 **Interfaces:**
-- Config gains `stagingTtlMs: number` (from `STAGING_TTL`, default 24h;
-  `parseDuration` reused if present, else add one).
+- `parseDurationMs(value: string): number` — `s`/`m`/`h`/`d`, throws otherwise.
 - `runCleanup(db, retentionDays, emailVerification, stagingTtlMs)`.
+- `scheduleCleanup(db, retentionDays, emailVerification, stagingTtlMs, intervalMs?)`.
 - Remove `cleanupOldTimelines`; add `pruneTimelineSessions`.
 
 - [ ] **Step 1: Failing test** — a session idle past the TTL is deleted; one
-  updated now survives; captures in both are untouched. Config: `STAGING_TTL=1h`
-  parses; a bad value fails startup.
+  updated now survives; captures in both are untouched. `parseDurationMs` parses
+  `STAGING_TTL=1h` and rejects a bad value.
 - [ ] **Step 2: Run, expect FAIL**
 - [ ] **Step 3: Implement** — swap the timelines step for `pruneTimelineSessions`;
   thread `stagingTtlMs` through `scheduleCleanup`.
