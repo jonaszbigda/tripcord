@@ -159,7 +159,10 @@ Within one transaction:
 3. Merge `old events ∪ pending events ∪ payload.events`, dedupe by key, sort by
    `timestamp` ascending, cap at `MAX_SESSION_EVENTS` (drop oldest).
 4. `UPDATE sessions SET events = $merged`.
-5. `INSERT INTO captures (…, occurred_at = greatest(now(), payload.meta.capturedAt))`.
+5. `INSERT INTO captures (…, occurred_at = least(now(), payload.meta.capturedAt))`.
+   The clamp only stops a client clock that's ahead from future-dating a
+   capture; a **backdated** `capturedAt` is kept as-is, so a capture can
+   describe a moment from days ago.
 6. Response: `201 { id, sessionId, eventCount }`.
 
 The cap bounds a single session's jsonb. Default `MAX_SESSION_EVENTS = 500`;

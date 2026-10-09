@@ -351,9 +351,12 @@ export async function pruneTimelineSessions(db: Database, stagingTtlMs: number):
 }
 ```
 
-> The `UPDATE … RETURNING` both locks and drains; a concurrent stage waits on the
-> row and its event lands in `pendingEvents` after the drain, ready for the next
-> bake. That's Review Focus 2.
+> The row is locked with `SELECT … FOR UPDATE`, then drained with a plain
+> `UPDATE`. It can't be a single `UPDATE … RETURNING`: Postgres returns the
+> *new* row, so `RETURNING pending_events` would hand back the `'[]'` we just
+> set, not what was staged. The plan's first draft made that mistake and the
+> route test caught it. A concurrent stage waits on the lock and lands in
+> `pendingEvents` after the drain, ready for the next bake — Review Focus 2.
 
 - [ ] **Step 4: Run it, expect PASS**
 - [ ] **Step 5: Commit** — `feat(server): timeline-session staging and bake`
@@ -363,19 +366,24 @@ export async function pruneTimelineSessions(db: Database, stagingTtlMs: number):
 ### Task 3: Ingest routes — `/v1/events`, `/v1/sessions`, bake in `/v1/timeline`
 
 **Files:**
-- Create: `server/src/routes/ingest-auth.ts`
-- Create: `server/src/routes/events.ts`
-- Test: `server/src/routes/events.test.ts`
-- Modify: `server/src/routes/timeline.ts`
-- Modify: `server/src/app.ts` (register the new routes in the `/v1` plugin)
+- Create: `server/src/routes/ingest.ts` — one module for all three ingest
+  routes, so the invalid-key limiter is a single shared instance.
+- Delete: `server/src/routes/timeline.ts` (folded into `ingest.ts`)
+- Modify: `server/src/app.ts` (register `registerIngestRoutes`; add
+  `Authorization` to the `/v1` CORS `allowedHeaders`)
+- Test: `server/src/routes/timeline.test.ts` (rewritten: `/v1/timeline` now
+  bakes; assert `captures`/`timelineSessions`)
 
 **Interfaces:**
 - Consumes: `stageEvents`, `bakeCapture`, `ensureTimelineSession` (Task 2).
-- Produces: `resolveProject(request, reply, db, invalidKeys): Promise<boolean>`
-  — reads `X-Tripcord-Key` or `Authorization: Bearer`, applies the invalid-key
-  limiter, sets `request.project`.
+- Produces: `readApiKey(headers): string | undefined` — reads
+  `X-Tripcord-Key` or `Authorization: Bearer`.
+- Produces: `registerIngestRoutes(app, db, options)` — registers
+  `POST /timeline`, `POST /events`, `POST /sessions` with one shared
+  `FailureLimiter` and the same key lookup.
 
-- [ ] **Step 1: Write the failing tests**
+- [ ] **Step 1: Write the failing tests** (in the rewritten `timeline.test.ts`,
+  which already owns the key/rate-limit cases)
 
 ```ts
 it("stages via /v1/events and does not list a capture", async () => { /* POST, then read API empty */ });
