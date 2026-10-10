@@ -1,6 +1,6 @@
 {
   "name": "@tripcord/js",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Mark the moments that matter in your web app; when one happens, send the timeline that led there. For debugging and analytics.",
   "license": "MIT",
   "repository": {
