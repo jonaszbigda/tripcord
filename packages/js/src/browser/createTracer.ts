@@ -1,4 +1,5 @@
 import { createTracer as createCoreTracer } from "../core/tracer";
+import { randomId } from "../core/ids";
 import type { CaptureOptions, TimelineEvent } from "../core/types";
 import { getOrCreateSessionId } from "./sessionId";
 import { readBuffer, writeBuffer } from "./storage";
@@ -15,6 +16,13 @@ export interface CreateTracerConfig {
   seedEvents?: TimelineEvent[];
   captureErrors?: boolean;
   captureTraceAttribute?: boolean;
+  /**
+   * When true (default), the session id and the event buffer are kept in
+   * `sessionStorage`, so a timeline survives page loads within the tab. When
+   * false, both live in memory only and nothing is stored on the device: a
+   * full page load starts a new session with an empty buffer.
+   */
+  persist?: boolean;
   /**
    * What to send as the page URL. By default only the origin and path are
    * sent: query strings and fragments often hold tokens and emails.
@@ -35,8 +43,9 @@ export function createTracer(config: CreateTracerConfig): BrowserTracer {
     return { track() {}, capture() {}, setTags() {}, clearTags() {}, dispose() {} };
   }
 
-  const sessionId = config.sessionId ?? getOrCreateSessionId();
-  const seedEvents = readBuffer() ?? config.seedEvents;
+  const persist = config.persist ?? true;
+  const sessionId = config.sessionId ?? (persist ? getOrCreateSessionId() : randomId());
+  const seedEvents = (persist ? readBuffer() : undefined) ?? config.seedEvents;
 
   const core = createCoreTracer({
     sessionId,
@@ -45,7 +54,7 @@ export function createTracer(config: CreateTracerConfig): BrowserTracer {
     source: "browser",
     send: createSend(config.endpoint, config.apiKey),
     getMeta: () => ({ url: pageUrl(location.href, config.sanitizeUrl), userAgent: navigator.userAgent }),
-    onBufferChange: writeBuffer,
+    onBufferChange: persist ? writeBuffer : undefined,
   });
 
   const disposers: Array<() => void> = [];
