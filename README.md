@@ -53,7 +53,7 @@ on /welcome · tagged onboarding
    no DOM snapshots, no keystrokes, no network logs. Your backend can record
    steps too, with `@tripcord/js/node` or the REST API.
 2. **Everything waits.** The browser keeps the last 50 events in
-   `sessionStorage` and sends nothing. Server breadcrumbs are staged on your
+   `sessionStorage` (or only in memory, with `persist: false`) and sends nothing. Server breadcrumbs are staged on your
    Tripcord server and stay invisible. Neither is a timeline yet.
 3. **A moment happens.** An uncaught error, an unhandled rejection, a React error
    boundary, or your own `capture("signup.completed")` — from the browser or the
@@ -111,6 +111,17 @@ Uncaught errors are captured without any code. For React, wrap your tree in
 [client README](packages/js/README.md) covers tags, manual captures and
 controlling which page URLs are sent.
 
+**Nothing stored on the device (optional).** By default the client keeps the
+session id and recent events in `sessionStorage`, so a timeline survives page
+loads. Pass `persist: false` and it stores nothing on the visitor's device: no
+cookies, no `sessionStorage`, no `localStorage`. The timeline lives in memory
+until the page unloads, which suits single-page apps and sites with client-side
+navigation:
+
+```ts
+init({ endpoint: "…", apiKey: "tpk_…", persist: false });
+```
+
 **3. Add server breadcrumbs (optional).** A backend can record its own steps — an
 API call, a background job — into the same session:
 
@@ -137,7 +148,8 @@ today:
 - **`@tripcord/js`**: the browser client (a framework-agnostic core and a React
   error boundary) and a Node client at `@tripcord/js/node`. Both stamp every
   event with an id and a `source`, so browser and server breadcrumbs land in one
-  session. TypeScript, ESM and CommonJS.
+  session. The browser client can run without storing anything on the device
+  (`persist: false`). TypeScript, ESM and CommonJS.
 - **The server**: the ingest API, with API keys per project and rate limits, and
   a dashboard with accounts, orgs, invites, GitHub login and a session viewer:
   a volume chart, top errors and captures, tag filters, and per-session detail

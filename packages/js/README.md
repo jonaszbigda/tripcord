@@ -25,7 +25,7 @@ exists right now versus what's planned:
 **Built, tested, working:**
 - `@tripcord/js` — this browser client library. Framework-agnostic core, a browser
   adapter (DOM error hooks, `data-trace` click capture, `sessionStorage`-backed
-  persistence, `fetch`-based delivery), a thin React `ErrorBoundary` adapter, and
+  persistence that can be switched off, `fetch`-based delivery), a thin React `ErrorBoundary` adapter, and
   a Node client at `@tripcord/js/node`. TypeScript types, dual ESM/CJS build.
 - A self-hostable server: the ingest API that receives captures and staged
   events, bakes each session's timeline, and a dashboard for browsing them,
@@ -165,6 +165,22 @@ init({
 If `sanitizeUrl` throws or doesn't return a string, the default is used and a
 warning is logged.
 
+### Without browser storage
+
+By default the client keeps the session id and the recent events in
+`sessionStorage`, so a timeline survives page loads within the tab. To store
+nothing on the visitor's device (no cookies, no `sessionStorage`, no
+`localStorage`), pass `persist: false`:
+
+```ts
+init({ endpoint: "…", apiKey: "…", persist: false });
+```
+
+The session id and the buffer then live in memory only. A full page load starts a
+new session with an empty buffer, so this suits single-page apps and sites with
+client-side navigation, where the page's JavaScript stays alive between routes.
+An explicit `sessionId` and `seedEvents` still apply.
+
 ### Server compatibility
 
 The client and the server are versioned independently. This table says which
@@ -172,7 +188,8 @@ server version each client feature needs:
 
 | @tripcord/js | Needs server |
 | --- | --- |
-| 0.3.x, with the Node client or `id`/`source` | 0.4.0 or later |
+| 0.4.x, `persist: false` | no server requirement of its own |
+| 0.3.x and later, with the Node client or `id`/`source` | 0.4.0 or later |
 | 0.2.x, with tags | 0.1.0 or later |
 | 0.2.x, without tags | any |
 

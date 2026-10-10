@@ -331,6 +331,19 @@ capture("checkout.completed");</code></pre>
             </dt>
             <dd class="mt-2 leading-relaxed text-muted">Timelines older than that are deleted automatically, and the window is yours to configure.</dd>
           </div>
+          <div>
+            <dt class="flex items-center gap-2 font-medium">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4 text-muted">
+                <circle cx="12" cy="12" r="10" />
+                <path d="m4.9 4.9 14.2 14.2" />
+              </svg>
+              Nothing stored on the device, if you want
+            </dt>
+            <dd class="mt-2 leading-relaxed text-muted">
+              Pass <code class="font-mono text-sm text-fg">persist: false</code> and the client keeps the timeline in memory only: no
+              cookies, no <code class="font-mono text-sm text-fg">sessionStorage</code>, no <code class="font-mono text-sm text-fg">localStorage</code>.
+            </dd>
+          </div>
         </dl>
       </section>
 
