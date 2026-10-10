@@ -120,4 +120,65 @@ describe("browser createTracer", () => {
     expect(fetchMock).toHaveBeenCalledOnce();
     expect(JSON.parse(fetchMock.mock.calls[0][1].body).tags).toEqual(["video_player"]);
   });
+
+  describe("with persist: false", () => {
+    const config = { endpoint: "https://ingest.example.com/timeline", apiKey: "key-123", persist: false };
+
+    it("writes nothing to sessionStorage", () => {
+      const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 200 }));
+      vi.stubGlobal("fetch", fetchMock);
+
+      const tracer = trackedCreateTracer(config);
+      tracer.track("checkout.step", { step: "shipping" });
+      tracer.capture("payment-declined");
+
+      expect(sessionStorage.length).toBe(0);
+    });
+
+    it("ignores a session id and buffer left in sessionStorage", () => {
+      const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 200 }));
+      vi.stubGlobal("fetch", fetchMock);
+      sessionStorage.setItem("__tripcord_session_id", "stored-session");
+      sessionStorage.setItem(
+        "__tripcord_buffer",
+        JSON.stringify([{ timestamp: 1, type: "custom", name: "stored.event" }]),
+      );
+
+      trackedCreateTracer(config).capture("moment");
+
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+      expect(body.sessionId).toMatch(/^[0-9a-f-]{36}$/);
+      expect(body.sessionId).not.toBe("stored-session");
+      expect(body.events).toEqual([]);
+    });
+
+    it("keeps one session id and the tracked events in memory", () => {
+      const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 200 }));
+      vi.stubGlobal("fetch", fetchMock);
+
+      const tracer = trackedCreateTracer(config);
+      tracer.track("page", { path: "/uslugi" });
+      tracer.capture("first");
+      tracer.capture("second");
+
+      const [first, second] = fetchMock.mock.calls.map((call) => JSON.parse(call[1].body));
+      expect(first.events).toEqual([expect.objectContaining({ name: "page" })]);
+      expect(second.sessionId).toBe(first.sessionId);
+    });
+
+    it("still honours an explicit sessionId and seedEvents", () => {
+      const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 200 }));
+      vi.stubGlobal("fetch", fetchMock);
+
+      trackedCreateTracer({
+        ...config,
+        sessionId: "from-server",
+        seedEvents: [{ timestamp: 1, type: "custom", name: "seeded" }],
+      }).capture("moment");
+
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+      expect(body.sessionId).toBe("from-server");
+      expect(body.events).toEqual([expect.objectContaining({ name: "seeded" })]);
+    });
+  });
 });
